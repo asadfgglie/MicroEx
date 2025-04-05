@@ -1,0 +1,47 @@
+%%%
+This file is test file for MicroEx scanner.
+And this is multi-line comment I define in MicroEx.
+%%%
+%% This is singal-line comment define by requirement.
+begin
+end
+read
+write
+id
+123456 %% integer_literal
+102.2 %% float_literal
+12. %% float_literal
+.651 %% float_literal
+12.3e-3 %% exp_float_literal
+.3E3 %% exp_float_literal
+12.e+3 %% exp_float_literal
+"text" %% string_literal
+"text\"" %% string_literal
+( %% left_parent
+) %% right_parent
+; %% semicolon
+, %% comma
+:= %% assign
++ %% plus
+- %% minus
+* %% multiply
+/ %% division
+!= %% not_equal
+== %% equal
+> %% great
+< %% less
+>= %% great_equal
+<= %% less_equal
+if
+then
+else
+endif
+for
+to
+endfor
+while
+endwhile
+declare
+as
+integer
+real
