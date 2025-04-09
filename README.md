@@ -1,1 +1,62 @@
 # MicroEx
+
+## New feature
+In my scanner implementation, I define:
+ - add multi-line comment
+ - add string literal, allow escape characters `\n`, `\t`, `\"`, `\\`
+ - add 16-bit integer literal 
+      (ex: `0xabcd`)
+ - add 8-bit integer literal
+      (ex: `0o1275`)
+ - add 2-bit integer literal
+      (ex: `0b101010`)
+ - add underscore in integer literal
+      (ex: `1_000_000`)
+ - add character literal
+      (ex: `'a'`, `'1'`, `'\n'`)
+ - add original string literal
+      (ex: `r"abc\n" == "abc\\n"`)
+ - add import token for pacakage management
+      (ex: `import "package_name";`)
+ - add boolean literal
+      (`true`, `false`, `boolean`)
+ - add more operators:
+      `&`, `|`, `^`, `!`, `&&`, `||`, `<<`, 
+      `>>`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, 
+      `|=`, `^=`, `<<=`, `>>=`, `**`, `**=`, `%`
+      (`2**2 == 4`, and `a **= 2` means `a := a ** 2`)
+ - add OOP keywords: `class`, `extends`, `implements`, `public`, `private`, `protect`, 
+                     `static`, `final`, `this`, `super`, `abstract`, `interface`, `.` (access class member)
+                     (reference Java OOP, but more simple)
+ - add function keywords: `fn`, `return`, `void`, `endfn`
+      (ex: `fn real add(real a, real b) return a + b; endfn`)
+ - add `null` keyword for `void` return type
+ - add switch-case keywords: `switch`, `case`, `default`, `endswitch`
+      ex:
+```
+switch(a)
+     case (1) 
+          write("a is 1"); 
+          break;
+     case (2)
+          write("a is 2");
+          break;
+     default 
+          write("a is not 1");
+endswitch
+```
+ - add `break`, `continue` keywords
+ - add operator overloading keywords: `oper`, `endoper`
+      (ex: `oper + (int a, int b) return a + b; endoper`)
+
+## Example
+You can check full usage example in `test/full_gramma_test.microex` with definsion.
+
+(我知道我寫在範例中的定義其實不夠嚴謹，但為了讓版面簡單一點，我將部分課本中的定義引入到語法定義中並省略不寫。同時也為了讓定義直覺一點、面板簡潔一點，我也將Java對於物件導向的語法也引入到定義中，也同樣省略不寫。反正只要scanner能正確地拆分token就行，至於語法具體要怎麼定義還是交給未來的paser吧。)
+
+ - `test/test0.microex`:
+ classical hello world tutorial
+ - `test/test1.microex`:
+ a list of all token define in MicroEx, including default token and new token
+ - `test/test{2-4}.microex`:
+ some lexical error example

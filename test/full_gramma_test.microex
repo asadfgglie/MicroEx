@@ -109,7 +109,7 @@ fn_call_stmt ::= <identity>"("((<identity>|<value_literal>)(,(<identity>|<value_
 %%%
 fn void print(integer a)
     write(a);
-    return;
+    return null;
 endfn
 fn string strcat(string a, string b)
     declare c as string;
@@ -185,7 +185,7 @@ class Object
 
     public fn void hi()
         write("hi, " + this.string_value);
-        return;
+        return null;
     endfn
 endclass
 
@@ -201,7 +201,7 @@ endclass
 class B extends A
     fn void abc_method()
         write("a abc method implements")
-        return;
+        return null;
     endfn
 endclass
 
