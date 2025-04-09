@@ -3,6 +3,8 @@ This file is test file for MicroEx scanner.
 And this is multi-line comment I define in MicroEx.
 %%%
 %% This is singal-line comment define by requirement.
+
+%% default token:
 begin
 end
 read
@@ -17,6 +19,7 @@ id
 12.e+3 %% exp_float_literal
 "text" %% string_literal
 "text\"" %% string_literal
+"\'" %% string_literal
 ( %% left_parent
 ) %% right_parent
 ; %% semicolon
@@ -45,3 +48,78 @@ declare
 as
 integer
 real
+
+%% new token:
+0xabc431 %% hex_integer_literal
+0o010547 %% ord_integer_literal
+0b10010 %% bit_integer_literal
+'a' %% char_literal
+'\n' %% char_literal
+'\"' %% char_literal
+'\'' %% char_literal
+char 
+r"text\ntext" %% r_string_literal
+import
+
+true
+false
+boolean
+
+&
+|
+^
+!
+&=
+|=
+^=
+
+&&
+||
+
+%
+**
+
+<<
+>>
++=
+-=
+*=
+/=
+%=
+<<=
+>>=
+**=
+
+class
+endclass
+extends
+implements
+public
+private
+protect
+static
+final
+this
+super
+abstract
+interface
+endinterface
+. %% dot, for access class member or package path
+
+fn %% function
+return
+void %% return type for null
+endfn
+
+null
+
+switch
+case
+default
+endswitch
+
+break
+continue
+
+oper %% operator overload
+endoper

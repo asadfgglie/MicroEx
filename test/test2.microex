@@ -3,5 +3,5 @@ This is lexcial error test file.
 %%%
 begin
     declare A as integer;
-    A = 3 +- 5; %% lexcial error!
+    A = 3 +- 5; %% lexcial error! (=)
 end

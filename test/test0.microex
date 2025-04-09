@@ -1,0 +1,7 @@
+%%%
+The most simple hello world example lol
+This language is just a little complex than python lol
+%%%
+begin
+    write("hello, world\n");
+end

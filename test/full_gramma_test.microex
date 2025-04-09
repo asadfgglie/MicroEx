@@ -1,0 +1,230 @@
+%%%
+This is full gramma doc and example.
+%%%
+
+%%%
+all program must start with `begin`, end with `end`
+
+program ::= begin <stmt>+ end
+%%%
+begin
+
+%%%
+import_stmt ::= import <identity>(.<identity>)*;
+%%%
+import exr_lex_test_data.PI;
+
+%%%
+declare_stmt ::= (final)? declare <identity>("("<integer_literal>|<identity>")")? as <type>;
+type ::= (integer)|(real)|(char)|(string)|(boolean)|(class_name)|(interface_name)
+%%%
+declare example_int as integer;
+declare example_float as real;
+declare example_char as char;
+declare example_string as string;
+declare example_bool as boolean;
+declare example_int_array(100) as integer;
+
+%%%
+assign_stmt ::= <identity> := <value_literal>;
+value_literal ::= <integer_literal>|<float_literal>|
+                  <exp_float_literal>|<char_literal>|
+                  <string_literal>|<r_string_literal>|
+                  true|false|
+                  <hex_integer_literal>|<ord_integer_literal>|
+                  <bit_integer_literal>|null|
+                  <expression>
+%%%
+example_int := 1000000; %% normal integer literal
+example_int := 1_000_000; %% integer literal with underscore
+%% example_int := 0100; error! integer start with 0 and more than 1 digit is not allow!
+example_int := 0x0abc; %% hex integer literal
+example_int := 0o0745; %% ord integer literal
+example_int := 0b0100; %% bit integer literal
+
+example_float := 0.1; %% normal float literal
+example_float := .1; %% simple `0.1`
+example_float := 1.0; %% normal float literal
+example_float := 1.; %% simple `1.0`
+example_float := 1_00. %% simple `100.0` with underscore
+example_float := .00_100_1 %% simple `0.001001` with underscore
+%% example_float := ._001; error! float point number start with underscore is not allow
+example_float := 314.16e-2; %% normal float literal with exponential
+
+example_char := 'a'; %% normal char literal
+example_char := '\n'; %% char literal with escape charactor, allow \n, \t, \\, \', \"
+
+example_string := "string"; %% normal string literal
+example_string := "string\n\'\"\t\b\\"; %% string literal with escape charactor
+example_string := r"string\n"; %% python-like r-string s.t. escape charactor lose their meaning
+
+example_bool := true; %% normal boolean literal
+
+example_int_array(0) := 1; %% array element assign
+
+%%%
+read_stmt ::= read"("<identity>(,( \t\n)*<identity>)*")";
+%%%
+read(example_string, example_int);
+
+%%%
+write_stmt ::= write"("(<identity>|<value_literal>)(,(<identity>|<value_literal>))*")";
+%%%
+write(example_bool);
+
+%%%
+if_stmt ::= if "("<condition>")" then <stmt>+ (else <stmt>+) endif
+%%%
+if (example_bool) then
+    example_char := 'A';
+endif %% without `else`
+
+if (example_bool) then
+    example_int_array(0) := 1;
+    example_int_array(1) := 2;
+else
+    example_int_array(0) := 0;
+    example_int_array(1) := 1;
+endif %% with `else`
+
+%%%
+for_stmt ::= for "("<assign_stmt> to <identity>|<integer_literal>")" <stmt>+ endfor
+%%%
+for (example_int := 0 to 99)
+    example_int_array(example_int) := example_int;
+endfor
+
+%%%
+while_stmt := while "("condition")" <stmt>+ endwhile
+%%%
+while(example_bool)
+    example_bool := false;
+endwhile
+
+%%%
+fn_stmt ::= fn <type>|(void) <identity>"("(<type> <identity>(,<type> <identity>)*)*")" 
+            <stmt>* <return_stmt> endfn
+return_stmt ::= return <expression>?;
+fn_call_stmt ::= <identity>"("((<identity>|<value_literal>)(,(<identity>|<value_literal>))*)*")";
+%%%
+fn void print(integer a)
+    write(a);
+    return;
+endfn
+fn string strcat(string a, string b)
+    declare c as string;
+    c := a + b;
+    return c;
+endfn
+print(example_int);
+write(strcat(example_string, "hello, world"));
+
+%%%
+switch_stmt ::= switch"("<identity>")" <case_stmt> <default_stmt>? endswitch
+case_stmt ::= case(value_literal) <stmt>* (break;)*
+default_stmt ::= <stmt>* (break;)*
+%%%
+switch(example_char)
+    case(0)
+        example_bool := example_int_array(0) == 0;
+        break;
+    case(1)
+    case(2)
+        example_bool := example_int_array(0) == 1;
+    default
+        example_int_array(0) := 666;
+        break;
+endswitch
+
+%%%
+oper_stmt ::= oper <opers> "("<type> <identity>(,<type> <identity>)?")" 
+              <stmt>* <return_stmt> endoper
+%%%
+oper * (string a, integer b)
+    declare c as string;
+    declare i as integer;
+    c := a;
+    for(i:=1 to b)
+        c += a;
+    endfor
+    return c;
+endoper
+example_string := example_string * example_int;
+
+%% OOP with MicroEx
+%%%
+class_stmt ::= class (abstract)? <class_name> (extends <class_name>)? 
+               (implements <interface_name>(,<interface_name>)*)? 
+               (<member_stmt>|<method_stmt>)* endclass
+class_name ::= <identity>
+member ::= <permission>? (static)? <declare_stmt>
+permission ::= (public)|(protect)|(private)
+method_stmt ::= <permission>? (static)? <fn_stmt>
+abstract_method_stmt ::= <permission>? (static)? abstract fn <type>|(void) <identity>
+                         "("(<type> <identity>(,<type> <identity>)*)*")" endfn
+                         
+class_instant_stmt ::= <identity> := <class_name>"("((<identity>|<value_literal>)(,(<identity>|<value_literal>))*)*")";
+%%%
+class Object
+    public declare int_value as integer;
+    public declare float_value as real;
+    protect declare string_value as string;
+    private declare char_value as char;
+    static declare static_int_value as integer;
+    final declare final_float_value as real;
+
+    %%%
+    constructure_stmt ::= <permission>? static <class_name> <class_name>"("(<type> <identity>(,<type> <identity>)*)*")" <stmt>* <return_stmt> endfn
+    %%%
+    public static fn Object Object(integer int_value, real f)
+        %% `this` means current object referece, use `.` to access class member
+        this.int_value := int_value;
+        this.final_float_value := f;
+        return this;
+    endfn
+
+    public fn void hi()
+        write("hi, " + this.string_value);
+        return;
+    endfn
+endclass
+
+declare obj as Object;
+obj := Object(example_int, PI); %% `PI` is declared by other package and through `import` to access
+print(Object.static_int_value);
+print(obj.int_value);
+
+class abstract A extends Object
+    abstract fn void abc_method() endfn
+endclass
+
+class B extends A
+    fn void abc_method()
+        write("a abc method implements")
+        return;
+    endfn
+endclass
+
+declare b as B;
+b := B(example_int, 2.6);
+
+%%%
+interface_stmt ::= interface <interface_name> ((<permission>? fn <type>|(void) <identity>
+                   "("(<type> <identity>(,<type> <identity>)*)*")" endfn)|(declare_stmt))* endinterface
+%%%
+interface Person
+    public fn string greet(string name) endfn
+    private fn string mutter(Person p) endfn
+    declare o as Object;
+endinterface
+
+class Human extends B implements Person
+    public fn string greet(string name) 
+        return "hi, " + name;
+    endfn
+    private fn string mutter(Person p)
+        return p.greet(this.string_value) + " wtf?";
+    endfn
+endclass
+
+end

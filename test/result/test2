@@ -1,8 +1,8 @@
-Token number = 1,	value is "begin"
-Token number = 34,	value is "declare"
-Token number = 5,	value is "A"
-Token number = 35,	value is "as"
-Token number = 36,	value is "integer"
-Token number = 12,	value is ";"
-Token number = 5,	value is "A"
+Token number =   1,	token is `begin              `,	value is `begin`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `A`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `A`
 lexcial error in line(6:7): Unexcept character: =
