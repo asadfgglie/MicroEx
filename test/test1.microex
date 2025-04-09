@@ -1,5 +1,5 @@
 %%%
-This file is test file for MicroEx scanner.
+This file will test all token in MicroEx scanner.
 And this is multi-line comment I define in MicroEx.
 %%%
 %% This is singal-line comment define by requirement.
@@ -57,7 +57,9 @@ real
 '\n' %% char_literal
 '\"' %% char_literal
 '\'' %% char_literal
-char 
+
+char
+string 
 r"text\ntext" %% r_string_literal
 import
 

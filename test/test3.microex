@@ -1,0 +1,5 @@
+begin
+    declare a as integer;
+    a := 0;
+    a =+ 0; %% lexical error!
+end

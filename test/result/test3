@@ -1,0 +1,12 @@
+Token number =   1,	token is `begin              `,	value is `begin`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `a`
+lexcial error in line(4:7): Unexcept character: =

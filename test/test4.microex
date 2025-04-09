@@ -1,0 +1,5 @@
+%%%
+begin
+    write("hi");
+end
+%% lexical error! unbalance multi-line comment

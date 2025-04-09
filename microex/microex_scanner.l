@@ -350,9 +350,15 @@ endoper [Ee][Nn][Dd][Oo][Pp][Ee][Rr]
 {empty_word} {
     line_word_count += yyleng;
 }
-{new_line}|{line_comment} {
+{new_line} {
     line_count += 1;
     line_word_count = 0;
+}
+{line_comment} {
+    if (yytext[yyleng - 1] == '\n') {
+        line_count += 1;
+        line_word_count = 0;
+    }
 }
 {multi_line_comment} {
     is_multi_line_comment = !is_multi_line_comment;
@@ -983,6 +989,10 @@ int main(int argc, char **argv) {
         else {
             printf("Token number = %3d,\ttoken is `%-19s`,\tvalue is `%s`\n", id_s->token_id, id_s->token_name, yytext);
         }
+    }
+    if (is_multi_line_comment) {
+        printf("lexcial error in line(%llu:%llu): Unbalance multi-line comment\n", line_count, line_word_count);
+        return 1001; /* lexical error: Unexcept character */
     }
     TokenMap* s;
     HASH_FIND_STR(token_map, "EOF", s);

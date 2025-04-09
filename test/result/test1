@@ -49,6 +49,7 @@ Token number =  42,	token is `char_literal       `,	value is `'\n'`
 Token number =  42,	token is `char_literal       `,	value is `'\"'`
 Token number =  42,	token is `char_literal       `,	value is `'\''`
 Token number =  43,	token is `char               `,	value is `char`
+Token number =  45,	token is `string             `,	value is `string`
 Token number =  44,	token is `r_string_literal   `,	value is `r"text\ntext"`
 Token number =  46,	token is `import             `,	value is `import`
 Token number =  48,	token is `true               `,	value is `true`
