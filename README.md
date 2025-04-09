@@ -60,3 +60,10 @@ You can check full usage example in `test/full_gramma_test.microex` with definsi
  a list of all token define in MicroEx, including default token and new token
  - `test/test{2-4}.microex`:
  some lexical error example
+
+ ## Build scoures
+ Run `make build` to get excutable scanner `microex_c`, then use `./microex_c <file>` to scan code.
+
+ Or run `make test` to automatically complie lex, c, and scan test code.
+
+ All test result will be saved in `test/result`.
