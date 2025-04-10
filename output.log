@@ -1,0 +1,2384 @@
+cat README.md
+# MicroEx
+
+## New feature
+In my scanner implementation, I define:
+ - add multi-line comment
+ - add string literal, allow escape characters `\n`, `\t`, `\"`, `\\`
+ - add 16-bit integer literal 
+      (ex: `0xabcd`)
+ - add 8-bit integer literal
+      (ex: `0o1275`)
+ - add 2-bit integer literal
+      (ex: `0b101010`)
+ - add underscore in integer literal
+      (ex: `1_000_000`)
+ - add character literal
+      (ex: `'a'`, `'1'`, `'\n'`)
+ - add original string literal
+      (ex: `r"abc\n" == "abc\\n"`)
+ - add import token for pacakage management
+      (ex: `import "package_name";`)
+ - add boolean literal
+      (`true`, `false`, `boolean`)
+ - add more operators:
+      `&`, `|`, `^`, `!`, `&&`, `||`, `<<`, 
+      `>>`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, 
+      `|=`, `^=`, `<<=`, `>>=`, `**`, `**=`, `%`
+      (`2**2 == 4`, and `a **= 2` means `a := a ** 2`)
+ - add OOP keywords: `class`, `extends`, `implements`, `public`, `private`, `protect`, 
+                     `static`, `final`, `this`, `super`, `abstract`, `interface`, `.` (access class member)
+                     (reference Java OOP, but more simple)
+ - add function keywords: `fn`, `return`, `void`, `endfn`
+      (ex: `fn real add(real a, real b) return a + b; endfn`)
+ - add `null` keyword for `void` return type
+ - add switch-case keywords: `switch`, `case`, `default`, `endswitch`
+      ex:
+```
+switch(a)
+     case (1) 
+          write("a is 1"); 
+          break;
+     case (2)
+          write("a is 2");
+          break;
+     default 
+          write("a is not 1");
+endswitch
+```
+ - add `break`, `continue` keywords
+ - add operator overloading keywords: `oper`, `endoper`
+      (ex: `oper + (int a, int b) return a + b; endoper`)
+
+## Example
+You can check full usage example in `test/full_gramma_test.microex` with definsion.
+
+(我知道我寫在範例中的定義其實不夠嚴謹，但為了讓版面簡單一點，我將部分課本中的定義引入到語法定義中並省略不寫。同時也為了讓定義直覺一點、面板簡潔一點，我也將Java對於物件導向的語法也引入到定義中，也同樣省略不寫。反正只要scanner能正確地拆分token就行，至於語法具體要怎麼定義還是交給未來的paser吧。)
+
+ - `test/test0.microex`:
+ classical hello world tutorial
+ - `test/test1.microex`:
+ a list of all token define in MicroEx, including default token and new token
+ - `test/test{2-4}.microex`:
+ some lexical error example
+
+ ## Build scoures
+ Run `make build` to get excutable scanner `microex_c`, then use `./microex_c <file>` to scan code.
+
+ Or run `make test` to automatically complie lex, c, and scan test code.
+
+ All test result will be saved in `test/result`.
+====================
+
+cat microex/microex_scanner.l
+%{
+    #include <stdbool.h>
+    #include "../lib/uthash.h"
+    #define MAX_ERROR_MSG_LEN 256
+    #define MAX_TOKEN_NAME_LEN 64
+    unsigned long long line_count = 1, line_word_count = 0;
+    bool is_multi_line_comment = false;
+    char error_msg[MAX_ERROR_MSG_LEN];
+
+    typedef struct id_map{
+        int token_id;
+        char token_name[MAX_TOKEN_NAME_LEN];
+        UT_hash_handle hh;
+    } IdMap;
+
+    typedef struct token_map {
+        int token_id;
+        char token_name[MAX_TOKEN_NAME_LEN];
+        UT_hash_handle hh;
+    } TokenMap;
+    
+    TokenMap *token_map = NULL; // automatically initialized by uthash
+    IdMap *id_map = NULL; // automatically initialized by uthash
+
+    /**
+     * 1. check if token_name is already in the map
+     * 2. if not, add it to the map with a new id 
+     *    (incremental id order based on the number of tokens in the map)
+     * 3. return the id of the token
+     */
+    int token_id_register(char *token_name) {
+        TokenMap *s;
+        HASH_FIND_STR(token_map, token_name, s);
+        if (s == NULL) {
+            s = malloc(sizeof(TokenMap));
+            strcpy(s->token_name, token_name);
+            s->token_id = HASH_COUNT(token_map) + 1;
+            HASH_ADD_STR(token_map, token_name, s);
+        }
+
+        IdMap *id_s;
+        HASH_FIND_INT(id_map, &s->token_id, id_s);
+        if (id_s == NULL) {
+            id_s = malloc(sizeof(IdMap));
+            strcpy(id_s->token_name, token_name);
+            id_s->token_id = s->token_id;
+            HASH_ADD_INT(id_map, token_id, id_s);
+        }
+
+        return s->token_id;
+    }
+
+    void init_token_map() {
+        /* pre-register all tokens */
+        // default token id: 1 - 38
+        // EOF token id: 38
+        token_id_register("begin");
+        token_id_register("end");
+        token_id_register("read");
+        token_id_register("write");
+        token_id_register("id");
+        token_id_register("integer_literal");
+        token_id_register("float_literal");
+        token_id_register("exp_float_literal");
+        token_id_register("string_literal");
+        token_id_register("left_parent");
+        token_id_register("right_parent");
+        token_id_register("semicolon");
+        token_id_register("comma");
+        token_id_register("assign");
+        token_id_register("plus");
+        token_id_register("minus");
+        token_id_register("multiply");
+        token_id_register("division");
+        token_id_register("not_equal");
+        token_id_register("great");
+        token_id_register("less");
+        token_id_register("great_equal");
+        token_id_register("less_equal");
+        token_id_register("equal");
+        token_id_register("if");
+        token_id_register("then");
+        token_id_register("else");
+        token_id_register("endif");
+        token_id_register("for");
+        token_id_register("to");
+        token_id_register("endfor");
+        token_id_register("while");
+        token_id_register("endwhile");
+        token_id_register("declare");
+        token_id_register("as");
+        token_id_register("integer");
+        token_id_register("real");
+        token_id_register("EOF");
+
+        // new feature token id: 39~
+        token_id_register("hex_integer_literal");
+        token_id_register("ord_integer_literal");
+        token_id_register("bit_integer_literal");
+
+        token_id_register("char_literal");
+        token_id_register("char");
+        token_id_register("r_string_literal");
+        token_id_register("string");
+        
+        token_id_register("import");
+
+        token_id_register("boolean");
+        token_id_register("true");
+        token_id_register("false");
+
+        token_id_register("binary_and");
+        token_id_register("binary_or");
+        token_id_register("binary_xor");
+        token_id_register("binary_boolean_not");
+        token_id_register("binary_and_equal");
+        token_id_register("binary_or_equal");
+        token_id_register("binary_xor_equal");
+
+        token_id_register("boolean_and");
+        token_id_register("boolean_or");
+
+        token_id_register("mod");
+        token_id_register("power");
+        token_id_register("left_shift");
+        token_id_register("right_shift");
+
+        token_id_register("plus_equal");
+        token_id_register("minus_equal");
+        token_id_register("multiply_equal");
+        token_id_register("division_equal");
+        token_id_register("mod_equal");
+        token_id_register("left_shift_equal");
+        token_id_register("right_shift_equal");
+        token_id_register("power_equal");
+
+        token_id_register("class");
+        token_id_register("endclass");
+        token_id_register("extends");
+        token_id_register("implements");
+        token_id_register("public");
+        token_id_register("private");
+        token_id_register("protect");
+        token_id_register("static");
+        token_id_register("final");
+        token_id_register("this");
+        token_id_register("super");
+        token_id_register("abstract");
+        token_id_register("interface");
+        token_id_register("endinterface");
+
+        token_id_register("dot");
+
+        token_id_register("fn");
+        token_id_register("return");
+        token_id_register("void");
+        token_id_register("endfn");
+
+        token_id_register("null");
+
+        token_id_register("switch");
+        token_id_register("case");
+        token_id_register("default");
+        token_id_register("endswitch");
+
+        token_id_register("break");
+        token_id_register("continue");
+
+        token_id_register("oper");
+        token_id_register("endoper");
+    }
+
+    void free_token_map() {
+        IdMap *current_id, *id_tmp;
+        HASH_ITER(hh, id_map, current_id, id_tmp) {
+            HASH_DEL(id_map, current_id);
+            free(current_id);
+        }
+        TokenMap *current_token, *tmp;
+        HASH_ITER(hh, token_map, current_token, tmp) {
+            HASH_DEL(token_map, current_token);
+            free(current_token);
+        }
+    }
+
+    /**
+     * New feature:
+     *  - add multi-line comment
+     *  - add string literal, allow escape characters \n, \t, \", \\
+     *  - add 16-bit integer literal 
+     *       (ex: 0xabcd)
+     *  - add 8-bit integer literal
+     *       (ex: 0o1275)
+     *  - add 2-bit integer literal
+     *       (ex: 0b101010)
+     *  - add underscore in integer literal
+     *       (ex: 1_000_000)
+     *  - add character literal
+     *       (ex: 'a', '1', '\n')
+     *  - add original string literal
+     *       (ex: r"abc\n" == "abc\\n")
+     *  - add import token for pacakage management
+     *       (ex: import "package_name";)
+     *  - add boolean literal
+     *       (true, false, boolean)
+     *  - add more operators: &, |, ^, !, &&, ||, <<, >>, +=, -=, *=, /=, %=, &=, 
+     *                        |=, ^=, <<=, >>=, **, **=, %
+     *  - add OOP keywords: class, extends, implements, public, private, protect, 
+     *                      static, final, this, super, abstract, interface, . (access class member)
+     *                      (reference Java OOP)
+     *  - add function keywords: fn, return, void, endfn
+     *       (ex: fn real add(real a, real b) return a + b endfn)
+     *  - add null keyword
+     *  - add switch-case keywords: switch, case, default, endswitch
+     *       (ex: switch(a)
+     *              case (1) 
+     *                  write("a is 1"); 
+     *                  break;
+     *              case (2)
+     *                  write("a is 2");
+     *                  break;
+     *              default 
+     *                  write("a is not 1");
+     *            endswitch)
+     *  - add break, continue keywords
+     *  - add operator overloading keywords: oper, endoper
+     *       (ex: oper + (int a, int b) return a + b; endoper)
+    */
+%}
+
+empty_word [ \t]+
+new_line \n
+
+line_comment %%(((\n)?)|([^\n%][^\n]*((\n)?)))
+multi_line_comment "%%%"
+
+begin [Bb][Ee][Gg][Ii][Nn]
+end [Ee][Nn][Dd]
+read [Rr][Ee][Aa][Dd]
+write [Ww][Rr][Ii][Tt][Ee]
+id ([a-zA-Z]|_)+([0-9]*|_|[a-zA-Z])
+integer_literal ([1-9](_?[0-9]+)*)|[0-9]
+float_literal (({integer_literal}\.)|(\.(([0-9]+)|([0-9](_?[0-9]+)*)))|({integer_literal}\.(([0-9]*)|([0-9](_?[0-9]+)*))))
+exp_float_literal {float_literal}[Ee][+-]?{integer_literal}
+string_literal \"(([^\n\"\\])|(\\\")|(\\\\)|(\\n)|(\\t)|(\\b)|(\\\'))*\"
+left_parent "("
+right_parent ")"
+semicolon ";"
+comma ","
+assign ":="
+plus "+"
+minus "-"
+multiply "*"
+division "/"
+not_equal "!="
+equal "=="
+great ">"
+less "<"
+great_equal ">="
+less_equal "<="
+if [iI][fF]
+then [Tt][Hh][Ee][Nn]
+else [Ee][Ll][Ss][Ee]
+endif [Ee][Nn][Dd][Ii][Ff]
+for [Ff][Oo][Rr]
+endfor [Ee][Nn][Dd][Ff][Oo][Rr]
+while [Ww][Hh][Ii][Ll][Ee]
+endwhile [Ee][Nn][Dd][Ww][Hh][Ii][Ll][Ee]
+declare [Dd][Ee][Cc][Ll][Aa][Rr][Ee]
+as [Aa][Ss]
+integer [Ii][Nn][Tt][Ee][Gg][Ee][Rr]
+real [Rr][Ee][Aa][Ll]
+to [Tt][Oo]
+
+hex_integer_literal 0[xX]([0-9a-fA-F]+)
+ord_integer_literal 0[oO]([0-7]+)
+bit_integer_literal 0[bB]([01]+)
+char_literal \'(([^\n\'\\])|(\\\")|(\\\\)|(\\n)|(\\t)|(\\b)|(\\\'))\'
+char [Cc][Hh][Aa][Rr]
+r_string_literal r{string_literal}
+string [Ss][Tt][Rr][Ii][Nn][Gg]
+
+import [Ii][Mm][Pp][Oo][Rr][Tt]
+
+true [Tt][Rr][Uu][Ee]
+false [Ff][Aa][Ll][Ss][Ee]
+boolean [Bb][Oo][Oo][Ll][Ee][Aa][Nn]
+
+binary_and "&"
+binary_or "|"
+binary_xor "^"
+binary_boolean_not "!"
+binary_and_equal "&="
+binary_or_equal "|="
+binary_xor_equal "^="
+
+boolean_and "&&"
+boolean_or "||"
+
+mod "%"
+power "**"
+
+left_shift "<<"
+right_shift ">>"
+plus_equal "+="
+minus_equal "-="
+multiply_equal "*="
+division_equal "/="
+mod_equal "%="
+left_shift_equal "<<="
+right_shift_equal ">>="
+power_equal "**="
+
+class [Cc][Ll][Aa][Ss][Ss]
+endclass [Ee][Nn][Dd][Cc][Ll][Aa][Ss][Ss]
+extends [Ee][Xx][Tt][Ee][Nn][Dd][Ss]
+implements [Ii][Mm][Pp][Ll][Ee][Mm][Ee][Nn][Tt][Ss]
+public [Pp][Uu][Bb][Ll][Ii][Cc]
+private [Pp][Rr][Ii][Vv][Aa][Tt][Ee]
+protect [Pp][Rr][Oo][Tt][Ee][Cc][Tt]
+static [Ss][Tt][Aa][Tt][Ii][Cc]
+final [Ff][Ii][Nn][Aa][Ll]
+this [Tt][Hh][Ii][Ss]
+super [Ss][Uu][Pp][Ee][Rr]
+abstract [Aa][Bb][Ss][Tt][Rr][Aa][Cc][Tt]
+interface [Ii][Nn][Tt][Ee][Rr][Ff][Aa][Cc][Ee]
+endinterface [Ee][Nn][Dd][Ii][Nn][Tt][Ee][Rr][Ff][Aa][Cc][Ee]
+dot \.
+
+fn [Ff][Nn]
+return [Rr][Ee][Tt][Uu][Rr][Nn]
+void [Vv][Oo][Ii][Dd]
+endfn [Ee][Nn][Dd][Ff][Nn]
+
+null [Nn][Uu][Ll][Ll]
+
+switch [Ss][Ww][Ii][Tt][Cc][Hh]
+case [Cc][Aa][Ss][Ee]
+default [Dd][Ee][Ff][Aa][Uu][Ll][Tt]
+endswitch [Ee][Nn][Dd][Ss][Ww][Ii][Tt][Cc][Hh]
+
+break [Bb][Rr][Ee][Aa][Kk]
+continue [Cc][Oo][Nn][Tt][Ii][Nn][Uu][Ee]
+
+oper [Oo][Pp][Ee][Rr]
+endoper [Ee][Nn][Dd][Oo][Pp][Ee][Rr]
+
+%%
+
+{empty_word} {
+    line_word_count += yyleng;
+}
+{new_line} {
+    line_count += 1;
+    line_word_count = 0;
+}
+{line_comment} {
+    if (yytext[yyleng - 1] == '\n') {
+        line_count += 1;
+        line_word_count = 0;
+    }
+}
+{multi_line_comment} {
+    is_multi_line_comment = !is_multi_line_comment;
+}
+
+{begin} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("begin");
+    }
+}
+{end} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("end");
+    }
+}
+{read} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("read");
+    }
+}
+{write} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("write");
+    }
+}
+{integer_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("integer_literal");
+    }
+}
+{float_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("float_literal");
+    }
+}
+{exp_float_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("exp_float_literal");
+    }
+}
+{string_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("string_literal");
+    }
+}
+{left_parent} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("left_parent");
+    }
+}
+{right_parent} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("right_parent");
+    }
+}
+{semicolon} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("semicolon");
+    }
+}
+{comma} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("comma");
+    }
+}
+{assign} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("assign");
+    }
+}
+{plus} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("plus");
+    }
+}
+{minus} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("minus");
+    }
+}
+{multiply} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("multiply");
+    }
+}
+{division} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("division");
+    }
+}
+{not_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("not_equal");
+    }
+}
+{great} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("great");
+    }
+}
+{less} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("less");
+    }
+}
+{great_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("great_equal");
+    }
+}
+{less_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("less_equal");
+    }
+}
+{equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("equal");
+    }
+}
+{if} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("if");
+    }
+}
+{then} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("then");
+    }
+}
+{else} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("else");
+    }
+}
+{endif} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("endif");
+    }
+}
+{for} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("for");
+    }
+}
+{to} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("to");
+    }
+}
+{endfor} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("endfor");
+    }
+}
+{while} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("while");
+    }
+}
+{endwhile} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("endwhile");
+    }
+}
+{declare} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("declare");
+    }
+}
+{as} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("as");
+    }
+}
+{integer} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("integer");
+    }
+}
+{real} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("real");
+    }
+}
+
+{hex_integer_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("hex_integer_literal");
+    }
+}
+{ord_integer_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("ord_integer_literal");
+    }
+}
+{bit_integer_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("bit_integer_literal");
+    }
+}
+{char_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("char_literal");
+    }
+}
+{char} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("char");
+    }
+}
+{r_string_literal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("r_string_literal");
+    }
+}
+{string} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("string");
+    }
+}
+{import} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("import");
+    }
+}
+{true} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("true");
+    }
+}
+{false} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("false");
+    }
+}
+{boolean} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("boolean");
+    }
+}
+{binary_and} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("binary_and");
+    }
+}
+{binary_or} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("binary_or");
+    }
+}
+{binary_xor} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("binary_xor");
+    }
+}
+{binary_boolean_not} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("binary_boolean_not");
+    }
+}
+{binary_and_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("binary_and_equal");
+    }
+}
+{binary_or_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("binary_or_equal");
+    }
+}
+{binary_xor_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("binary_xor_equal");
+    }
+}
+{boolean_and} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("boolean_and");
+    }
+}
+{boolean_or} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("boolean_or");
+    }
+}
+{mod} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("mod");
+    }
+}
+{power} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("power");
+    }
+}
+{left_shift} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("left_shift");
+    }
+}
+{right_shift} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("right_shift");
+    }
+}
+{plus_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("plus_equal");
+    }
+}
+{minus_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("minus_equal");
+    }
+}
+{multiply_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("multiply_equal");
+    }
+}
+{division_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("division_equal");
+    }
+}
+{mod_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("mod_equal");
+    }
+}
+{left_shift_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("left_shift_equal");
+    }
+}
+{right_shift_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("right_shift_equal");
+    }
+}
+{power_equal} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("power_equal");
+    }
+}
+{class} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("class");
+    }
+}
+{endclass} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("endclass");
+    }
+}
+{extends} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("extends");
+    }
+}
+{implements} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("implements");
+    }
+}
+{public} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("public");
+    }
+}
+{private} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("private");
+    }
+}
+{protect} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("protect");
+    }
+}
+{static} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("static");
+    }
+}
+{final} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("final");
+    }
+}
+{this} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("this");
+    }
+}
+{super} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("super");
+    }
+}
+{abstract} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("abstract");
+    }
+}
+{interface} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("interface");
+    }
+}
+{endinterface} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("endinterface");
+    }
+}
+{dot} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("dot");
+    }
+}
+{fn} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("fn");
+    }
+}
+{return} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("return");
+    }
+}
+{void} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("void");
+    }
+}
+{endfn} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("endfn");
+    }
+}
+{null} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("null");
+    }
+}
+{switch} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("switch");
+    }
+}
+{case} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("case");
+    }
+}
+{default} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("default");
+    }
+}
+{endswitch} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("endswitch");
+    }
+}
+{break} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("break");
+    }
+}
+{continue} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("continue");
+    }
+}
+{oper} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("oper");
+    }
+}
+{endoper} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("endoper");
+    }
+}
+
+{id} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        return token_id_register("id");
+    }
+}
+
+. {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment)  {
+        sprintf(error_msg, "Unexcept character: %s", yytext);
+        return 1000; /* lexical error: Unexcept character */
+    }
+}
+
+%%
+
+int main(int argc, char **argv) {
+    if (argc == 2) {
+        FILE *fp = fopen(argv[1], "r");
+        if (fp == NULL) {
+            printf("Error opening file: %s\n", argv[1]);
+            return 1;
+        }
+        yyin = fp;
+    }
+    else if (argc == 1) {
+        yyin = stdin;
+    }
+    else {
+        printf("Usage: %s <filename>\n", argv[0]);
+        return 1;
+    }
+
+    init_token_map();
+
+    int token_id = -1;
+    while((token_id = yylex()) != 0) {
+        IdMap* id_s;
+        HASH_FIND_INT(id_map, &token_id, id_s);
+        if (id_s == NULL) {
+            printf("lexcial error in line(%llu:%llu): %s\n", line_count, line_word_count, error_msg);
+            return token_id;
+        }
+        else {
+            printf("Token number = %3d,\ttoken is `%-19s`,\tvalue is `%s`\n", id_s->token_id, id_s->token_name, yytext);
+        }
+    }
+    if (is_multi_line_comment) {
+        printf("lexcial error in line(%llu:%llu): Unbalance multi-line comment\n", line_count, line_word_count);
+        return 1001; /* lexical error: Unexcept character */
+    }
+    TokenMap* s;
+    HASH_FIND_STR(token_map, "EOF", s);
+    printf("Token number = %3d,\ttoken is `%-19s`,\tvalue is `%s`\n", s->token_id, s->token_name, s->token_name);
+
+    free_token_map();
+    
+    fclose(yyin);
+    
+    return 0;
+}
+====================
+
+cat test/exr_lex_test_data.microex
+%%the beginning of an test data for Micro/Ex
+
+begin 
+ declare A,I as integer;
+ declare B,C,D,size as real;
+ declare PI;
+ declare LLL(100) AS REAL;
+
+ PI:=3.1416;
+ B:=PI*B*B+C/D+0.345E-6;
+ 
+ FOR (I:=1 TO 100)
+   C:=LLL(I)+B*D-C;
+ ENDFOR
+
+ IF (C>=10000) THEN
+    print("Good!");
+ ENDIF
+
+end 
+  
+    
+ 
+====================
+
+cat test/full_gramma_test.microex
+%%%
+This is full gramma doc and example.
+%%%
+
+%%%
+all program must start with `begin`, end with `end`
+
+program ::= begin <stmt>+ end
+%%%
+begin
+
+%%%
+import_stmt ::= import <identity>(.<identity>)*;
+%%%
+import exr_lex_test_data.PI;
+
+%%%
+declare_stmt ::= (final)? declare <identity>("("<integer_literal>|<identity>")")? as <type>;
+type ::= (integer)|(real)|(char)|(string)|(boolean)|(class_name)|(interface_name)
+%%%
+declare example_int as integer;
+declare example_float as real;
+declare example_char as char;
+declare example_string as string;
+declare example_bool as boolean;
+declare example_int_array(100) as integer;
+
+%%%
+assign_stmt ::= <identity> := <value_literal>;
+value_literal ::= <integer_literal>|<float_literal>|
+                  <exp_float_literal>|<char_literal>|
+                  <string_literal>|<r_string_literal>|
+                  true|false|
+                  <hex_integer_literal>|<ord_integer_literal>|
+                  <bit_integer_literal>|null|
+                  <expression>
+%%%
+example_int := 1000000; %% normal integer literal
+example_int := 1_000_000; %% integer literal with underscore
+%% example_int := 0100; error! integer start with 0 and more than 1 digit is not allow!
+example_int := 0x0abc; %% hex integer literal
+example_int := 0o0745; %% ord integer literal
+example_int := 0b0100; %% bit integer literal
+
+example_float := 0.1; %% normal float literal
+example_float := .1; %% simple `0.1`
+example_float := 1.0; %% normal float literal
+example_float := 1.; %% simple `1.0`
+example_float := 1_00. %% simple `100.0` with underscore
+example_float := .00_100_1 %% simple `0.001001` with underscore
+%% example_float := ._001; error! float point number start with underscore is not allow
+example_float := 314.16e-2; %% normal float literal with exponential
+
+example_char := 'a'; %% normal char literal
+example_char := '\n'; %% char literal with escape charactor, allow \n, \t, \\, \', \"
+
+example_string := "string"; %% normal string literal
+example_string := "string\n\'\"\t\b\\"; %% string literal with escape charactor
+example_string := r"string\n"; %% python-like r-string s.t. escape charactor lose their meaning
+
+example_bool := true; %% normal boolean literal
+
+example_int_array(0) := 1; %% array element assign
+
+%%%
+read_stmt ::= read"("<identity>(,( \t\n)*<identity>)*")";
+%%%
+read(example_string, example_int);
+
+%%%
+write_stmt ::= write"("(<identity>|<value_literal>)(,(<identity>|<value_literal>))*")";
+%%%
+write(example_bool);
+
+%%%
+if_stmt ::= if "("<condition>")" then <stmt>+ (else <stmt>+) endif
+%%%
+if (example_bool) then
+    example_char := 'A';
+endif %% without `else`
+
+if (example_bool) then
+    example_int_array(0) := 1;
+    example_int_array(1) := 2;
+else
+    example_int_array(0) := 0;
+    example_int_array(1) := 1;
+endif %% with `else`
+
+%%%
+for_stmt ::= for "("<assign_stmt> to <identity>|<integer_literal>")" <stmt>+ endfor
+%%%
+for (example_int := 0 to 99)
+    example_int_array(example_int) := example_int;
+endfor
+
+%%%
+while_stmt := while "("condition")" <stmt>+ endwhile
+%%%
+while(example_bool)
+    example_bool := false;
+endwhile
+
+%%%
+fn_stmt ::= fn <type>|(void) <identity>"("(<type> <identity>(,<type> <identity>)*)*")" 
+            <stmt>* <return_stmt> endfn
+return_stmt ::= return <expression>?;
+fn_call_stmt ::= <identity>"("((<identity>|<value_literal>)(,(<identity>|<value_literal>))*)*")";
+%%%
+fn void print(integer a)
+    write(a);
+    return null;
+endfn
+fn string strcat(string a, string b)
+    declare c as string;
+    c := a + b;
+    return c;
+endfn
+print(example_int);
+write(strcat(example_string, "hello, world"));
+
+%%%
+switch_stmt ::= switch"("<identity>")" <case_stmt> <default_stmt>? endswitch
+case_stmt ::= case(value_literal) <stmt>* (break;)*
+default_stmt ::= <stmt>* (break;)*
+%%%
+switch(example_char)
+    case(0)
+        example_bool := example_int_array(0) == 0;
+        break;
+    case(1)
+    case(2)
+        example_bool := example_int_array(0) == 1;
+    default
+        example_int_array(0) := 666;
+        break;
+endswitch
+
+%%%
+oper_stmt ::= oper <opers> "("<type> <identity>(,<type> <identity>)?")" 
+              <stmt>* <return_stmt> endoper
+%%%
+oper * (string a, integer b)
+    declare c as string;
+    declare i as integer;
+    c := a;
+    for(i:=1 to b)
+        c += a;
+    endfor
+    return c;
+endoper
+example_string := example_string * example_int;
+
+%% OOP with MicroEx
+%%%
+class_stmt ::= class (abstract)? <class_name> (extends <class_name>)? 
+               (implements <interface_name>(,<interface_name>)*)? 
+               (<member_stmt>|<method_stmt>)* endclass
+class_name ::= <identity>
+member ::= <permission>? (static)? <declare_stmt>
+permission ::= (public)|(protect)|(private)
+method_stmt ::= <permission>? (static)? <fn_stmt>
+abstract_method_stmt ::= <permission>? (static)? abstract fn <type>|(void) <identity>
+                         "("(<type> <identity>(,<type> <identity>)*)*")" endfn
+                         
+class_instant_stmt ::= <identity> := <class_name>"("((<identity>|<value_literal>)(,(<identity>|<value_literal>))*)*")";
+%%%
+class Object
+    public declare int_value as integer;
+    public declare float_value as real;
+    protect declare string_value as string;
+    private declare char_value as char;
+    static declare static_int_value as integer;
+    final declare final_float_value as real;
+
+    %%%
+    constructure_stmt ::= <permission>? static <class_name> <class_name>"("(<type> <identity>(,<type> <identity>)*)*")" <stmt>* <return_stmt> endfn
+    %%%
+    public static fn Object Object(integer int_value, real f)
+        %% `this` means current object referece, use `.` to access class member
+        this.int_value := int_value;
+        this.final_float_value := f;
+        return this;
+    endfn
+
+    public fn void hi()
+        write("hi, " + this.string_value);
+        return null;
+    endfn
+endclass
+
+declare obj as Object;
+obj := Object(example_int, PI); %% `PI` is declared by other package and through `import` to access
+print(Object.static_int_value);
+print(obj.int_value);
+
+class abstract A extends Object
+    abstract fn void abc_method() endfn
+endclass
+
+class B extends A
+    fn void abc_method()
+        write("a abc method implements")
+        return null;
+    endfn
+endclass
+
+declare b as B;
+b := B(example_int, 2.6);
+
+%%%
+interface_stmt ::= interface <interface_name> ((<permission>? fn <type>|(void) <identity>
+                   "("(<type> <identity>(,<type> <identity>)*)*")" endfn)|(declare_stmt))* endinterface
+%%%
+interface Person
+    public fn string greet(string name) endfn
+    private fn string mutter(Person p) endfn
+    declare o as Object;
+endinterface
+
+class Human extends B implements Person
+    public fn string greet(string name) 
+        return "hi, " + name;
+    endfn
+    private fn string mutter(Person p)
+        return p.greet(this.string_value) + " wtf?";
+    endfn
+endclass
+
+end
+====================
+
+cat test/test0.microex
+%%%
+The most simple hello world example lol
+This language is just a little complex than python lol
+%%%
+begin
+    write("hello, world\n");
+end
+====================
+
+cat test/test1.microex
+%%%
+This file will test all token in MicroEx scanner.
+And this is multi-line comment I define in MicroEx.
+%%%
+%% This is singal-line comment define by requirement.
+
+%% default token:
+begin
+end
+read
+write
+id
+123456 %% integer_literal
+102.2 %% float_literal
+12. %% float_literal
+.651 %% float_literal
+12.3e-3 %% exp_float_literal
+.3E3 %% exp_float_literal
+12.e+3 %% exp_float_literal
+"text" %% string_literal
+"text\"" %% string_literal
+"\'" %% string_literal
+( %% left_parent
+) %% right_parent
+; %% semicolon
+, %% comma
+:= %% assign
++ %% plus
+- %% minus
+* %% multiply
+/ %% division
+!= %% not_equal
+== %% equal
+> %% great
+< %% less
+>= %% great_equal
+<= %% less_equal
+if
+then
+else
+endif
+for
+to
+endfor
+while
+endwhile
+declare
+as
+integer
+real
+
+%% new token:
+0xabc431 %% hex_integer_literal
+0o010547 %% ord_integer_literal
+0b10010 %% bit_integer_literal
+'a' %% char_literal
+'\n' %% char_literal
+'\"' %% char_literal
+'\'' %% char_literal
+
+char
+string 
+r"text\ntext" %% r_string_literal
+import
+
+true
+false
+boolean
+
+&
+|
+^
+!
+&=
+|=
+^=
+
+&&
+||
+
+%
+**
+
+<<
+>>
++=
+-=
+*=
+/=
+%=
+<<=
+>>=
+**=
+
+class
+endclass
+extends
+implements
+public
+private
+protect
+static
+final
+this
+super
+abstract
+interface
+endinterface
+. %% dot, for access class member or package path
+
+fn %% function
+return
+void %% return type for null
+endfn
+
+null
+
+switch
+case
+default
+endswitch
+
+break
+continue
+
+oper %% operator overload
+endoper
+====================
+
+cat test/test2.microex
+%%%
+This is lexcial error test file.
+%%%
+begin
+    declare A as integer;
+    A = 3 +- 5; %% lexcial error! (=)
+end
+====================
+
+cat test/test3.microex
+begin
+    declare a as integer;
+    a := 0;
+    a =+ 0; %% lexical error!
+end
+====================
+
+cat test/test4.microex
+%%%
+begin
+    write("hi");
+end
+%% lexical error! unbalance multi-line comment
+====================
+
+cat makefile
+.PHONY: clean build test
+
+build: build/microex_c
+	@cp build/microex_c microex_c
+
+build/microex_c: build/lex.yy.c
+	@mkdir -p build
+	@gcc -o build/microex_c build/lex.yy.c -lfl
+
+build/lex.yy.c: microex/microex_scanner.l
+	@mkdir -p build
+	@lex -o build/lex.yy.c microex/microex_scanner.l
+
+clean:
+	@rm -rf build
+	@rm -f microex_c
+	@rm -f test/result/*
+
+test:
+	@./test.sh
+====================
+
+cat test.sh
+#!/bin/bash
+
+make build
+# Check if the build was successful
+if [ $? -ne 0 ]; then
+    echo "Build failed. Please check the errors."
+    exit 1
+fi
+
+# Ensure the result directory exists
+mkdir -p test/result
+rm -f test/result/*
+
+# Loop through all .microex files in the test directory
+for test_file in test/*.microex; do
+    # Extract the base name of the test file
+    base_name=$(basename "$test_file" .microex)
+    
+    # Compile the test file and redirect output to the result directory
+    ./microex_c "$test_file" > "test/result/$base_name"
+done
+
+echo "Compilation completed. Results are in the test/result directory."
+====================
+
+make test
+make[1]: Entering directory '/home/asadfgglie-msi/complier'
+make[1]: Leaving directory '/home/asadfgglie-msi/complier'
+Compilation completed. Results are in the test/result directory.
+cat test/result/exr_lex_test_data
+Token number =   1,	token is `begin              `,	value is `begin`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `A`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =   5,	token is `id                 `,	value is `I`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =   5,	token is `id                 `,	value is `C`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =   5,	token is `id                 `,	value is `D`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =   5,	token is `id                 `,	value is `size`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  37,	token is `real               `,	value is `real`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `PI`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `LLL`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `100`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  35,	token is `as                 `,	value is `AS`
+Token number =  37,	token is `real               `,	value is `REAL`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `PI`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   7,	token is `float_literal      `,	value is `3.1416`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `PI`
+Token number =  17,	token is `multiply           `,	value is `*`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  17,	token is `multiply           `,	value is `*`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  15,	token is `plus               `,	value is `+`
+Token number =   5,	token is `id                 `,	value is `C`
+Token number =  18,	token is `division           `,	value is `/`
+Token number =   5,	token is `id                 `,	value is `D`
+Token number =  15,	token is `plus               `,	value is `+`
+Token number =   8,	token is `exp_float_literal  `,	value is `0.345E-6`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  29,	token is `for                `,	value is `FOR`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `I`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  30,	token is `to                 `,	value is `TO`
+Token number =   6,	token is `integer_literal    `,	value is `100`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   5,	token is `id                 `,	value is `C`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `LLL`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `I`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  15,	token is `plus               `,	value is `+`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  17,	token is `multiply           `,	value is `*`
+Token number =   5,	token is `id                 `,	value is `D`
+Token number =  16,	token is `minus              `,	value is `-`
+Token number =   5,	token is `id                 `,	value is `C`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  31,	token is `endfor             `,	value is `ENDFOR`
+Token number =  25,	token is `if                 `,	value is `IF`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `C`
+Token number =  22,	token is `great_equal        `,	value is `>=`
+Token number =   6,	token is `integer_literal    `,	value is `10000`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  26,	token is `then               `,	value is `THEN`
+Token number =   5,	token is `id                 `,	value is `print`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   9,	token is `string_literal     `,	value is `"Good!"`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  28,	token is `endif              `,	value is `ENDIF`
+Token number =   2,	token is `end                `,	value is `end`
+Token number =  38,	token is `EOF                `,	value is `EOF`
+
+====================
+
+cat test/result/full_gramma_test
+Token number =   1,	token is `begin              `,	value is `begin`
+Token number =  46,	token is `import             `,	value is `import`
+Token number =   5,	token is `id                 `,	value is `exr_lex_test_data`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =   5,	token is `id                 `,	value is `PI`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `example_float`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  37,	token is `real               `,	value is `real`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `example_char`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  43,	token is `char               `,	value is `char`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `example_string`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  47,	token is `boolean            `,	value is `boolean`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `100`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `1000000`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `1_000_000`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  39,	token is `hex_integer_literal`,	value is `0x0abc`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  40,	token is `ord_integer_literal`,	value is `0o0745`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  41,	token is `bit_integer_literal`,	value is `0b0100`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_float`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   7,	token is `float_literal      `,	value is `0.1`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_float`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   7,	token is `float_literal      `,	value is `.1`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_float`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   7,	token is `float_literal      `,	value is `1.0`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_float`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   7,	token is `float_literal      `,	value is `1.`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_float`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   7,	token is `float_literal      `,	value is `1_00.`
+Token number =   5,	token is `id                 `,	value is `example_float`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   7,	token is `float_literal      `,	value is `.00_100_1`
+Token number =   5,	token is `id                 `,	value is `example_float`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   8,	token is `exp_float_literal  `,	value is `314.16e-2`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_char`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  42,	token is `char_literal       `,	value is `'a'`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_char`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  42,	token is `char_literal       `,	value is `'\n'`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_string`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   9,	token is `string_literal     `,	value is `"string"`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_string`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   9,	token is `string_literal     `,	value is `"string\n\'\"\t\b\\"`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_string`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  44,	token is `r_string_literal   `,	value is `r"string\n"`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  48,	token is `true               `,	value is `true`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   3,	token is `read               `,	value is `read`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_string`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   4,	token is `write              `,	value is `write`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  25,	token is `if                 `,	value is `if`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  26,	token is `then               `,	value is `then`
+Token number =   5,	token is `id                 `,	value is `example_char`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  42,	token is `char_literal       `,	value is `'A'`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  28,	token is `endif              `,	value is `endif`
+Token number =  25,	token is `if                 `,	value is `if`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  26,	token is `then               `,	value is `then`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `2`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  27,	token is `else               `,	value is `else`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  28,	token is `endif              `,	value is `endif`
+Token number =  29,	token is `for                `,	value is `for`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  30,	token is `to                 `,	value is `to`
+Token number =   6,	token is `integer_literal    `,	value is `99`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  31,	token is `endfor             `,	value is `endfor`
+Token number =  32,	token is `while              `,	value is `while`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  49,	token is `false              `,	value is `false`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  33,	token is `endwhile           `,	value is `endwhile`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  88,	token is `void               `,	value is `void`
+Token number =   5,	token is `id                 `,	value is `print`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   4,	token is `write              `,	value is `write`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =  90,	token is `null               `,	value is `null`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `strcat`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `b`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `c`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `c`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  15,	token is `plus               `,	value is `+`
+Token number =   5,	token is `id                 `,	value is `b`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =   5,	token is `id                 `,	value is `c`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =   5,	token is `id                 `,	value is `print`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   4,	token is `write              `,	value is `write`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `strcat`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_string`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =   9,	token is `string_literal     `,	value is `"hello, world"`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  91,	token is `switch             `,	value is `switch`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_char`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  92,	token is `case               `,	value is `case`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  24,	token is `equal              `,	value is `==`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  95,	token is `break              `,	value is `break`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  92,	token is `case               `,	value is `case`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  92,	token is `case               `,	value is `case`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `2`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   5,	token is `id                 `,	value is `example_bool`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  24,	token is `equal              `,	value is `==`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  93,	token is `default            `,	value is `default`
+Token number =   5,	token is `id                 `,	value is `example_int_array`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `666`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  95,	token is `break              `,	value is `break`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  94,	token is `endswitch          `,	value is `endswitch`
+Token number =  97,	token is `oper               `,	value is `oper`
+Token number =  17,	token is `multiply           `,	value is `*`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =   5,	token is `id                 `,	value is `b`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `c`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `i`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `c`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  29,	token is `for                `,	value is `for`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `i`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `1`
+Token number =  30,	token is `to                 `,	value is `to`
+Token number =   5,	token is `id                 `,	value is `b`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   5,	token is `id                 `,	value is `c`
+Token number =  63,	token is `plus_equal         `,	value is `+=`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  31,	token is `endfor             `,	value is `endfor`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =   5,	token is `id                 `,	value is `c`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  98,	token is `endoper            `,	value is `endoper`
+Token number =   5,	token is `id                 `,	value is `example_string`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `example_string`
+Token number =  17,	token is `multiply           `,	value is `*`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  71,	token is `class              `,	value is `class`
+Token number =   5,	token is `id                 `,	value is `Object`
+Token number =  75,	token is `public             `,	value is `public`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `int_value`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  75,	token is `public             `,	value is `public`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `float_value`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  37,	token is `real               `,	value is `real`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  77,	token is `protect            `,	value is `protect`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `string_value`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  76,	token is `private            `,	value is `private`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `char_value`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  43,	token is `char               `,	value is `char`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  78,	token is `static             `,	value is `static`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `static_int_value`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  79,	token is `final              `,	value is `final`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `final_float_value`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  37,	token is `real               `,	value is `real`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  75,	token is `public             `,	value is `public`
+Token number =  78,	token is `static             `,	value is `static`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =   5,	token is `id                 `,	value is `Object`
+Token number =   5,	token is `id                 `,	value is `Object`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =   5,	token is `id                 `,	value is `int_value`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =  37,	token is `real               `,	value is `real`
+Token number =   5,	token is `id                 `,	value is `f`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  80,	token is `this               `,	value is `this`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =   5,	token is `id                 `,	value is `int_value`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `int_value`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  80,	token is `this               `,	value is `this`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =   5,	token is `id                 `,	value is `final_float_value`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `f`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =  80,	token is `this               `,	value is `this`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  75,	token is `public             `,	value is `public`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  88,	token is `void               `,	value is `void`
+Token number =   5,	token is `id                 `,	value is `hi`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   4,	token is `write              `,	value is `write`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   9,	token is `string_literal     `,	value is `"hi, "`
+Token number =  15,	token is `plus               `,	value is `+`
+Token number =  80,	token is `this               `,	value is `this`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =   5,	token is `id                 `,	value is `string_value`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =  90,	token is `null               `,	value is `null`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  72,	token is `endclass           `,	value is `endclass`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `obj`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =   5,	token is `id                 `,	value is `Object`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `obj`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `Object`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =   5,	token is `id                 `,	value is `PI`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `print`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `Object`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =   5,	token is `id                 `,	value is `static_int_value`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `print`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `obj`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =   5,	token is `id                 `,	value is `int_value`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  71,	token is `class              `,	value is `class`
+Token number =  82,	token is `abstract           `,	value is `abstract`
+Token number =   5,	token is `id                 `,	value is `A`
+Token number =  73,	token is `extends            `,	value is `extends`
+Token number =   5,	token is `id                 `,	value is `Object`
+Token number =  82,	token is `abstract           `,	value is `abstract`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  88,	token is `void               `,	value is `void`
+Token number =   5,	token is `id                 `,	value is `abc_method`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  72,	token is `endclass           `,	value is `endclass`
+Token number =  71,	token is `class              `,	value is `class`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  73,	token is `extends            `,	value is `extends`
+Token number =   5,	token is `id                 `,	value is `A`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  88,	token is `void               `,	value is `void`
+Token number =   5,	token is `id                 `,	value is `abc_method`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =   4,	token is `write              `,	value is `write`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   9,	token is `string_literal     `,	value is `"a abc method implements"`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =  90,	token is `null               `,	value is `null`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  72,	token is `endclass           `,	value is `endclass`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `b`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `b`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `example_int`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =   7,	token is `float_literal      `,	value is `2.6`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  83,	token is `interface          `,	value is `interface`
+Token number =   5,	token is `id                 `,	value is `Person`
+Token number =  75,	token is `public             `,	value is `public`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `greet`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `name`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  76,	token is `private            `,	value is `private`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `mutter`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `Person`
+Token number =   5,	token is `id                 `,	value is `p`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `o`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =   5,	token is `id                 `,	value is `Object`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  84,	token is `endinterface       `,	value is `endinterface`
+Token number =  71,	token is `class              `,	value is `class`
+Token number =   5,	token is `id                 `,	value is `Human`
+Token number =  73,	token is `extends            `,	value is `extends`
+Token number =   5,	token is `id                 `,	value is `B`
+Token number =  74,	token is `implements         `,	value is `implements`
+Token number =   5,	token is `id                 `,	value is `Person`
+Token number =  75,	token is `public             `,	value is `public`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `greet`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `name`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =   9,	token is `string_literal     `,	value is `"hi, "`
+Token number =  15,	token is `plus               `,	value is `+`
+Token number =   5,	token is `id                 `,	value is `name`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  76,	token is `private            `,	value is `private`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =   5,	token is `id                 `,	value is `mutter`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   5,	token is `id                 `,	value is `Person`
+Token number =   5,	token is `id                 `,	value is `p`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =   5,	token is `id                 `,	value is `p`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =   5,	token is `id                 `,	value is `greet`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  80,	token is `this               `,	value is `this`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =   5,	token is `id                 `,	value is `string_value`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  15,	token is `plus               `,	value is `+`
+Token number =   9,	token is `string_literal     `,	value is `" wtf?"`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  72,	token is `endclass           `,	value is `endclass`
+Token number =   2,	token is `end                `,	value is `end`
+Token number =  38,	token is `EOF                `,	value is `EOF`
+
+====================
+
+cat test/result/test0
+Token number =   1,	token is `begin              `,	value is `begin`
+Token number =   4,	token is `write              `,	value is `write`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =   9,	token is `string_literal     `,	value is `"hello, world\n"`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   2,	token is `end                `,	value is `end`
+Token number =  38,	token is `EOF                `,	value is `EOF`
+
+====================
+
+cat test/result/test1
+Token number =   1,	token is `begin              `,	value is `begin`
+Token number =   2,	token is `end                `,	value is `end`
+Token number =   3,	token is `read               `,	value is `read`
+Token number =   4,	token is `write              `,	value is `write`
+Token number =   5,	token is `id                 `,	value is `id`
+Token number =   6,	token is `integer_literal    `,	value is `123456`
+Token number =   7,	token is `float_literal      `,	value is `102.2`
+Token number =   7,	token is `float_literal      `,	value is `12.`
+Token number =   7,	token is `float_literal      `,	value is `.651`
+Token number =   8,	token is `exp_float_literal  `,	value is `12.3e-3`
+Token number =   8,	token is `exp_float_literal  `,	value is `.3E3`
+Token number =   8,	token is `exp_float_literal  `,	value is `12.e+3`
+Token number =   9,	token is `string_literal     `,	value is `"text"`
+Token number =   9,	token is `string_literal     `,	value is `"text\""`
+Token number =   9,	token is `string_literal     `,	value is `"\'"`
+Token number =  10,	token is `left_parent        `,	value is `(`
+Token number =  11,	token is `right_parent       `,	value is `)`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =  13,	token is `comma              `,	value is `,`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =  15,	token is `plus               `,	value is `+`
+Token number =  16,	token is `minus              `,	value is `-`
+Token number =  17,	token is `multiply           `,	value is `*`
+Token number =  18,	token is `division           `,	value is `/`
+Token number =  19,	token is `not_equal          `,	value is `!=`
+Token number =  24,	token is `equal              `,	value is `==`
+Token number =  20,	token is `great              `,	value is `>`
+Token number =  21,	token is `less               `,	value is `<`
+Token number =  22,	token is `great_equal        `,	value is `>=`
+Token number =  23,	token is `less_equal         `,	value is `<=`
+Token number =  25,	token is `if                 `,	value is `if`
+Token number =  26,	token is `then               `,	value is `then`
+Token number =  27,	token is `else               `,	value is `else`
+Token number =  28,	token is `endif              `,	value is `endif`
+Token number =  29,	token is `for                `,	value is `for`
+Token number =  30,	token is `to                 `,	value is `to`
+Token number =  31,	token is `endfor             `,	value is `endfor`
+Token number =  32,	token is `while              `,	value is `while`
+Token number =  33,	token is `endwhile           `,	value is `endwhile`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  37,	token is `real               `,	value is `real`
+Token number =  39,	token is `hex_integer_literal`,	value is `0xabc431`
+Token number =  40,	token is `ord_integer_literal`,	value is `0o010547`
+Token number =  41,	token is `bit_integer_literal`,	value is `0b10010`
+Token number =  42,	token is `char_literal       `,	value is `'a'`
+Token number =  42,	token is `char_literal       `,	value is `'\n'`
+Token number =  42,	token is `char_literal       `,	value is `'\"'`
+Token number =  42,	token is `char_literal       `,	value is `'\''`
+Token number =  43,	token is `char               `,	value is `char`
+Token number =  45,	token is `string             `,	value is `string`
+Token number =  44,	token is `r_string_literal   `,	value is `r"text\ntext"`
+Token number =  46,	token is `import             `,	value is `import`
+Token number =  48,	token is `true               `,	value is `true`
+Token number =  49,	token is `false              `,	value is `false`
+Token number =  47,	token is `boolean            `,	value is `boolean`
+Token number =  50,	token is `binary_and         `,	value is `&`
+Token number =  51,	token is `binary_or          `,	value is `|`
+Token number =  52,	token is `binary_xor         `,	value is `^`
+Token number =  53,	token is `binary_boolean_not `,	value is `!`
+Token number =  54,	token is `binary_and_equal   `,	value is `&=`
+Token number =  55,	token is `binary_or_equal    `,	value is `|=`
+Token number =  56,	token is `binary_xor_equal   `,	value is `^=`
+Token number =  57,	token is `boolean_and        `,	value is `&&`
+Token number =  58,	token is `boolean_or         `,	value is `||`
+Token number =  59,	token is `mod                `,	value is `%`
+Token number =  60,	token is `power              `,	value is `**`
+Token number =  61,	token is `left_shift         `,	value is `<<`
+Token number =  62,	token is `right_shift        `,	value is `>>`
+Token number =  63,	token is `plus_equal         `,	value is `+=`
+Token number =  64,	token is `minus_equal        `,	value is `-=`
+Token number =  65,	token is `multiply_equal     `,	value is `*=`
+Token number =  66,	token is `division_equal     `,	value is `/=`
+Token number =  67,	token is `mod_equal          `,	value is `%=`
+Token number =  68,	token is `left_shift_equal   `,	value is `<<=`
+Token number =  69,	token is `right_shift_equal  `,	value is `>>=`
+Token number =  70,	token is `power_equal        `,	value is `**=`
+Token number =  71,	token is `class              `,	value is `class`
+Token number =  72,	token is `endclass           `,	value is `endclass`
+Token number =  73,	token is `extends            `,	value is `extends`
+Token number =  74,	token is `implements         `,	value is `implements`
+Token number =  75,	token is `public             `,	value is `public`
+Token number =  76,	token is `private            `,	value is `private`
+Token number =  77,	token is `protect            `,	value is `protect`
+Token number =  78,	token is `static             `,	value is `static`
+Token number =  79,	token is `final              `,	value is `final`
+Token number =  80,	token is `this               `,	value is `this`
+Token number =  81,	token is `super              `,	value is `super`
+Token number =  82,	token is `abstract           `,	value is `abstract`
+Token number =  83,	token is `interface          `,	value is `interface`
+Token number =  84,	token is `endinterface       `,	value is `endinterface`
+Token number =  85,	token is `dot                `,	value is `.`
+Token number =  86,	token is `fn                 `,	value is `fn`
+Token number =  87,	token is `return             `,	value is `return`
+Token number =  88,	token is `void               `,	value is `void`
+Token number =  89,	token is `endfn              `,	value is `endfn`
+Token number =  90,	token is `null               `,	value is `null`
+Token number =  91,	token is `switch             `,	value is `switch`
+Token number =  92,	token is `case               `,	value is `case`
+Token number =  93,	token is `default            `,	value is `default`
+Token number =  94,	token is `endswitch          `,	value is `endswitch`
+Token number =  95,	token is `break              `,	value is `break`
+Token number =  96,	token is `continue           `,	value is `continue`
+Token number =  97,	token is `oper               `,	value is `oper`
+Token number =  98,	token is `endoper            `,	value is `endoper`
+Token number =  38,	token is `EOF                `,	value is `EOF`
+
+====================
+
+cat test/result/test2
+Token number =   1,	token is `begin              `,	value is `begin`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `A`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `A`
+lexcial error in line(6:7): Unexcept character: =
+
+====================
+
+cat test/result/test3
+Token number =   1,	token is `begin              `,	value is `begin`
+Token number =  34,	token is `declare            `,	value is `declare`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  35,	token is `as                 `,	value is `as`
+Token number =  36,	token is `integer            `,	value is `integer`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `a`
+Token number =  14,	token is `assign             `,	value is `:=`
+Token number =   6,	token is `integer_literal    `,	value is `0`
+Token number =  12,	token is `semicolon          `,	value is `;`
+Token number =   5,	token is `id                 `,	value is `a`
+lexcial error in line(4:7): Unexcept character: =
+
+====================
+
+cat test/result/test4
+lexcial error in line(5:0): Unbalance multi-line comment
+
+====================
+
