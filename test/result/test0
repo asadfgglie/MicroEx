@@ -1,8 +1,0 @@
-Token number =   1,	token is `begin              `,	value is `begin`
-Token number =   4,	token is `write              `,	value is `write`
-Token number =  10,	token is `left_parent        `,	value is `(`
-Token number =   9,	token is `string_literal     `,	value is `"hello, world\n"`
-Token number =  11,	token is `right_parent       `,	value is `)`
-Token number =  12,	token is `semicolon          `,	value is `;`
-Token number =   2,	token is `end                `,	value is `end`
-Token number =  38,	token is `EOF                `,	value is `EOF`

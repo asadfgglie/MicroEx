@@ -1,0 +1,11 @@
+%%the beginning of an test data for Micro/Ex
+
+Program Mypro
+
+Begin 
+
+ declare A,I as integer;
+
+ Declare B,C,D,size,LLL[100] as Real;
+
+end

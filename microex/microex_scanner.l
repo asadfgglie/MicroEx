@@ -1,231 +1,13 @@
 %{
     #include <stdbool.h>
+    #include <math.h>
     #include "../lib/uthash.h"
-    #define MAX_ERROR_MSG_LEN 256
-    #define MAX_TOKEN_NAME_LEN 64
+    #include "../microex/util.h"
+    #include "../build/y.tab.h"
+
     unsigned long long line_count = 1, line_word_count = 0;
     bool is_multi_line_comment = false;
     char error_msg[MAX_ERROR_MSG_LEN];
-
-    typedef struct id_map{
-        int token_id;
-        char token_name[MAX_TOKEN_NAME_LEN];
-        UT_hash_handle hh;
-    } IdMap;
-
-    typedef struct token_map {
-        int token_id;
-        char token_name[MAX_TOKEN_NAME_LEN];
-        UT_hash_handle hh;
-    } TokenMap;
-    
-    TokenMap *token_map = NULL; // automatically initialized by uthash
-    IdMap *id_map = NULL; // automatically initialized by uthash
-
-    /**
-     * 1. check if token_name is already in the map
-     * 2. if not, add it to the map with a new id 
-     *    (incremental id order based on the number of tokens in the map)
-     * 3. return the id of the token
-     */
-    int token_id_register(char *token_name) {
-        TokenMap *s;
-        HASH_FIND_STR(token_map, token_name, s);
-        if (s == NULL) {
-            s = malloc(sizeof(TokenMap));
-            strcpy(s->token_name, token_name);
-            s->token_id = HASH_COUNT(token_map) + 1;
-            HASH_ADD_STR(token_map, token_name, s);
-        }
-
-        IdMap *id_s;
-        HASH_FIND_INT(id_map, &s->token_id, id_s);
-        if (id_s == NULL) {
-            id_s = malloc(sizeof(IdMap));
-            strcpy(id_s->token_name, token_name);
-            id_s->token_id = s->token_id;
-            HASH_ADD_INT(id_map, token_id, id_s);
-        }
-
-        return s->token_id;
-    }
-
-    void init_token_map() {
-        /* pre-register all tokens */
-        // default token id: 1 - 38
-        // EOF token id: 38
-        token_id_register("begin");
-        token_id_register("end");
-        token_id_register("read");
-        token_id_register("write");
-        token_id_register("id");
-        token_id_register("integer_literal");
-        token_id_register("float_literal");
-        token_id_register("exp_float_literal");
-        token_id_register("string_literal");
-        token_id_register("left_parent");
-        token_id_register("right_parent");
-        token_id_register("semicolon");
-        token_id_register("comma");
-        token_id_register("assign");
-        token_id_register("plus");
-        token_id_register("minus");
-        token_id_register("multiply");
-        token_id_register("division");
-        token_id_register("not_equal");
-        token_id_register("great");
-        token_id_register("less");
-        token_id_register("great_equal");
-        token_id_register("less_equal");
-        token_id_register("equal");
-        token_id_register("if");
-        token_id_register("then");
-        token_id_register("else");
-        token_id_register("endif");
-        token_id_register("for");
-        token_id_register("to");
-        token_id_register("endfor");
-        token_id_register("while");
-        token_id_register("endwhile");
-        token_id_register("declare");
-        token_id_register("as");
-        token_id_register("integer");
-        token_id_register("real");
-        token_id_register("EOF");
-
-        // new feature token id: 39~
-        token_id_register("hex_integer_literal");
-        token_id_register("ord_integer_literal");
-        token_id_register("bit_integer_literal");
-
-        token_id_register("char_literal");
-        token_id_register("char");
-        token_id_register("r_string_literal");
-        token_id_register("string");
-        
-        token_id_register("import");
-
-        token_id_register("boolean");
-        token_id_register("true");
-        token_id_register("false");
-
-        token_id_register("binary_and");
-        token_id_register("binary_or");
-        token_id_register("binary_xor");
-        token_id_register("binary_boolean_not");
-        token_id_register("binary_and_equal");
-        token_id_register("binary_or_equal");
-        token_id_register("binary_xor_equal");
-
-        token_id_register("boolean_and");
-        token_id_register("boolean_or");
-
-        token_id_register("mod");
-        token_id_register("power");
-        token_id_register("left_shift");
-        token_id_register("right_shift");
-
-        token_id_register("plus_equal");
-        token_id_register("minus_equal");
-        token_id_register("multiply_equal");
-        token_id_register("division_equal");
-        token_id_register("mod_equal");
-        token_id_register("left_shift_equal");
-        token_id_register("right_shift_equal");
-        token_id_register("power_equal");
-
-        token_id_register("class");
-        token_id_register("endclass");
-        token_id_register("extends");
-        token_id_register("implements");
-        token_id_register("public");
-        token_id_register("private");
-        token_id_register("protect");
-        token_id_register("static");
-        token_id_register("final");
-        token_id_register("this");
-        token_id_register("super");
-        token_id_register("abstract");
-        token_id_register("interface");
-        token_id_register("endinterface");
-
-        token_id_register("dot");
-
-        token_id_register("fn");
-        token_id_register("return");
-        token_id_register("void");
-        token_id_register("endfn");
-
-        token_id_register("null");
-
-        token_id_register("switch");
-        token_id_register("case");
-        token_id_register("default");
-        token_id_register("endswitch");
-
-        token_id_register("break");
-        token_id_register("continue");
-
-        token_id_register("oper");
-        token_id_register("endoper");
-    }
-
-    void free_token_map() {
-        IdMap *current_id, *id_tmp;
-        HASH_ITER(hh, id_map, current_id, id_tmp) {
-            HASH_DEL(id_map, current_id);
-            free(current_id);
-        }
-        TokenMap *current_token, *tmp;
-        HASH_ITER(hh, token_map, current_token, tmp) {
-            HASH_DEL(token_map, current_token);
-            free(current_token);
-        }
-    }
-
-    /**
-     * New feature:
-     *  - add multi-line comment
-     *  - add string literal, allow escape characters \n, \t, \", \\
-     *  - add 16-bit integer literal 
-     *       (ex: 0xabcd)
-     *  - add 8-bit integer literal
-     *       (ex: 0o1275)
-     *  - add 2-bit integer literal
-     *       (ex: 0b101010)
-     *  - add underscore in integer literal
-     *       (ex: 1_000_000)
-     *  - add character literal
-     *       (ex: 'a', '1', '\n')
-     *  - add original string literal
-     *       (ex: r"abc\n" == "abc\\n")
-     *  - add import token for pacakage management
-     *       (ex: import "package_name";)
-     *  - add boolean literal
-     *       (true, false, boolean)
-     *  - add more operators: &, |, ^, !, &&, ||, <<, >>, +=, -=, *=, /=, %=, &=, 
-     *                        |=, ^=, <<=, >>=, **, **=, %
-     *  - add OOP keywords: class, extends, implements, public, private, protect, 
-     *                      static, final, this, super, abstract, interface, . (access class member)
-     *                      (reference Java OOP)
-     *  - add function keywords: fn, return, void, endfn
-     *       (ex: fn real add(real a, real b) return a + b endfn)
-     *  - add null keyword
-     *  - add switch-case keywords: switch, case, default, endswitch
-     *       (ex: switch(a)
-     *              case (1) 
-     *                  write("a is 1"); 
-     *                  break;
-     *              case (2)
-     *                  write("a is 2");
-     *                  break;
-     *              default 
-     *                  write("a is not 1");
-     *            endswitch)
-     *  - add break, continue keywords
-     *  - add operator overloading keywords: oper, endoper
-     *       (ex: oper + (int a, int b) return a + b; endoper)
-    */
 %}
 
 empty_word [ \t]+
@@ -233,6 +15,8 @@ new_line \n
 
 line_comment %%(((\n)?)|([^\n%][^\n]*((\n)?)))
 multi_line_comment "%%%"
+
+program [Pp][Rr][Oo][Gg][Rr][Aa][Mm]
 
 begin [Bb][Ee][Gg][Ii][Nn]
 end [Ee][Nn][Dd]
@@ -245,6 +29,8 @@ exp_float_literal {float_literal}[Ee][+-]?{integer_literal}
 string_literal \"(([^\n\"\\])|(\\\")|(\\\\)|(\\n)|(\\t)|(\\b)|(\\\'))*\"
 left_parent "("
 right_parent ")"
+left_bracket "["
+right_bracket "]"
 semicolon ";"
 comma ","
 assign ":="
@@ -270,80 +56,9 @@ declare [Dd][Ee][Cc][Ll][Aa][Rr][Ee]
 as [Aa][Ss]
 integer [Ii][Nn][Tt][Ee][Gg][Ee][Rr]
 real [Rr][Ee][Aa][Ll]
-to [Tt][Oo]
-
-hex_integer_literal 0[xX]([0-9a-fA-F]+)
-ord_integer_literal 0[oO]([0-7]+)
-bit_integer_literal 0[bB]([01]+)
-char_literal \'(([^\n\'\\])|(\\\")|(\\\\)|(\\n)|(\\t)|(\\b)|(\\\'))\'
-char [Cc][Hh][Aa][Rr]
-r_string_literal r{string_literal}
 string [Ss][Tt][Rr][Ii][Nn][Gg]
-
-import [Ii][Mm][Pp][Oo][Rr][Tt]
-
-true [Tt][Rr][Uu][Ee]
-false [Ff][Aa][Ll][Ss][Ee]
-boolean [Bb][Oo][Oo][Ll][Ee][Aa][Nn]
-
-binary_and "&"
-binary_or "|"
-binary_xor "^"
-binary_boolean_not "!"
-binary_and_equal "&="
-binary_or_equal "|="
-binary_xor_equal "^="
-
-boolean_and "&&"
-boolean_or "||"
-
-mod "%"
-power "**"
-
-left_shift "<<"
-right_shift ">>"
-plus_equal "+="
-minus_equal "-="
-multiply_equal "*="
-division_equal "/="
-mod_equal "%="
-left_shift_equal "<<="
-right_shift_equal ">>="
-power_equal "**="
-
-class [Cc][Ll][Aa][Ss][Ss]
-endclass [Ee][Nn][Dd][Cc][Ll][Aa][Ss][Ss]
-extends [Ee][Xx][Tt][Ee][Nn][Dd][Ss]
-implements [Ii][Mm][Pp][Ll][Ee][Mm][Ee][Nn][Tt][Ss]
-public [Pp][Uu][Bb][Ll][Ii][Cc]
-private [Pp][Rr][Ii][Vv][Aa][Tt][Ee]
-protect [Pp][Rr][Oo][Tt][Ee][Cc][Tt]
-static [Ss][Tt][Aa][Tt][Ii][Cc]
-final [Ff][Ii][Nn][Aa][Ll]
-this [Tt][Hh][Ii][Ss]
-super [Ss][Uu][Pp][Ee][Rr]
-abstract [Aa][Bb][Ss][Tt][Rr][Aa][Cc][Tt]
-interface [Ii][Nn][Tt][Ee][Rr][Ff][Aa][Cc][Ee]
-endinterface [Ee][Nn][Dd][Ii][Nn][Tt][Ee][Rr][Ff][Aa][Cc][Ee]
-dot \.
-
-fn [Ff][Nn]
-return [Rr][Ee][Tt][Uu][Rr][Nn]
-void [Vv][Oo][Ii][Dd]
-endfn [Ee][Nn][Dd][Ff][Nn]
-
-null [Nn][Uu][Ll][Ll]
-
-switch [Ss][Ww][Ii][Tt][Cc][Hh]
-case [Cc][Aa][Ss][Ee]
-default [Dd][Ee][Ff][Aa][Uu][Ll][Tt]
-endswitch [Ee][Nn][Dd][Ss][Ww][Ii][Tt][Cc][Hh]
-
-break [Bb][Rr][Ee][Aa][Kk]
-continue [Cc][Oo][Nn][Tt][Ii][Nn][Uu][Ee]
-
-oper [Oo][Pp][Ee][Rr]
-endoper [Ee][Nn][Dd][Oo][Pp][Ee][Rr]
+to [Tt][Oo]
+downto [Dd][Oo][Ww][Nn][Tt][Oo]
 
 %%
 
@@ -364,643 +79,405 @@ endoper [Ee][Nn][Dd][Oo][Pp][Ee][Rr]
     is_multi_line_comment = !is_multi_line_comment;
 }
 
+{program} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "PROGRAM", yytext);
+        return PROGRAM_MICOREX;
+    }
+}
+
 {begin} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("begin");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "BEGIN", yytext);
+        return BEGIN_MICOREX;
     }
 }
 {end} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("end");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "END", yytext);
+        return END_MICOREX;
     }
 }
 {read} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("read");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "READ", yytext);
+        return READ_MICOREX;
     }
 }
 {write} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("write");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "WRITE", yytext);
+        return WRITE_MICOREX;
     }
 }
 {integer_literal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("integer_literal");
+        yylval.int_val = atoi(yytext);
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "INTEGER_LITERAL", yytext);
+        return INTEGER_LITERAL_MICOREX;
     }
 }
 {float_literal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("float_literal");
+        yylval.double_val = atof(yytext);
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "FLOAT_LITERAL", yytext);
+        return FLOAT_LITERAL_MICOREX;
     }
 }
 {exp_float_literal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("exp_float_literal");
+        yylval.double_val = atof(yytext);
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "EXP_FLOAT_LITERAL", yytext);
+        return EXP_FLOAT_LITERAL_MICOREX;
     }
 }
 {string_literal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("string_literal");
+        yylval.str_val = strdup(yytext);
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "STRING_LITERAL", yytext);
+        return STRING_LITERAL_MICOREX;
     }
 }
 {left_parent} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("left_parent");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "LEFT_PARENT", yytext);
+        return LEFT_PARENT_MICOREX;
     }
 }
 {right_parent} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("right_parent");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "RIGHT_PARENT", yytext);
+        return RIGHT_PARENT_MICOREX;
+    }
+}
+{left_bracket} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "LEFT_BRACKET", yytext);
+        return LEFT_BRACKET_MICOREX;
+    }
+}
+{right_bracket} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "RIGHT_BRACKET", yytext);
+        return RIGHT_BRACKET_MICOREX;
     }
 }
 {semicolon} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("semicolon");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "SEMICOLON", yytext);
+        return SEMICOLON_MICOREX;
     }
 }
 {comma} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("comma");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "COMMA", yytext);
+        return COMMA_MICOREX;
     }
 }
 {assign} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("assign");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ASSIGN", yytext);
+        return ASSIGN_MICOREX;
     }
 }
 {plus} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("plus");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "PLUS", yytext);
+        return PLUS_MICOREX;
     }
 }
 {minus} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("minus");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "MINUS", yytext);
+        return MINUS_MICOREX;
     }
 }
 {multiply} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("multiply");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "MULTIPLY", yytext);
+        return MULTIPLY_MICOREX;
     }
 }
 {division} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("division");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "DIVISION", yytext);
+        return DIVISION_MICOREX;
     }
 }
 {not_equal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("not_equal");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "NOT_EQUAL", yytext);
+        return NOT_EQUAL_MICOREX;
     }
 }
 {great} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("great");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "GREAT", yytext);
+        return GREAT_MICOREX;
     }
 }
 {less} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("less");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "LESS", yytext);
+        return LESS_MICOREX;
     }
 }
 {great_equal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("great_equal");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "GREAT_EQUAL", yytext);
+        return GREAT_EQUAL_MICOREX;
     }
 }
 {less_equal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("less_equal");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "LESS_EQUAL", yytext);
+        return LESS_EQUAL_MICOREX;
     }
 }
 {equal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("equal");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "EQUAL", yytext);
+        return EQUAL_MICOREX;
     }
 }
 {if} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("if");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "IF", yytext);
+        return IF_MICOREX;
     }
 }
 {then} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("then");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "THEN", yytext);
+        return THEN_MICOREX;
     }
 }
 {else} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("else");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ELSE", yytext);
+        return ELSE_MICOREX;
     }
 }
 {endif} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("endif");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ENDIF", yytext);
+        return ENDIF_MICOREX;
     }
 }
 {for} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("for");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "FOR", yytext);
+        return FOR_MICOREX;
     }
 }
 {to} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("to");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "TO", yytext);
+        return TO_MICOREX;
+    }
+}
+{downto} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment) {
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "DOWNTO", yytext);
+        return DOWNTO_MICOREX;
     }
 }
 {endfor} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("endfor");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ENDFOR", yytext);
+        return ENDFOR_MICOREX;
     }
 }
 {while} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("while");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "WHILE", yytext);
+        return WHILE_MICOREX;
     }
 }
 {endwhile} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("endwhile");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ENDWHILE", yytext);
+        return ENDWHILE_MICOREX;
     }
 }
 {declare} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("declare");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "DECLARE", yytext);
+        return DECLARE_MICOREX;
     }
 }
 {as} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("as");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "AS", yytext);
+        return AS_MICOREX;
     }
 }
 {integer} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("integer");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "INTEGER", yytext);
+        yylval.type = TYPE_INT;
+        return INTEGER_MICOREX;
     }
 }
 {real} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("real");
-    }
-}
-
-{hex_integer_literal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("hex_integer_literal");
-    }
-}
-{ord_integer_literal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("ord_integer_literal");
-    }
-}
-{bit_integer_literal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("bit_integer_literal");
-    }
-}
-{char_literal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("char_literal");
-    }
-}
-{char} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("char");
-    }
-}
-{r_string_literal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("r_string_literal");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "REAL", yytext);
+        yylval.type = TYPE_DOUBLE;
+        return REAL_MICOREX;
     }
 }
 {string} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("string");
-    }
-}
-{import} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("import");
-    }
-}
-{true} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("true");
-    }
-}
-{false} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("false");
-    }
-}
-{boolean} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("boolean");
-    }
-}
-{binary_and} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("binary_and");
-    }
-}
-{binary_or} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("binary_or");
-    }
-}
-{binary_xor} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("binary_xor");
-    }
-}
-{binary_boolean_not} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("binary_boolean_not");
-    }
-}
-{binary_and_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("binary_and_equal");
-    }
-}
-{binary_or_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("binary_or_equal");
-    }
-}
-{binary_xor_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("binary_xor_equal");
-    }
-}
-{boolean_and} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("boolean_and");
-    }
-}
-{boolean_or} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("boolean_or");
-    }
-}
-{mod} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("mod");
-    }
-}
-{power} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("power");
-    }
-}
-{left_shift} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("left_shift");
-    }
-}
-{right_shift} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("right_shift");
-    }
-}
-{plus_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("plus_equal");
-    }
-}
-{minus_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("minus_equal");
-    }
-}
-{multiply_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("multiply_equal");
-    }
-}
-{division_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("division_equal");
-    }
-}
-{mod_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("mod_equal");
-    }
-}
-{left_shift_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("left_shift_equal");
-    }
-}
-{right_shift_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("right_shift_equal");
-    }
-}
-{power_equal} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("power_equal");
-    }
-}
-{class} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("class");
-    }
-}
-{endclass} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("endclass");
-    }
-}
-{extends} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("extends");
-    }
-}
-{implements} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("implements");
-    }
-}
-{public} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("public");
-    }
-}
-{private} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("private");
-    }
-}
-{protect} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("protect");
-    }
-}
-{static} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("static");
-    }
-}
-{final} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("final");
-    }
-}
-{this} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("this");
-    }
-}
-{super} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("super");
-    }
-}
-{abstract} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("abstract");
-    }
-}
-{interface} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("interface");
-    }
-}
-{endinterface} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("endinterface");
-    }
-}
-{dot} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("dot");
-    }
-}
-{fn} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("fn");
-    }
-}
-{return} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("return");
-    }
-}
-{void} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("void");
-    }
-}
-{endfn} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("endfn");
-    }
-}
-{null} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("null");
-    }
-}
-{switch} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("switch");
-    }
-}
-{case} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("case");
-    }
-}
-{default} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("default");
-    }
-}
-{endswitch} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("endswitch");
-    }
-}
-{break} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("break");
-    }
-}
-{continue} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("continue");
-    }
-}
-{oper} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("oper");
-    }
-}
-{endoper} {
-    line_word_count += yyleng;
-    if (!is_multi_line_comment) {
-        return token_id_register("endoper");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "STRING", yytext);
+        yylval.type = TYPE_STRING;
+        return STRING_MICOREX;
     }
 }
 
 {id} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        return token_id_register("id");
+        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ID", yytext);
+        yylval.symbol_ptr = get_symbol(yytext);
+        return ID_MICOREX;
     }
 }
 
 . {
     line_word_count += yyleng;
     if (!is_multi_line_comment)  {
-        sprintf(error_msg, "Unexcept character: %s", yytext);
-        return 1000; /* lexical error: Unexcept character */
+        sprintf(error_msg, "Unexcept character: `%s`", yytext);
+        yyerror(error_msg);
+        return -1; /* lexical error: Unexcept character */
     }
 }
 
 %%
 
+char *data_type_to_string(data_type type) {
+    switch (type) {
+        case TYPE_INT:
+            return strdup("integer");
+        case TYPE_DOUBLE:
+            return strdup("real");
+        case TYPE_STRING:
+            return strdup("string");
+        case TYPE_PROGRAM_NAME:
+            return strdup("program");
+        default:
+            yyerror("Unknown data type");
+    }
+}
+
+symbol *get_symbol(const char *name) {
+    symbol *s;
+    HASH_FIND_STR(symbol_table, name, s); // s = NULL if not found
+    if (s != NULL) {
+        return s;
+    }
+
+    add_symbol(name);
+    HASH_FIND_STR(symbol_table, name, s);
+    return s;
+}
+
+void add_symbol(const char *name) {
+    symbol *s = (symbol *)malloc(sizeof(symbol));
+    if (s == NULL) {
+        yyerror("Out of memory when malloc.");
+    }
+
+    s->name = strdup(name);
+    s->type = TYPE_UNKNOWN;
+    s->array_info.dimensions = 0;
+    s->array_info.dimension_sizes = NULL;
+
+    HASH_ADD_STR(symbol_table, name, s);
+}
+
+void free_symbol_table() {
+    symbol *current_symbol, *symbol_tmp;
+    HASH_ITER(hh, symbol_table, current_symbol, symbol_tmp) {
+        HASH_DEL(symbol_table, current_symbol);
+        free(current_symbol->name);
+        if (current_symbol->type == TYPE_STRING) {
+            free(current_symbol->value.str_val);
+        }
+        free(current_symbol);
+    }
+}
+
+void yyerror(const char *msg) {
+    fprintf(stderr, "Error: %s\nat line (%llu:%llu)\n", msg, line_count, line_word_count);
+    exit(EXIT_FAILURE);
+}
+
+// for Bison yacc to call parser
 int main(int argc, char **argv) {
     if (argc == 2) {
         FILE *fp = fopen(argv[1], "r");
         if (fp == NULL) {
             printf("Error opening file: %s\n", argv[1]);
-            return 1;
+            return EXIT_FAILURE;
         }
         yyin = fp;
     }
-    else if (argc == 1) {
-        yyin = stdin;
-    }
     else {
         printf("Usage: %s <filename>\n", argv[0]);
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    init_token_map();
-
-    int token_id = -1;
-    while((token_id = yylex()) != 0) {
-        IdMap* id_s;
-        HASH_FIND_INT(id_map, &token_id, id_s);
-        if (id_s == NULL) {
-            printf("lexcial error in line(%llu:%llu): %s\n", line_count, line_word_count, error_msg);
-            return token_id;
-        }
-        else {
-            printf("Token number = %3d,\ttoken is `%-19s`,\tvalue is `%s`\n", id_s->token_id, id_s->token_name, yytext);
-        }
-    }
+    int result = yyparse();
+    
     if (is_multi_line_comment) {
         printf("lexcial error in line(%llu:%llu): Unbalance multi-line comment\n", line_count, line_word_count);
         return 1001; /* lexical error: Unexcept character */
     }
-    TokenMap* s;
-    HASH_FIND_STR(token_map, "EOF", s);
-    printf("Token number = %3d,\ttoken is `%-19s`,\tvalue is `%s`\n", s->token_id, s->token_name, s->token_name);
 
-    free_token_map();
-    
+    free_symbol_table();
+
     fclose(yyin);
-    
-    return 0;
+
+    return result;
 }
