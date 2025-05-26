@@ -1,12 +1,16 @@
 %{
+    #include <string.h>
+    #include <unistd.h>
     #include <stdbool.h>
     #include <math.h>
     #include "../lib/uthash.h"
+    #include "../lib/cargs.h"
     #include "../microex/util.h"
     #include "../build/y.tab.h"
 
     unsigned long long line_count = 1, line_word_count = 0;
     bool is_multi_line_comment = false;
+    bool is_test_mode = false;
     char error_msg[MAX_ERROR_MSG_LEN];
 %}
 
@@ -118,7 +122,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
 {integer_literal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        yylval.int_val = atoi(yytext);
+        yylval.int_val = atoll(yytext);
         printf("\t$ lexer got token: `%s`, scan: `%s`\n", "INTEGER_LITERAL", yytext);
         return INTEGER_LITERAL_MICOREX;
     }
@@ -388,25 +392,104 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
     line_word_count += yyleng;
     if (!is_multi_line_comment)  {
         sprintf(error_msg, "Unexcept character: `%s`", yytext);
-        yyerror(error_msg);
+        yyerror_name(error_msg, "Lexical");
         return -1; /* lexical error: Unexcept character */
     }
 }
 
 %%
 
-char *data_type_to_string(data_type type) {
+size_t array_range(array_type array_info) {
+    size_t index_range = 1;
+    for (size_t i = 0; i < array_info.dimensions; i++) {
+        index_range *= array_info.dimension_sizes[i];
+    }
+    return index_range;
+}
+
+char *array_dimensions_to_string(array_type array_info) {
+    char *dimensions = (char *)malloc(sizeof(char) * array_info.dimensions * 3);
+    if (dimensions == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+    dimensions[0] = '\0';
+    for (size_t i = 0; i < array_info.dimensions; i++) {
+        sprintf(dimensions, "%s[%zu]", dimensions, array_info.dimension_sizes[i]);
+    }
+    return dimensions;
+}
+
+char *array_range_to_string(array_type array_info) {
+    size_t index_range = array_range(array_info);
+    size_t digital_len = 1;
+    size_t tmp = index_range;
+    while (tmp > 0) {
+        tmp /= 10;
+        digital_len++;
+    }
+    char *result = (char *)malloc(sizeof(char) * digital_len + 1);
+    if (result == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+    sprintf(result, "%zu", index_range);
+    return result;
+}
+
+char *data_array_type_to_string(data_type type) {
+    char *result = NULL;
     switch (type) {
         case TYPE_INT:
-            return strdup("integer");
+            result = strdup("integer_array");
+            if (result == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            return result;
         case TYPE_DOUBLE:
-            return strdup("real");
+            result = strdup("real_array");
+            if (result == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            return result;
         case TYPE_STRING:
-            return strdup("string");
-        case TYPE_PROGRAM_NAME:
-            return strdup("program");
+            result = strdup("string_array");
+            if (result == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            return result;
         default:
-            yyerror("Unknown data type");
+            yyerror_name("Unknown data type", "Parsing");
+    }
+}
+
+char *data_type_to_string(data_type type) {
+    char *result = NULL;
+    switch (type) {
+        case TYPE_INT:
+            result = strdup("integer");
+            if (result == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            return result;
+        case TYPE_DOUBLE:
+            result = strdup("real");
+            if (result == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            return result;
+        case TYPE_STRING:
+            result = strdup("string");
+            if (result == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            return result;
+        case TYPE_PROGRAM_NAME:
+            result = strdup("program");
+            if (result == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            return result;
+        default:
+            yyerror_name("Unknown data type", "Parsing");
     }
 }
 
@@ -425,15 +508,66 @@ symbol *get_symbol(const char *name) {
 void add_symbol(const char *name) {
     symbol *s = (symbol *)malloc(sizeof(symbol));
     if (s == NULL) {
-        yyerror("Out of memory when malloc.");
+        yyerror_name("Out of memory when malloc.", "Parsing");
     }
 
     s->name = strdup(name);
     s->type = TYPE_UNKNOWN;
     s->array_info.dimensions = 0;
     s->array_info.dimension_sizes = NULL;
+    s->array_pointer.dimensions = 0;
+    s->array_pointer.dimension_sizes = NULL;
 
     HASH_ADD_STR(symbol_table, name, s);
+}
+
+symbol *add_temp_symbol(data_type type) {
+    // TODO: fix temp symbol does not correctly add to temp symbol table
+    symbol *s = (symbol *)malloc(sizeof(symbol));
+    if (s == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+
+    size_t temp_index = HASH_COUNT(temp_symbol_table);
+    size_t tmp_index_len = 0;
+    while (temp_index > 0) {
+        temp_index /= 10;
+        tmp_index_len++;
+    }
+    char *name = (char *)malloc(sizeof(char) * (tmp_index_len + 1));
+    if (name == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+    char *type_str = data_type_to_string(type);
+    sprintf(name, "temp$%s$%zu", type_str, temp_index);
+    free(type_str);
+
+    s->name = name;
+    s->type = type;
+    s->array_info.dimensions = 0;
+    s->array_info.dimension_sizes = NULL;
+    s->array_pointer.dimensions = 0;
+    s->array_pointer.dimension_sizes = NULL;
+
+    HASH_ADD_STR(temp_symbol_table, name, s);
+
+    symbol *tmp_s = (symbol *)malloc(sizeof(symbol));
+    if (tmp_s == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+    tmp_s->name = strdup(name);
+    if (tmp_s->name == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+    tmp_s->type = type;
+    tmp_s->array_info.dimensions = 0;
+    tmp_s->array_info.dimension_sizes = NULL;
+    tmp_s->array_pointer.dimensions = 0;
+    tmp_s->array_pointer.dimension_sizes = NULL;
+
+    HASH_ADD_STR(symbol_table, name, tmp_s);
+
+    return s;
 }
 
 void free_symbol_table() {
@@ -441,6 +575,50 @@ void free_symbol_table() {
     HASH_ITER(hh, symbol_table, current_symbol, symbol_tmp) {
         HASH_DEL(symbol_table, current_symbol);
         free(current_symbol->name);
+        if (current_symbol->array_info.dimensions > 0) {
+            free(current_symbol->array_info.dimension_sizes);
+            switch (current_symbol->type) {
+                case TYPE_INT:
+                    free(current_symbol->value.int_array);
+                    break;
+                case TYPE_DOUBLE:
+                    free(current_symbol->value.double_array);
+                    break;
+                case TYPE_STRING:
+                    for (size_t i = 0; i < current_symbol->array_info.dimension_sizes[0]; i++) {
+                        free(current_symbol->value.str_array[i]);
+                    }
+                    free(current_symbol->value.str_array);
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (current_symbol->type == TYPE_STRING) {
+            free(current_symbol->value.str_val);
+        }
+        free(current_symbol);
+    }
+
+    HASH_ITER(hh, temp_symbol_table, current_symbol, symbol_tmp) {
+        HASH_DEL(temp_symbol_table, current_symbol);
+        free(current_symbol->name);
+        switch (current_symbol->type) {
+            case TYPE_INT:
+                free(current_symbol->value.int_array);
+                break;
+            case TYPE_DOUBLE:
+                free(current_symbol->value.double_array);
+                break;
+            case TYPE_STRING:
+                for (size_t i = 0; i < current_symbol->array_info.dimension_sizes[0]; i++) {
+                    free(current_symbol->value.str_array[i]);
+                }
+                free(current_symbol->value.str_array);
+                break;
+            default:
+                break;
+        }
         if (current_symbol->type == TYPE_STRING) {
             free(current_symbol->value.str_val);
         }
@@ -448,24 +626,110 @@ void free_symbol_table() {
     }
 }
 
+size_t get_array_offset(array_type array_info, array_type array_pointer) {
+    if (array_info.dimensions == 0) {
+        yyerror_name("Array access on non-array variable.", "Type");
+    }
+    if (array_pointer.dimensions != array_info.dimensions) {
+        yyerror_name("Array access with wrong number of dimensions.", "Index");
+    }
+
+    size_t offset = 0;
+    size_t stride = 1;
+    size_t i;
+    for (i = array_pointer.dimensions - 1; i <= array_pointer.dimensions - 1; i--) {
+        // use `i <= array_pointer.dimensions - 1` since `i` is unsigned
+        if (array_pointer.dimension_sizes[i] >= array_info.dimension_sizes[i]) {
+            yyerror_name("Array index out of bounds.", "Index");
+        }
+
+        offset += array_pointer.dimension_sizes[i] * stride;
+        stride *= array_info.dimension_sizes[i];
+    }
+
+    return offset;
+}
+
 void yyerror(const char *msg) {
-    fprintf(stderr, "Error: %s\nat line (%llu:%llu)\n", msg, line_count, line_word_count);
+    yyerror_name(msg, "Syntax");
+}
+
+void yyerror_name(const char *msg, const char *error_name) {
+    yyerror_warning(msg, error_name, false);
+}
+
+void yyerror_warning(const char *msg, const char *error_name, bool is_warning) {
+    yyerror_warning_test_mode(msg, error_name, is_warning, false);
+}
+
+void yyerror_warning_test_mode(const char *msg, const char *error_name, bool is_warning, bool need_test_mode) {
+    if (need_test_mode && !is_test_mode) {
+        fprintf(stderr, "%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
+        printf("This function only works in test mode.\n");
+        printf("Since it may not be fully implemented yet, output target code may be incorrect.\n");
+        printf("If you want to enable test mode, please use the -t option.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (is_warning) {
+        fprintf(stderr, "%s Warning: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
+        return;
+    }
+    fprintf(stderr, "%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
     exit(EXIT_FAILURE);
 }
 
 // for Bison yacc to call parser
 int main(int argc, char **argv) {
-    if (argc == 2) {
-        FILE *fp = fopen(argv[1], "r");
-        if (fp == NULL) {
-            printf("Error opening file: %s\n", argv[1]);
-            return EXIT_FAILURE;
+    struct cag_option options[] = {
+        {
+            .identifier = 'h',
+            .access_letters = "hH",
+            .access_name = "help",
+            .value_name = NULL,
+            .description = "Show this help message."
+        },
+        {
+            .identifier = 'f',
+            .access_letters = "fF",
+            .access_name = "file",
+            .value_name = "filename",
+            .description = "Input file to parse."
+        },
+        {
+            .identifier = 't',
+            .access_letters = "tT",
+            .access_name = "test",
+            .value_name = NULL,
+            .description = "Run in test mode, parsing won't stop when future features are not fully implemented."
         }
-        yyin = fp;
-    }
-    else {
-        printf("Usage: %s <filename>\n", argv[0]);
-        return EXIT_FAILURE;
+    };
+
+    cag_option_context context;
+    cag_option_init(&context, options, CAG_ARRAY_SIZE(options), argc, argv);
+
+    while (cag_option_fetch(&context)) {
+        switch (cag_option_get_identifier(&context)) {
+            case 'h':
+                printf("Usage: microex [OPTION]...\n");
+                printf("Compile microex source files.\n\n");
+                cag_option_print(options, CAG_ARRAY_SIZE(options), stdout);
+                return EXIT_SUCCESS;
+            case '?':
+                cag_option_print_error(&context, stdout);
+                return EXIT_FAILURE;
+            case 'f':
+                yyin = fopen(cag_option_get_value(&context), "r");
+                if (yyin == NULL) {
+                    fprintf(stderr, "Error: Cannot open file `%s`.\n", cag_option_get_value(&context));
+                    return EXIT_FAILURE;
+                }
+                break;
+            case 't':
+                is_test_mode = true;
+                printf("Running in test mode, parsing won't stop when future features are not implemented.\n\n");
+                break;
+        }
     }
 
     int result = yyparse();

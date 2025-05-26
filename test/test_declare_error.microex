@@ -1,0 +1,10 @@
+%%%
+ %% This is test file for declare statements.
+%%%
+
+program test_declare_error
+
+begin
+    declare a as integer; %% singal declare
+    declare a, b, c as real; %% redeclare error!
+end

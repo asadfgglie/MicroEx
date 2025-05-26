@@ -1,0 +1,10 @@
+%%%
+ %% This is test file for declare statements.
+%%%
+
+program test_declare_future_error
+
+begin
+    declare a as string; %% future error! use -t to parse this
+    declare b[2][2] as string; %% future error! use -t to parse this
+end
