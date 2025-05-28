@@ -522,26 +522,19 @@ void add_symbol(const char *name) {
 }
 
 symbol *add_temp_symbol(data_type type) {
-    // TODO: fix temp symbol does not correctly add to temp symbol table
-    symbol *s = (symbol *)malloc(sizeof(symbol));
-    if (s == NULL) {
-        yyerror_name("Out of memory when malloc.", "Parsing");
-    }
-
-    size_t temp_index = HASH_COUNT(temp_symbol_table);
-    size_t tmp_index_len = 0;
-    while (temp_index > 0) {
-        temp_index /= 10;
-        tmp_index_len++;
-    }
-    char *name = (char *)malloc(sizeof(char) * (tmp_index_len + 1));
+    size_t index = HASH_COUNT(temp_symbol_table);
+    char *name = (char *)malloc(sizeof(char) * (strlen(TEMP_SYMBOL_PREFIX) + 30));
     if (name == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
     char *type_str = data_type_to_string(type);
-    sprintf(name, "temp$%s$%zu", type_str, temp_index);
+    sprintf(name, "%s%s$%zu", TEMP_SYMBOL_PREFIX, type_str, index);
     free(type_str);
 
+    symbol *s = (symbol *)malloc(sizeof(symbol));
+    if (s == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
     s->name = name;
     s->type = type;
     s->array_info.dimensions = 0;
@@ -551,22 +544,21 @@ symbol *add_temp_symbol(data_type type) {
 
     HASH_ADD_STR(temp_symbol_table, name, s);
 
-    symbol *tmp_s = (symbol *)malloc(sizeof(symbol));
-    if (tmp_s == NULL) {
+    s = (symbol *)malloc(sizeof(symbol));
+    if (s == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
-    tmp_s->name = strdup(name);
-    if (tmp_s->name == NULL) {
+    s->name = strdup(name);
+    if (s->name == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
-    tmp_s->type = type;
-    tmp_s->array_info.dimensions = 0;
-    tmp_s->array_info.dimension_sizes = NULL;
-    tmp_s->array_pointer.dimensions = 0;
-    tmp_s->array_pointer.dimension_sizes = NULL;
-
-    HASH_ADD_STR(symbol_table, name, tmp_s);
-
+    s->type = type;
+    s->array_info.dimensions = 0;
+    s->array_info.dimension_sizes = NULL;
+    s->array_pointer.dimensions = 0;
+    s->array_pointer.dimension_sizes = NULL;
+    HASH_ADD_STR(symbol_table, name, s);
+    
     return s;
 }
 

@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #define MAX_ERROR_MSG_LEN 256
+#define TEMP_SYMBOL_PREFIX "temp$"
 
 typedef enum data_type {
     TYPE_UNKNOWN,
@@ -25,7 +26,7 @@ typedef struct symbol_table {
     data_type type;
     array_type array_info; // used for declare array and shape
     array_type array_pointer; // used for expression to locate array index
-    
+
     union {
         long long int_val;
         double double_val;
