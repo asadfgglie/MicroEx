@@ -18,4 +18,7 @@ begin
     declare e as real;
 
     e := a / b * (d[0][0] + d[0][1]);
+
+    a := 0;
+    d[a][a + 1] := d[0][2] * d[0][0] %% Dynamic access & assignment
 end

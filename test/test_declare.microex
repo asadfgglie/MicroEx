@@ -1,5 +1,7 @@
 %%%
  %% This is test file for declare statements.
+ %% In my implementation, all variable will be initialized to `0`.
+ %% So every variable are static checkable when initialized.
 %%%
 
 program test_declare
@@ -9,4 +11,8 @@ begin
     declare b, c as real; %% multiple declare
     declare d[10] as integer; %% declare array
     declare e[2][3], f as real; %% multiple declare with matrix (row major)
+
+    declare f[a + 1] as real; 
+    %% Dynamic declare, but since `a + 1` is static checkable (a + 1 = 0 + 1 = 1),
+    %% so this declaration is valid
 end
