@@ -1,4 +1,4 @@
-CFLAGS = -std=gnu11 -lfl -Wall -Wextra -Wpedantic -Wno-unused-function
+CFLAGS = -std=gnu11 -lfl -Wall -Wextra -Wpedantic -Wno-unused-function -g
 LIB_SRC = lib/cargs.c
 YACC_FLAGS = -d -Wcounterexamples -Wconflicts-sr
 

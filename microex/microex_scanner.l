@@ -2,16 +2,23 @@
     #include <string.h>
     #include <unistd.h>
     #include <stdbool.h>
+    #include <stdarg.h>
     #include <math.h>
     #include "../lib/uthash.h"
     #include "../lib/cargs.h"
     #include "../microex/util.h"
     #include "../build/y.tab.h"
+    #define DEFAULT_OUTPUT "a.out"
 
     unsigned long long line_count = 1, line_word_count = 0;
+    
     bool is_multi_line_comment = false;
     bool is_test_mode = false;
+    
     char error_msg[MAX_ERROR_MSG_LEN];
+
+    bool verbose = false;
+    FILE *output;
 %}
 
 empty_word [ \t]+
@@ -92,7 +99,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
 {program} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "PROGRAM", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "PROGRAM", yytext);
         return PROGRAM_MICROEX;
     }
 }
@@ -100,28 +107,28 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
 {begin} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "BEGIN", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "BEGIN", yytext);
         return BEGIN_MICROEX;
     }
 }
 {end} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "END", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "END", yytext);
         return END_MICROEX;
     }
 }
 {read} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "READ", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "READ", yytext);
         return READ_MICROEX;
     }
 }
 {write} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "WRITE", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "WRITE", yytext);
         return WRITE_MICROEX;
     }
 }
@@ -129,7 +136,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
         yylval.int_val = atoll(yytext);
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "INTEGER_LITERAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "INTEGER_LITERAL", yytext);
         return INTEGER_LITERAL_MICROEX;
     }
 }
@@ -137,7 +144,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
         yylval.double_val = atof(yytext);
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "FLOAT_LITERAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "FLOAT_LITERAL", yytext);
         return FLOAT_LITERAL_MICROEX;
     }
 }
@@ -145,7 +152,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
         yylval.double_val = atof(yytext);
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "EXP_FLOAT_LITERAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "EXP_FLOAT_LITERAL", yytext);
         return EXP_FLOAT_LITERAL_MICROEX;
     }
 }
@@ -153,7 +160,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
         yylval.str_val = strdup(yytext);
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "STRING_LITERAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "STRING_LITERAL", yytext);
         return STRING_LITERAL_MICROEX;
     }
 }
@@ -161,7 +168,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
         yylval.bool_val = true;
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "TRUE_LITERAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "TRUE_LITERAL", yytext);
         return TRUE_LITERAL_MICROEX;
     }
 }
@@ -169,238 +176,238 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
         yylval.bool_val = false;
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "FALSE_LITERAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "FALSE_LITERAL", yytext);
         return FALSE_LITERAL_MICROEX;
     }
 }
 {left_parent} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "LEFT_PARENT", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "LEFT_PARENT", yytext);
         return LEFT_PARENT_MICROEX;
     }
 }
 {right_parent} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "RIGHT_PARENT", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "RIGHT_PARENT", yytext);
         return RIGHT_PARENT_MICROEX;
     }
 }
 {left_bracket} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "LEFT_BRACKET", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "LEFT_BRACKET", yytext);
         return LEFT_BRACKET_MICROEX;
     }
 }
 {right_bracket} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "RIGHT_BRACKET", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "RIGHT_BRACKET", yytext);
         return RIGHT_BRACKET_MICROEX;
     }
 }
 {semicolon} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "SEMICOLON", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "SEMICOLON", yytext);
         return SEMICOLON_MICROEX;
     }
 }
 {comma} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "COMMA", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "COMMA", yytext);
         return COMMA_MICROEX;
     }
 }
 {assign} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ASSIGN", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "ASSIGN", yytext);
         return ASSIGN_MICROEX;
     }
 }
 {plus} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "PLUS", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "PLUS", yytext);
         return PLUS_MICROEX;
     }
 }
 {minus} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "MINUS", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "MINUS", yytext);
         return MINUS_MICROEX;
     }
 }
 {multiply} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "MULTIPLY", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "MULTIPLY", yytext);
         return MULTIPLY_MICROEX;
     }
 }
 {division} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "DIVISION", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "DIVISION", yytext);
         return DIVISION_MICROEX;
     }
 }
 {not_equal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "NOT_EQUAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "NOT_EQUAL", yytext);
         return NOT_EQUAL_MICROEX;
     }
 }
 {great} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "GREAT", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "GREAT", yytext);
         return GREAT_MICROEX;
     }
 }
 {less} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "LESS", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "LESS", yytext);
         return LESS_MICROEX;
     }
 }
 {great_equal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "GREAT_EQUAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "GREAT_EQUAL", yytext);
         return GREAT_EQUAL_MICROEX;
     }
 }
 {less_equal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "LESS_EQUAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "LESS_EQUAL", yytext);
         return LESS_EQUAL_MICROEX;
     }
 }
 {equal} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "EQUAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "EQUAL", yytext);
         return EQUAL_MICROEX;
     }
 }
 {and} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "AND", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "AND", yytext);
         return AND_MICROEX;
     }
 }
 {or} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "OR", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "OR", yytext);
         return OR_MICROEX;
     }
 }
 {not} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "NOT", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "NOT", yytext);
         return NOT_MICROEX;
     }
 }
 {if} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "IF", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "IF", yytext);
         return IF_MICROEX;
     }
 }
 {then} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "THEN", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "THEN", yytext);
         return THEN_MICROEX;
     }
 }
 {else} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ELSE", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "ELSE", yytext);
         return ELSE_MICROEX;
     }
 }
 {endif} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ENDIF", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "ENDIF", yytext);
         return ENDIF_MICROEX;
     }
 }
 {for} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "FOR", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "FOR", yytext);
         return FOR_MICROEX;
     }
 }
 {to} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "TO", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "TO", yytext);
         return TO_MICROEX;
     }
 }
 {downto} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "DOWNTO", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "DOWNTO", yytext);
         return DOWNTO_MICROEX;
     }
 }
 {endfor} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ENDFOR", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "ENDFOR", yytext);
         return ENDFOR_MICROEX;
     }
 }
 {while} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "WHILE", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "WHILE", yytext);
         return WHILE_MICROEX;
     }
 }
 {endwhile} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ENDWHILE", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "ENDWHILE", yytext);
         return ENDWHILE_MICROEX;
     }
 }
 {declare} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "DECLARE", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "DECLARE", yytext);
         return DECLARE_MICROEX;
     }
 }
 {as} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "AS", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "AS", yytext);
         return AS_MICROEX;
     }
 }
 {integer} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "INTEGER", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "INTEGER", yytext);
         yylval.type = TYPE_INT;
         return INTEGER_MICROEX;
     }
@@ -408,7 +415,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
 {real} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "REAL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "REAL", yytext);
         yylval.type = TYPE_DOUBLE;
         return REAL_MICROEX;
     }
@@ -416,7 +423,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
 {string} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "STRING", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "STRING", yytext);
         yylval.type = TYPE_STRING;
         return STRING_MICROEX;
     }
@@ -424,7 +431,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
 {bool} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "BOOL", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "BOOL", yytext);
         yylval.type = TYPE_BOOL;
         return BOOL_MICROEX;
     }
@@ -433,7 +440,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
 {id} {
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
-        printf("\t$ lexer got token: `%s`, scan: `%s`\n", "ID", yytext);
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "ID", yytext);
         yylval.symbol_ptr = get_symbol(yytext);
         return ID_MICROEX;
     }
@@ -814,7 +821,7 @@ size_t get_array_offset(array_type array_info, array_type array_pointer) {
         yyerror_name("Try to get array offset on non-static array. Use `get_array_offset_unstatic` instead.", "Parsing");
     }
 
-    printf("\t> Calculating offset for static array access.\n");
+    logging("> Calculating offset for static array access.\n");
 
     size_t offset = 0;
     size_t stride = 1;
@@ -847,17 +854,17 @@ symbol *get_array_offset_unstatic(array_type array_info, array_type array_pointe
         yyerror_name("Try to get array offset on static array. Use `get_array_offset` instead.", "Parsing");
     }
 
-    printf("\t> Calculating offset for unstatic array access.\n");
+    logging("> Calculating offset for unstatic array access.\n");
 
     symbol *offset = add_temp_symbol(TYPE_INT);
     offset->is_static_checkable = false;
     offset->value.int_val = 0;
-    printf("I_STORE %d %s\n", 0, offset->name);
+    generate("I_STORE %d %s\n", 0, offset->name);
 
     symbol *stride = add_temp_symbol(TYPE_INT);
     stride->is_static_checkable = false;
     stride->value.int_val = 1;
-    printf("I_STORE %d %s\n", 1, stride->name);
+    generate("I_STORE %d %s\n", 1, stride->name);
 
     symbol *temp_offset_symbol = add_temp_symbol(TYPE_INT);
     temp_offset_symbol->is_static_checkable = false;
@@ -872,16 +879,16 @@ symbol *get_array_offset_unstatic(array_type array_info, array_type array_pointe
         // offset += array_pointer.dimension_sizes[i] * stride;
         // stride *= array_info.dimension_sizes[i];
         if (array_pointer.dimension_sizes_symbol[i] == NULL) {
-            printf("I_MUL %s %zu %s\n", stride->name, array_pointer.dimension_sizes[i], temp_stride_symbol->name);
-            printf("I_ADD %s %s %s\n", offset->name, temp_stride_symbol->name, temp_offset_symbol->name);
-            printf("I_STORE %s %s\n", temp_offset_symbol->name, offset->name);
+            generate("I_MUL %s %zu %s\n", stride->name, array_pointer.dimension_sizes[i], temp_stride_symbol->name);
+            generate("I_ADD %s %s %s\n", offset->name, temp_stride_symbol->name, temp_offset_symbol->name);
+            generate("I_STORE %s %s\n", temp_offset_symbol->name, offset->name);
         } else {
-            printf("I_MUL %s %s %s\n", stride->name, array_pointer.dimension_sizes_symbol[i]->name, temp_stride_symbol->name);
-            printf("I_ADD %s %s %s\n", offset->name, temp_stride_symbol->name, temp_offset_symbol->name);
-            printf("I_STORE %s %s\n", temp_offset_symbol->name, offset->name);
+            generate("I_MUL %s %s %s\n", stride->name, array_pointer.dimension_sizes_symbol[i]->name, temp_stride_symbol->name);
+            generate("I_ADD %s %s %s\n", offset->name, temp_stride_symbol->name, temp_offset_symbol->name);
+            generate("I_STORE %s %s\n", temp_offset_symbol->name, offset->name);
         }
-        printf("I_MUL %s %zu %s\n", stride->name, array_info.dimension_sizes[i], temp_stride_symbol->name);
-        printf("I_STORE %s %s\n", temp_stride_symbol->name, stride->name);
+        generate("I_MUL %s %zu %s\n", stride->name, array_info.dimension_sizes[i], temp_stride_symbol->name);
+        generate("I_STORE %s %s\n", temp_stride_symbol->name, stride->name);
     }
 
     return offset;
@@ -909,9 +916,9 @@ void yyerror_warning(const char *msg, const char *error_name, bool is_warning) {
 void yyerror_warning_test_mode(const char *msg, const char *error_name, bool is_warning, bool need_test_mode) {
     if (need_test_mode && !is_test_mode) {
         fprintf(stderr, "%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
-        printf("This function only works in test mode.\n");
-        printf("Since it may not be fully implemented yet, output target code may be incorrect.\n");
-        printf("If you want to enable test mode, please use the -t option.\n");
+        fprintf(stderr, "This function only works in test mode.\n");
+        fprintf(stderr, "Since it may not be fully implemented yet, output target code may be incorrect.\n");
+        fprintf(stderr, "If you want to enable test mode, please use the -t option.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -919,8 +926,47 @@ void yyerror_warning_test_mode(const char *msg, const char *error_name, bool is_
         fprintf(stderr, "%s Warning: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
         return;
     }
+    
     fprintf(stderr, "%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
     exit(EXIT_FAILURE);
+}
+
+void generate(const char *format, ...) {
+    va_list args1, args2;
+    
+    va_start(args1, format);
+    va_copy(args2, args1); // copy another va_list for stdout
+    // va_list is a one-time pointer, state will be consumed after using
+    // but you still need `va_end()` to free them
+
+    vfprintf(output, format, args1);
+
+    if (verbose) {
+        vfprintf(stdout, format, args2);
+    }
+
+    // free va_list
+    va_end(args1);
+    va_end(args2);
+}
+
+void logging(const char *format, ...) {
+    va_list args;
+
+    va_start(args, format);
+    
+    if (verbose) {
+        char *tmp = (char *)malloc(sizeof(char) * (strlen(format) + 2));
+        tmp[0] = '\t';
+        tmp[1] = '\0';
+        strcat(tmp, format);
+        vfprintf(stdout, tmp, args);
+    }
+    else {
+        vfprintf(stdout, format, args);
+    }
+
+    va_end(args);
 }
 
 // for Bison yacc to call parser
@@ -946,6 +992,20 @@ int main(int argc, char **argv) {
             .access_name = "test",
             .value_name = NULL,
             .description = "Run in test mode, parsing won't stop when future features are not fully implemented."
+        },
+        {
+            .identifier = 'o',
+            .access_letters = "o",
+            .access_name = "output",
+            .value_name = "outputname",
+            .description = "Output file name, default is `a.out`." 
+        },
+        {
+            .identifier = 'v',
+            .access_letters = "v",
+            .access_name = "verbose",
+            .value_name = NULL,
+            .description = "Show generate code with parsing log." 
         }
     };
 
@@ -977,14 +1037,32 @@ int main(int argc, char **argv) {
                 printf("Running in test mode, parsing won't stop when future features are not implemented.\n\n");
                 break;
             }
+            case 'o': {
+                output = fopen(cag_option_get_value(&context), "w");
+                if (output == NULL) {
+                    fprintf(stderr, "Error: Cannot open file `%s`.\n", cag_option_get_value(&context));
+                    return EXIT_FAILURE;
+                }
+                break;
+            }
+            case 'v': {
+                verbose = true;
+                break;
+            }
+        }
+    }
+    if (output == NULL) {
+        output = fopen(DEFAULT_OUTPUT, "w");
+        if (output == NULL) {
+            fprintf(stderr, "Error: Cannot open file `%s`.\n", DEFAULT_OUTPUT);
+            return EXIT_FAILURE;
         }
     }
 
     int result = yyparse();
     
     if (is_multi_line_comment) {
-        printf("lexcial error in line(%llu:%llu): Unbalance multi-line comment\n", line_count, line_word_count);
-        return 1001; /* lexical error: Unexcept character */
+        yyerror_name("Unbalance multi-line comment\n", "Lexcial");
     }
 
     free_symbol_table();

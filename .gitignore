@@ -2,5 +2,4 @@ build
 microex_c
 .idea
 .vscode
-*.o
-*.a
+*.out

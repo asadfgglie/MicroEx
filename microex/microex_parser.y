@@ -97,15 +97,15 @@
         label *true_label = add_label();
         label *false_label = add_label();
         label *end_label = add_label();
-        printf("I_CMP 0 %s\n", src->name);
-        printf("JNE %s\n", true_label->name);
-        printf("J %s\n", false_label->name);
-        printf("%s:\n", true_label->name);
-        printf("I_STORE 1 %s[%zu]\n", dest->name, index);
-        printf("J %s\n", end_label->name);
-        printf("%s:\n", false_label->name);
-        printf("I_STORE 0 %s[%zu]\n", dest->name, index);
-        printf("%s:\n", end_label->name);
+        generate("I_CMP 0 %s\n", src->name);
+        generate("JNE %s\n", true_label->name);
+        generate("J %s\n", false_label->name);
+        generate("%s:\n", true_label->name);
+        generate("I_STORE 1 %s[%zu]\n", dest->name, index);
+        generate("J %s\n", end_label->name);
+        generate("%s:\n", false_label->name);
+        generate("I_STORE 0 %s[%zu]\n", dest->name, index);
+        generate("%s:\n", end_label->name);
 
         dest->value.bool_array[index] = src->value.int_val != 0; // convert int to bool
     }
@@ -140,15 +140,15 @@
         label *true_label = add_label();
         label *false_label = add_label();
         label *end_label = add_label();
-        printf("I_CMP 0 %s\n", src->name);
-        printf("JNE %s\n", true_label->name);
-        printf("J %s\n", false_label->name);
-        printf("%s:\n", true_label->name);
-        printf("I_STORE 1 %s[%s]\n", dest->name, index_symbol->name);
-        printf("J %s\n", end_label->name);
-        printf("%s:\n", false_label->name);
-        printf("I_STORE 0 %s[%s]\n", dest->name, index_symbol->name);
-        printf("%s:\n", end_label->name);
+        generate("I_CMP 0 %s\n", src->name);
+        generate("JNE %s\n", true_label->name);
+        generate("J %s\n", false_label->name);
+        generate("%s:\n", true_label->name);
+        generate("I_STORE 1 %s[%s]\n", dest->name, index_symbol->name);
+        generate("J %s\n", end_label->name);
+        generate("%s:\n", false_label->name);
+        generate("I_STORE 0 %s[%s]\n", dest->name, index_symbol->name);
+        generate("%s:\n", end_label->name);
 
         // since index_symbol is not static checkable, we don't do semantic propagation here
     }
@@ -180,15 +180,15 @@
         label *true_label = add_label();
         label *false_label = add_label();
         label *end_label = add_label();
-        printf("F_CMP 0.0 %s\n", src->name);
-        printf("JNE %s\n", true_label->name);
-        printf("J %s\n", false_label->name);
-        printf("%s:\n", true_label->name);
-        printf("I_STORE 1 %s[%zu]\n", dest->name, index);
-        printf("J %s\n", end_label->name);
-        printf("%s:\n", false_label->name);
-        printf("I_STORE 0 %s[%zu]\n", dest->name, index);
-        printf("%s:\n", end_label->name);
+        generate("F_CMP 0.0 %s\n", src->name);
+        generate("JNE %s\n", true_label->name);
+        generate("J %s\n", false_label->name);
+        generate("%s:\n", true_label->name);
+        generate("I_STORE 1 %s[%zu]\n", dest->name, index);
+        generate("J %s\n", end_label->name);
+        generate("%s:\n", false_label->name);
+        generate("I_STORE 0 %s[%zu]\n", dest->name, index);
+        generate("%s:\n", end_label->name);
 
         dest->value.bool_array[index] = src->value.double_val != 0.0; // convert double to bool
     }
@@ -223,15 +223,15 @@
         label *true_label = add_label();
         label *false_label = add_label();
         label *end_label = add_label();
-        printf("F_CMP 0.0 %s\n", src->name);
-        printf("JNE %s\n", true_label->name);
-        printf("J %s\n", false_label->name);
-        printf("%s:\n", true_label->name);
-        printf("I_STORE 1 %s[%s]\n", dest->name, index_symbol->name);
-        printf("J %s\n", end_label->name);
-        printf("%s:\n", false_label->name);
-        printf("I_STORE 0 %s[%s]\n", dest->name, index_symbol->name);
-        printf("%s:\n", end_label->name);
+        generate("F_CMP 0.0 %s\n", src->name);
+        generate("JNE %s\n", true_label->name);
+        generate("J %s\n", false_label->name);
+        generate("%s:\n", true_label->name);
+        generate("I_STORE 1 %s[%s]\n", dest->name, index_symbol->name);
+        generate("J %s\n", end_label->name);
+        generate("%s:\n", false_label->name);
+        generate("I_STORE 0 %s[%s]\n", dest->name, index_symbol->name);
+        generate("%s:\n", end_label->name);
 
         // since index_symbol is not static checkable, we don't do semantic propagation here
     }
@@ -253,15 +253,15 @@
         label *true_label = add_label();
         label *false_label = add_label();
         label *end_label = add_label();
-        printf("I_CMP 0 %s\n", src->name);
-        printf("JNE %s\n", true_label->name);
-        printf("J %s\n", false_label->name);
-        printf("%s:\n", true_label->name);
-        printf("I_STORE 1 %s\n", dest->name);
-        printf("J %s\n", end_label->name);
-        printf("%s:\n", false_label->name);
-        printf("I_STORE 0 %s\n", dest->name);
-        printf("%s:\n", end_label->name);
+        generate("I_CMP 0 %s\n", src->name);
+        generate("JNE %s\n", true_label->name);
+        generate("J %s\n", false_label->name);
+        generate("%s:\n", true_label->name);
+        generate("I_STORE 1 %s\n", dest->name);
+        generate("J %s\n", end_label->name);
+        generate("%s:\n", false_label->name);
+        generate("I_STORE 0 %s\n", dest->name);
+        generate("%s:\n", end_label->name);
 
         dest->value.bool_val = src->value.int_val != 0; // convert int to bool
     }
@@ -283,15 +283,15 @@
         label *true_label = add_label();
         label *false_label = add_label();
         label *end_label = add_label();
-        printf("F_CMP 0.0 %s\n", src->name);
-        printf("JNE %s\n", true_label->name);
-        printf("J %s\n", false_label->name);
-        printf("%s:\n", true_label->name);
-        printf("I_STORE 1 %s\n", dest->name);
-        printf("J %s\n", end_label->name);
-        printf("%s:\n", false_label->name);
-        printf("I_STORE 0 %s\n", dest->name);
-        printf("%s:\n", end_label->name);
+        generate("F_CMP 0.0 %s\n", src->name);
+        generate("JNE %s\n", true_label->name);
+        generate("J %s\n", false_label->name);
+        generate("%s:\n", true_label->name);
+        generate("I_STORE 1 %s\n", dest->name);
+        generate("J %s\n", end_label->name);
+        generate("%s:\n", false_label->name);
+        generate("I_STORE 0 %s\n", dest->name);
+        generate("%s:\n", end_label->name);
 
         dest->value.bool_val = src->value.double_val != 0.0; // convert double to bool
     }
@@ -331,24 +331,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.int_val != expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val != expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.int_val != expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -371,27 +371,27 @@
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val != temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->value.double_val != expr2->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val != temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -413,24 +413,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.bool_val != expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.double_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val != expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.bool_val != expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JNE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -476,24 +476,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.int_val == expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val == expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.int_val == expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -516,27 +516,27 @@
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val == temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->value.double_val == expr2->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val == temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -558,24 +558,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.bool_val == expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.double_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val == expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.bool_val == expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JEQ %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -621,24 +621,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.int_val > expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val > expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.int_val > expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -661,27 +661,27 @@
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val > temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->value.double_val > expr2->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val > temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -703,24 +703,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.bool_val > expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val > expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.bool_val > expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGT %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -759,24 +759,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.int_val < expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val < expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.int_val < expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -799,27 +799,27 @@
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val < temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->value.double_val < expr2->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val < temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -845,24 +845,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.bool_val < expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val < expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.bool_val < expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLT %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -904,24 +904,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.int_val >= expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val >= expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.int_val >= expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -944,27 +944,27 @@
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val >= temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->value.double_val >= expr2->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val >= temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -986,24 +986,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.bool_val >= expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val >= expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.bool_val >= expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JGE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -1049,24 +1049,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.int_val <= expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val <= expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.int_val <= expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -1089,27 +1089,27 @@
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val <= temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->value.double_val <= expr2->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
 
                                 result->value.bool_val = (expr1->value.double_val <= temp_symbol->value.double_val);
-                                printf("F_CMP %s %s\n", expr1->name, temp_symbol->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -1131,24 +1131,24 @@
                         switch (expr2->type) {
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->value.bool_val <= expr2->value.int_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                                 temp_symbol->value.double_val = (double) expr1->value.bool_val;
-                                printf("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
 
                                 result->value.bool_val = (temp_symbol->value.double_val <= expr2->value.double_val);
-                                printf("F_CMP %s %s\n", temp_symbol->name, expr2->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.bool_val <= expr2->value.bool_val);
-                                printf("I_CMP %s %s\n", expr1->name, expr2->name);
-                                printf("JLE %s\n", true_label->name);
+                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -1197,7 +1197,7 @@
                                 int_to_bool(expr1, temp_symbol1);
                                 int_to_bool(expr2, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val && temp_symbol2->value.bool_val);
-                                printf("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
+                                generate("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1206,7 +1206,7 @@
                                 int_to_bool(expr1, temp_symbol1);
                                 double_to_bool(expr2, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val && temp_symbol2->value.bool_val);
-                                printf("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
+                                generate("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1214,7 +1214,7 @@
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                                 int_to_bool(expr1, temp_symbol);
                                 result->value.bool_val = (temp_symbol->value.bool_val && expr2->value.bool_val);
-                                printf("AND %s %s %s\n", temp_symbol->name, expr2->name, result->name);
+                                generate("AND %s %s %s\n", temp_symbol->name, expr2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1240,7 +1240,7 @@
                                 double_to_bool(expr1, temp_symbol1);
                                 int_to_bool(expr2, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val && temp_symbol2->value.bool_val);
-                                printf("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
+                                generate("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1249,7 +1249,7 @@
                                 double_to_bool(expr1, temp_symbol1);
                                 double_to_bool(expr2, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val && temp_symbol2->value.bool_val);
-                                printf("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
+                                generate("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1257,7 +1257,7 @@
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                                 double_to_bool(expr1, temp_symbol);
                                 result->value.bool_val = (temp_symbol->value.bool_val && expr2->value.bool_val);
-                                printf("AND %s %s %s\n", temp_symbol->name, expr2->name, result->name);
+                                generate("AND %s %s %s\n", temp_symbol->name, expr2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1282,7 +1282,7 @@
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                                 int_to_bool(expr2, temp_symbol);
                                 result->value.bool_val = (expr1->value.bool_val && temp_symbol->value.bool_val);
-                                printf("AND %s %s %s\n", expr1->name, temp_symbol->name, result->name);
+                                generate("AND %s %s %s\n", expr1->name, temp_symbol->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1290,13 +1290,13 @@
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                                 double_to_bool(expr2, temp_symbol);
                                 result->value.bool_val = (expr1->value.bool_val && temp_symbol->value.bool_val);
-                                printf("AND %s %s %s\n", expr1->name, temp_symbol->name, result->name);
+                                generate("AND %s %s %s\n", expr1->name, temp_symbol->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.bool_val && expr2->value.bool_val);
-                                printf("AND %s %s %s\n", expr1->name, expr2->name, result->name);
+                                generate("AND %s %s %s\n", expr1->name, expr2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1339,7 +1339,7 @@
                                 int_to_bool(expr1, temp_symbol1);
                                 int_to_bool(expr2, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val || temp_symbol2->value.bool_val);
-                                printf("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
+                                generate("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1348,7 +1348,7 @@
                                 int_to_bool(expr1, temp_symbol1);
                                 double_to_bool(expr2, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val || temp_symbol2->value.bool_val);
-                                printf("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
+                                generate("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1356,7 +1356,7 @@
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                                 int_to_bool(expr1, temp_symbol);
                                 result->value.bool_val = (temp_symbol->value.bool_val || expr2->value.bool_val);
-                                printf("OR %s %s %s\n", temp_symbol->name, expr2->name, result->name);
+                                generate("OR %s %s %s\n", temp_symbol->name, expr2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1382,7 +1382,7 @@
                                 double_to_bool(expr1, temp_symbol1);
                                 int_to_bool(expr2, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val || temp_symbol2->value.bool_val);
-                                printf("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
+                                generate("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1391,7 +1391,7 @@
                                 double_to_bool(expr1, temp_symbol1);
                                 double_to_bool(expr2, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val || temp_symbol2->value.bool_val);
-                                printf("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
+                                generate("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1399,7 +1399,7 @@
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                                 double_to_bool(expr1, temp_symbol);
                                 result->value.bool_val = (temp_symbol->value.bool_val || expr2->value.bool_val);
-                                printf("OR %s %s %s\n", temp_symbol->name, expr2->name, result->name);
+                                generate("OR %s %s %s\n", temp_symbol->name, expr2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1424,7 +1424,7 @@
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                                 int_to_bool(expr2, temp_symbol);
                                 result->value.bool_val = (expr1->value.bool_val || temp_symbol->value.bool_val);
-                                printf("OR %s %s %s\n", expr1->name, temp_symbol->name, result->name);
+                                generate("OR %s %s %s\n", expr1->name, temp_symbol->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1432,13 +1432,13 @@
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                                 double_to_bool(expr2, temp_symbol);
                                 result->value.bool_val = (expr1->value.bool_val || temp_symbol->value.bool_val);
-                                printf("OR %s %s %s\n", expr1->name, temp_symbol->name, result->name);
+                                generate("OR %s %s %s\n", expr1->name, temp_symbol->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->value.bool_val || expr2->value.bool_val);
-                                printf("OR %s %s %s\n", expr1->name, expr2->name, result->name);
+                                generate("OR %s %s %s\n", expr1->name, expr2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1479,13 +1479,13 @@
         }
 
         if (is_code_generation) {
-            printf("J %s\n", false_label->name);
-            printf("%s:\n", true_label->name);
-            printf("I_STORE 1 %s\n", result->name);
-            printf("J %s\n", end_label->name);
-            printf("%s:\n", false_label->name);
-            printf("I_STORE 0 %s\n", result->name);
-            printf("%s:\n", end_label->name);
+            generate("J %s\n", false_label->name);
+            generate("%s:\n", true_label->name);
+            generate("I_STORE 1 %s\n", result->name);
+            generate("J %s\n", end_label->name);
+            generate("%s:\n", false_label->name);
+            generate("I_STORE 0 %s\n", result->name);
+            generate("%s:\n", end_label->name);
         }
 
         condition_info info = {
@@ -1589,13 +1589,13 @@
 program:
     program_title
     program_body {
-        printf("HALT %s\n", $1->name);
-        printf("\t> program -> program_title program_body\n");
-        printf("\t\t> Program done with name: `%s`\n", $1->name);
+        generate("HALT %s\n", $1->name);
+        logging("> program -> program_title program_body\n");
+        logging("\t> Program done with name: `%s`\n", $1->name);
 
         symbol *current_symbol, *next_symbol;
         HASH_ITER(hh, temp_symbol_table, current_symbol, next_symbol) {
-            printf("DECLARE %s %s\n", current_symbol->name, data_type_to_string(current_symbol->type));
+            generate("DECLARE %s %s\n", current_symbol->name, data_type_to_string(current_symbol->type));
         }
     }
     ;
@@ -1603,47 +1603,47 @@ program_title:
     PROGRAM_MICROEX ID_MICROEX {
         $2->type = TYPE_PROGRAM_NAME;
         $$ = $2;
-        printf("START %s\n", $2->name);
-        printf("\t> program_title -> program id (program_title -> program %s)\n", $2->name);
-        printf("\t\t> Program start with name: `%s`\n", $2->name);
+        generate("START %s\n", $2->name);
+        logging("> program_title -> program id (program_title -> program %s)\n", $2->name);
+        logging("\t> Program start with name: `%s`\n", $2->name);
     }
     ;
 program_body:
     BEGIN_MICROEX
         statement_list
     END_MICROEX {
-        printf("\t> program_body -> begin statement_list end\n");
+        logging("> program_body -> begin statement_list end\n");
     }
     ;
 statement_list:
     statement {
-        printf("\t> statement_list -> statement\n");
+        logging("> statement_list -> statement\n");
     }
     | statement_list statement {
-        printf("\t> statement_list -> statement_list statement\n");
+        logging("> statement_list -> statement_list statement\n");
     }
     ;
 statement:
     declare_statement {
-        printf("\t> statement -> declare_statement\n");
+        logging("> statement -> declare_statement\n");
     }
     | assignment_statement {
-        printf("\t> statement -> assignment_statement\n");
+        logging("> statement -> assignment_statement\n");
     }
     | read_statement {
-        printf("\t> statement -> read_statement\n");
+        logging("> statement -> read_statement\n");
     }
     | write_statement {
-        printf("\t> statement -> write_statement\n");
+        logging("> statement -> write_statement\n");
     }
     | if_statement {
-        printf("\t> statement -> if_statement\n");
+        logging("> statement -> if_statement\n");
     }
     | for_statement {
-        printf("\t> statement -> for_statement\n");
+        logging("> statement -> for_statement\n");
     }
     | while_statement {
-        printf("\t> statement -> while_statement\n");
+        logging("> statement -> while_statement\n");
     }
     ;
 
@@ -1670,7 +1670,7 @@ declare_statement:
                 }
                 char *array_dimensions = array_range_to_string(current->symbol_ptr->array_pointer);
                 char *type_str = data_array_type_to_string($4);
-                printf("DECLARE %s %s %s\n", current->symbol_ptr->name, type_str, array_dimensions);
+                generate("DECLARE %s %s %s\n", current->symbol_ptr->name, type_str, array_dimensions);
                 free(type_str);
                 free(array_dimensions);
                 current->symbol_ptr->array_info = current->symbol_ptr->array_pointer;
@@ -1689,7 +1689,7 @@ declare_statement:
                             yyerror_name("Out of memory when calloc.", "Parsing");
                         }
                         for (size_t i = 0; i < array_size; i++) {
-                            printf("I_STORE 0 %s[%zu]\n", current->symbol_ptr->name, i);
+                            generate("I_STORE 0 %s[%zu]\n", current->symbol_ptr->name, i);
                         }
                         break;
                     }
@@ -1699,7 +1699,7 @@ declare_statement:
                             yyerror_name("Out of memory when calloc.", "Parsing");
                         }
                         for (size_t i = 0; i < array_size; i++) {
-                            printf("F_STORE 0.0 %s[%zu]\n", current->symbol_ptr->name, i);
+                            generate("F_STORE 0.0 %s[%zu]\n", current->symbol_ptr->name, i);
                         }
                         break;
                     }
@@ -1724,7 +1724,7 @@ declare_statement:
                             yyerror_name("Out of memory when calloc.", "Parsing");
                         }
                         for (size_t i = 0; i < array_size; i++) {
-                            printf("I_STORE 0 %s[%zu]\n", current->symbol_ptr->name, i);
+                            generate("I_STORE 0 %s[%zu]\n", current->symbol_ptr->name, i);
                             // boolean actually stored as int, so we use I_STORE
                         }
                         break;
@@ -1744,18 +1744,18 @@ declare_statement:
                 if (type_str == NULL) {
                     yyerror_name("Unknown data type.", "Parsing");
                 }
-                printf("DECLARE %s %s\n", current->symbol_ptr->name, type_str);
+                generate("DECLARE %s %s\n", current->symbol_ptr->name, type_str);
                 free(type_str);
 
                 switch ($4) {
                     case TYPE_INT: {
                         current->symbol_ptr->value.int_val = 0;
-                        printf("I_STORE 0 %s\n", current->symbol_ptr->name);
+                        generate("I_STORE 0 %s\n", current->symbol_ptr->name);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         current->symbol_ptr->value.double_val = 0.0;
-                        printf("F_STORE 0.0 %s\n", current->symbol_ptr->name);
+                        generate("F_STORE 0.0 %s\n", current->symbol_ptr->name);
                         break;
                     }
                     case TYPE_STRING: {
@@ -1769,7 +1769,7 @@ declare_statement:
                     }
                     case TYPE_BOOL: {
                         current->symbol_ptr->value.bool_val = false;
-                        printf("I_STORE 0 %s\n", current->symbol_ptr->name);
+                        generate("I_STORE 0 %s\n", current->symbol_ptr->name);
                         // boolean actually stored as int, so we use I_STORE
                         break;
                     }
@@ -1806,7 +1806,7 @@ declare_statement:
             strcat(ids_name.str, current->symbol_ptr->name);
             if (current->symbol_ptr->array_info.dimensions > 0) {
                 dimensions = array_dimensions_to_string(current->symbol_ptr->array_info);
-                if (realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
+                if (!realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");
                 }
@@ -1816,7 +1816,7 @@ declare_statement:
             current = current->next;
         }
         char *type_str = data_type_to_string($4);
-        printf("\t> declare_statement -> declare id_list as type semicolon (declare_statement -> declare %s as %s;)\n", ids_name.str, type_str);
+        logging("> declare_statement -> declare id_list as type semicolon (declare_statement -> declare %s as %s;)\n", ids_name.str, type_str);
         free(type_str);
         free(ids_name.str);
         
@@ -1827,7 +1827,7 @@ id_list:
     id {
         $$ = $1;
         add_id_node($1);
-        printf("\t> id_list -> id (id_list -> %s)\n", $1->name);
+        logging("> id_list -> id (id_list -> %s)\n", $1->name);
     }
     | id_list COMMA_MICROEX id {
         $$ = $1;
@@ -1859,7 +1859,7 @@ id_list:
             strcat(ids_name.str, current->symbol_ptr->name);
             if (current->symbol_ptr->array_pointer.dimensions > 0) {
                 dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
-                if (realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
+                if (!realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");
                 }
@@ -1868,20 +1868,20 @@ id_list:
             }
             current = current->next;
         }
-        printf("\t> id_list -> id_list comma id (id_list -> %s)\n", ids_name.str);
+        logging("> id_list -> id_list comma id (id_list -> %s)\n", ids_name.str);
         free(ids_name.str);
     }
     ;
 id:
     ID_MICROEX {
         $$ = $1;
-        printf("\t> id -> ID (id -> %s)\n", $1->name);
+        logging("> id -> ID (id -> %s)\n", $1->name);
     }
     | ID_MICROEX array_dimension_list {
         $$ = $1;
         $$->array_pointer = $2;
         dimensions = array_dimensions_to_string($2);
-        printf("\t> id -> ID array_dimension_list (id -> %s%s)\n", $1->name, dimensions);
+        logging("> id -> ID array_dimension_list (id -> %s%s)\n", $1->name, dimensions);
         free(dimensions);
 
         $$->is_static_checkable = $2.is_static_checkable; // propagate static checkability
@@ -1898,7 +1898,7 @@ array_dimension:
             temp_symbol = add_temp_symbol(TYPE_INT);
             temp_symbol->value.int_val = $2->value.bool_val ? 1 : 0; // convert bool to int
             temp_symbol->is_static_checkable = $2->is_static_checkable; // propagate static checkability
-            printf("I_STORE %s %s\n", $2->name, temp_symbol->name);
+            generate("I_STORE %s %s\n", $2->name, temp_symbol->name);
         }
         $$.dimensions = 1;
         $$.dimension_sizes = (size_t *)malloc(sizeof(size_t) * $$.dimensions);
@@ -1916,12 +1916,12 @@ array_dimension:
         if (temp_symbol->is_static_checkable) {
             $$.dimension_sizes[$$.dimensions - 1] = temp_symbol->value.int_val;
             $$.dimension_sizes_symbol[$$.dimensions - 1] = NULL; // static checkable dimension, no symbol needed
-            printf("\t> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [%lld])\n", temp_symbol->value.int_val);
+            logging("> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [%lld])\n", temp_symbol->value.int_val);
         }
         else {
             $$.dimension_sizes[$$.dimensions - 1] = 0; // non-static checkable dimension, set to 0
             $$.dimension_sizes_symbol[$$.dimensions - 1] = temp_symbol; // store the symbol for non-static checkable dimension
-            printf("\t> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [%s])\n", temp_symbol->name);
+            logging("> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [%s])\n", temp_symbol->name);
         }
 
         $$.is_static_checkable = temp_symbol->is_static_checkable; // propagate static checkability
@@ -1932,10 +1932,10 @@ array_dimension_list:
         $$ = $1;
 
         if ($1.is_static_checkable) {
-            printf("\t> array_dimension_list -> array_dimension (array_dimension_list -> [%zu])\n", $1.dimension_sizes[0]);
+            logging("> array_dimension_list -> array_dimension (array_dimension_list -> [%zu])\n", $1.dimension_sizes[0]);
         }
         else {
-            printf("\t> array_dimension_list -> array_dimension (array_dimension_list -> [%s])\n", $1.dimension_sizes_symbol[0]->name);
+            logging("> array_dimension_list -> array_dimension (array_dimension_list -> [%s])\n", $1.dimension_sizes_symbol[0]->name);
         }
         // propagate static checkability inherited from $1, so we don't need to set it again
     }
@@ -1954,7 +1954,7 @@ array_dimension_list:
         $$.dimension_sizes_symbol[$$.dimensions - 1] = $2.dimension_sizes_symbol[0];
 
         dimensions = array_dimensions_to_string($$);
-        printf("\t> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> %s)\n", dimensions);
+        logging("> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> %s)\n", dimensions);
         free(dimensions);
 
         $$.is_static_checkable = $1.is_static_checkable && $2.is_static_checkable; // propagate static checkability
@@ -1964,15 +1964,15 @@ array_dimension_list:
 type:
     INTEGER_MICROEX {
         $$ = $1;
-        printf("\t> type -> INTEGER\n");
+        logging("> type -> INTEGER\n");
     }
     | REAL_MICROEX {
         $$ = $1;
-        printf("\t> type -> REAL\n");
+        logging("> type -> REAL\n");
     }
     | BOOL_MICROEX {
         $$ = $1;
-        printf("\t> type -> BOOL\n");
+        logging("> type -> BOOL\n");
     }
     // This bad body is too difficult to implement,
     // so we currently do not support string and won't generate code for it.
@@ -1980,7 +1980,7 @@ type:
         // TODO: implement STRING type if have time
         $$ = $1;
         yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-        printf("\t> type -> STRING\n");
+        logging("> type -> STRING\n");
     }
     ;
 // assignment statement
@@ -2000,34 +2000,34 @@ assignment_statement:
                         switch ($3->type) {
                             case TYPE_INT: {
                                 $1->value.int_array[index] = $3->value.int_val;
-                                printf("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
+                                generate("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                                 }
                                 free(dimensions);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 $1->value.int_array[index] = (long long) $3->value.double_val;
-                                printf("F_TO_I %s %s[%zu]\n", $3->name, $1->name, index);
+                                generate("F_TO_I %s %s[%zu]\n", $3->name, $1->name, index);
                                 
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                                 }
                                 free(dimensions);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 $1->value.int_array[index] = $3->value.bool_val ? 1 : 0;
-                                printf("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
+                                generate("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                                 }
                                 free(dimensions);
                                 break;
@@ -2054,35 +2054,35 @@ assignment_statement:
                         switch ($3->type) {
                             case TYPE_DOUBLE: {
                                 $1->value.double_array[index] = $3->value.double_val;
-                                printf("F_STORE %s %s[%zu]\n", $3->name, $1->name, index);
+                                generate("F_STORE %s %s[%zu]\n", $3->name, $1->name, index);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                                 }
                                 free(dimensions);
                                 break;
                             }
                             case TYPE_INT: {
                                 $1->value.double_array[index] = (double) $3->value.int_val;
-                                printf("I_TO_F %s %s[%zu]\n", $3->name, $1->name, index);
+                                generate("I_TO_F %s %s[%zu]\n", $3->name, $1->name, index);
                                 
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                                 }
                                 free(dimensions);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 $1->value.double_array[index] = $3->value.bool_val ? 1.0 : 0.0;
-                                printf("I_TO_F %s %s[%zu]\n", $3->name, $1->name, index);
+                                generate("I_TO_F %s %s[%zu]\n", $3->name, $1->name, index);
 
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                                 }
                                 free(dimensions);
                                 break;
@@ -2114,9 +2114,9 @@ assignment_statement:
                         yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                         
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3->value.str_val);
+                        logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3->value.str_val);
                         if (!$3->is_static_checkable) {
-                            printf("\t\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
+                            logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
                         }
                         free(dimensions);
                         break;
@@ -2125,11 +2125,11 @@ assignment_statement:
                         switch ($3->type) {
                             case TYPE_BOOL: {
                                 $1->value.bool_array[index] = $3->value.bool_val;
-                                printf("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
+                                generate("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                                 }
                                 free(dimensions);
                                 break;
@@ -2138,9 +2138,9 @@ assignment_statement:
                                 itob_array($3, $1, index);
                                 
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                                 }
                                 free(dimensions);
                                 break;
@@ -2149,9 +2149,9 @@ assignment_statement:
                                 ftob_array($3, $1, index);
 
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                                 }
                                 free(dimensions);
                                 break;
@@ -2191,33 +2191,33 @@ assignment_statement:
                         switch ($3->type) {
                             case TYPE_INT: {
                                 // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                printf("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                                generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                                 }
                                 free(dimensions);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                printf("F_TO_I %s %s[%s]\n", $3->name, $1->name, offset->name);
+                                generate("F_TO_I %s %s[%s]\n", $3->name, $1->name, offset->name);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                                 }
                                 free(dimensions);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                printf("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                                generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                                 }
                                 free(dimensions);
                                 break;
@@ -2244,33 +2244,33 @@ assignment_statement:
                         switch ($3->type) {
                             case TYPE_DOUBLE: {
                                 // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                printf("F_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                                generate("F_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                                 }
                                 free(dimensions);
                                 break;
                             }
                             case TYPE_INT: {
                                 // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                printf("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
+                                generate("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                                 }
                                 free(dimensions);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                printf("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
+                                generate("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                                 }
                                 free(dimensions);
                                 break;
@@ -2298,9 +2298,9 @@ assignment_statement:
                         yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                         
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3->value.str_val);
+                        logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3->value.str_val);
                         if (!$3->is_static_checkable) {
-                            printf("\t\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
+                            logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
                         }
                         free(dimensions);
                         break;
@@ -2312,11 +2312,11 @@ assignment_statement:
                         switch ($3->type) {
                             case TYPE_BOOL: {
                                 // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                printf("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                                generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                                 }
                                 free(dimensions);
                                 break;
@@ -2325,9 +2325,9 @@ assignment_statement:
                                 itob_array_unstatic($3, $1, offset);
 
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                                 }
                                 free(dimensions);
                                 break;
@@ -2336,9 +2336,9 @@ assignment_statement:
                                 ftob_array_unstatic($3, $1, offset);
                                 
                                 dimensions = array_dimensions_to_string($1->array_pointer);
-                                printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
                                 if (!$3->is_static_checkable) {
-                                    printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                                 }
                                 free(dimensions);
                                 break;
@@ -2378,30 +2378,30 @@ assignment_statement:
                     switch ($3->type) {
                         case TYPE_INT: {
                             $1->value.int_val = $3->value.int_val;
-                            printf("I_STORE %s %s\n", $3->name, $1->name);
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
+                            generate("I_STORE %s %s\n", $3->name, $1->name);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                             }
                             break;
                         }
                         case TYPE_DOUBLE: {
                             $1->value.int_val = (long long) $3->value.double_val;
-                            printf("F_TO_I %s %s\n", $3->name, $1->name);
+                            generate("F_TO_I %s %s\n", $3->name, $1->name);
                             
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                             }
                             break;
                         }
                         case TYPE_BOOL: {
                             $1->value.int_val = $3->value.bool_val ? 1 : 0; // convert bool to int
-                            printf("I_STORE %s %s\n", $3->name, $1->name);
+                            generate("I_STORE %s %s\n", $3->name, $1->name);
 
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                             }
                             break;
                         }
@@ -2427,30 +2427,30 @@ assignment_statement:
                     switch ($3->type) {
                         case TYPE_DOUBLE: {
                             $1->value.double_val = $3->value.double_val;
-                            printf("F_STORE %s %s\n", $3->name, $1->name);
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
+                            generate("F_STORE %s %s\n", $3->name, $1->name);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                             }
                             break;
                         }
                         case TYPE_INT: {
                             $1->value.double_val = (double) $3->value.int_val;
-                            printf("I_TO_F %s %s\n", $3->name, $1->name);
+                            generate("I_TO_F %s %s\n", $3->name, $1->name);
                             
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                             }
                             break;
                         }
                         case TYPE_BOOL: {
                             $1->value.double_val = $3->value.bool_val ? 1.0 : 0.0;
-                            printf("I_TO_F %s %s\n", $3->name, $1->name);
+                            generate("I_TO_F %s %s\n", $3->name, $1->name);
                             
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                             }
                             break;
                         }
@@ -2480,9 +2480,9 @@ assignment_statement:
                     strcpy($1->value.str_val, $3->value.str_val);
                     yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                     
-                    printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := \"%s\";)\n", $1->name, $3->value.str_val);
+                    logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := \"%s\";)\n", $1->name, $3->value.str_val);
                     if (!$3->is_static_checkable) {
-                        printf("\t\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
+                        logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
                     }
                     break;
                 }
@@ -2493,28 +2493,28 @@ assignment_statement:
                     switch ($3->type) {
                         case TYPE_BOOL: {
                             $1->value.bool_val = $3->value.bool_val;
-                            printf("I_STORE %s %s\n", $3->name, $1->name);
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
+                            generate("I_STORE %s %s\n", $3->name, $1->name);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                             }
                             break;
                         }
                         case TYPE_INT: {
                             int_to_bool($3, $1);
                             
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                             }
                             break;
                         }
                         case TYPE_DOUBLE: {
                             double_to_bool($3, $1);
                             
-                            printf("\t> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
                             if (!$3->is_static_checkable) {
-                                printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                             }
                             break;
                         }
@@ -2553,29 +2553,29 @@ expression:
                     case TYPE_INT: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.int_val + $3->value.int_val;
-                        printf("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression PLUS expression (%lld -> %lld + %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
+                        generate("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression PLUS expression (%lld -> %lld + %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = (double) $1->value.int_val;
-                        printf("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        printf("\t\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
+                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
+                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
                         
                         $$->value.double_val = temp_symbol->value.double_val + $3->value.double_val;
-                        printf("F_ADD %s %s %s\n", temp_symbol->name, $3->name, $$->name);
+                        generate("F_ADD %s %s %s\n", temp_symbol->name, $3->name, $$->name);
                         
-                        printf("\t> expression -> expression PLUS expression (%g -> %lld + %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
+                        logging("> expression -> expression PLUS expression (%g -> %lld + %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
                         break;
                     }
                     case TYPE_BOOL: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.int_val + ($3->value.bool_val ? 1 : 0); // convert bool to int
-                        printf("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
+                        generate("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
                         
-                        printf("\t> expression -> expression PLUS expression (%lld -> %lld + %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
+                        logging("> expression -> expression PLUS expression (%lld -> %lld + %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_STRING: {
@@ -2599,33 +2599,33 @@ expression:
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = (double) $3->value.int_val;
-                        printf("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        printf("\t\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
+                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
+                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
 
                         $$->value.double_val = $1->value.double_val + temp_symbol->value.double_val;
-                        printf("F_ADD %s %s %s\n", $1->name, temp_symbol->name, $$->name);
+                        generate("F_ADD %s %s %s\n", $1->name, temp_symbol->name, $$->name);
 
-                        printf("\t> expression -> expression PLUS expression (%g -> %g + %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
+                        logging("> expression -> expression PLUS expression (%g -> %g + %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = $1->value.double_val + $3->value.double_val;
-                        printf("F_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression PLUS expression (%g -> %g + %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
+                        generate("F_ADD %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression PLUS expression (%g -> %g + %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
                         break;
                     }
                     case TYPE_BOOL: {
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = $3->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        printf("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        printf("\t\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
+                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
+                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
 
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = $1->value.double_val + temp_symbol->value.double_val;
-                        printf("F_ADD %s %s %s\n", $1->name, temp_symbol->name, $$->name);
+                        generate("F_ADD %s %s %s\n", $1->name, temp_symbol->name, $$->name);
                         
-                        printf("\t> expression -> expression PLUS expression (%g -> %g + %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
+                        logging("> expression -> expression PLUS expression (%g -> %g + %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_STRING: {
@@ -2653,7 +2653,7 @@ expression:
                     $$->value.str_val[0] = '\0'; // Initialize to empty string
                     sprintf($$->value.str_val, "%s%s", $1->value.str_val, $3->value.str_val);
                     yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                    printf("\t> expression -> expression PLUS expression (%s -> %s + %s)\n", $$->value.str_val, $1->value.str_val, $3->value.str_val);
+                    logging("> expression -> expression PLUS expression (%s -> %s + %s)\n", $$->value.str_val, $1->value.str_val, $3->value.str_val);
                 } else {
                     yyerror("Cannot add string with non-string type.");
                 }
@@ -2668,26 +2668,26 @@ expression:
                     case TYPE_BOOL: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.bool_val + $3->value.bool_val; // c99 bool is int
-                        printf("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression PLUS expression (%lld -> %s + %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
+                        generate("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression PLUS expression (%lld -> %s + %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_INT: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.bool_val + $3->value.int_val;
-                        printf("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression PLUS expression (%lld -> %s + %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
+                        generate("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression PLUS expression (%lld -> %s + %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = $1->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        printf("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        printf("\t\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
+                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
+                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = temp_symbol->value.double_val + $3->value.double_val;
-                        printf("F_ADD %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        printf("\t> expression -> expression PLUS expression (%g -> %s + %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
+                        generate("F_ADD %s %s %s\n", temp_symbol->name, $3->name, $$->name);
+                        logging("> expression -> expression PLUS expression (%g -> %s + %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
                         break;
                     }
                     case TYPE_STRING: {
@@ -2720,27 +2720,27 @@ expression:
                     case TYPE_INT: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.int_val - $3->value.int_val;
-                        printf("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%lld -> %lld - %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
+                        generate("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%lld -> %lld - %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = (double) $1->value.int_val;
-                        printf("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        printf("\t\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
+                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
+                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
 
                         $$->value.double_val = temp_symbol->value.double_val - $3->value.double_val;
-                        printf("F_SUB %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%g -> %lld - %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
+                        generate("F_SUB %s %s %s\n", temp_symbol->name, $3->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%g -> %lld - %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
                         break;
                     }
                     case TYPE_BOOL: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.int_val - ($3->value.bool_val ? 1 : 0); // convert bool to int
-                        printf("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%lld -> %lld - %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
+                        generate("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%lld -> %lld - %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_STRING: {
@@ -2764,31 +2764,31 @@ expression:
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = (double) $3->value.int_val;
-                        printf("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        printf("\t\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
+                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
+                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
 
                         $$->value.double_val = $1->value.double_val - temp_symbol->value.double_val;
-                        printf("F_SUB %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%g -> %g - %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
+                        generate("F_SUB %s %s %s\n", $1->name, temp_symbol->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%g -> %g - %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = $1->value.double_val - $3->value.double_val;
-                        printf("F_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%g -> %g - %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
+                        generate("F_SUB %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%g -> %g - %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
                         break;
                     }
                     case TYPE_BOOL: {
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = $3->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        printf("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        printf("\t\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
+                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
+                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
 
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = $1->value.double_val - temp_symbol->value.double_val;
-                        printf("F_SUB %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%g -> %g - %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
+                        generate("F_SUB %s %s %s\n", $1->name, temp_symbol->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%g -> %g - %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_STRING: {
@@ -2819,26 +2819,26 @@ expression:
                     case TYPE_BOOL: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.bool_val - $3->value.bool_val; // c99 bool is int
-                        printf("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%lld -> %s - %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
+                        generate("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%lld -> %s - %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_INT: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.bool_val - $3->value.int_val;
-                        printf("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%lld -> %s - %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
+                        generate("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%lld -> %s - %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = $1->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        printf("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        printf("\t\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
+                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
+                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = temp_symbol->value.double_val - $3->value.double_val;
-                        printf("F_SUB %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MINUS expression (%g -> %s - %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
+                        generate("F_SUB %s %s %s\n", temp_symbol->name, $3->name, $$->name);
+                        logging("> expression -> expression MINUS expression (%g -> %s - %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
                         break;
                     }
                     case TYPE_STRING: {
@@ -2871,27 +2871,27 @@ expression:
                     case TYPE_INT: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.int_val * $3->value.int_val;
-                        printf("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%lld -> %lld * %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
+                        generate("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%lld -> %lld * %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = (double) $1->value.int_val;
-                        printf("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        printf("\t\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
+                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
+                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
 
                         $$->value.double_val = temp_symbol->value.double_val * $3->value.double_val;
-                        printf("F_MUL %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%g -> %lld * %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
+                        generate("F_MUL %s %s %s\n", temp_symbol->name, $3->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%g -> %lld * %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
                         break;
                     }
                     case TYPE_BOOL: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.int_val * ($3->value.bool_val ? 1 : 0);
-                        printf("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%lld -> %lld * %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
+                        generate("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%lld -> %lld * %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_STRING: {
@@ -2915,31 +2915,31 @@ expression:
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = (double) $3->value.int_val;
-                        printf("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        printf("\t\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
+                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
+                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
 
                         $$->value.double_val = $1->value.double_val * temp_symbol->value.double_val;
-                        printf("F_MUL %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%g -> %g * %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
+                        generate("F_MUL %s %s %s\n", $1->name, temp_symbol->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%g -> %g * %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = $1->value.double_val * $3->value.double_val;
-                        printf("F_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%g -> %g * %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
+                        generate("F_MUL %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%g -> %g * %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
                         break;
                     }
                     case TYPE_BOOL: {
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = $3->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        printf("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        printf("\t\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
+                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
+                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
 
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = $1->value.double_val * temp_symbol->value.double_val;
-                        printf("F_MUL %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%g -> %g * %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
+                        generate("F_MUL %s %s %s\n", $1->name, temp_symbol->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%g -> %g * %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_STRING: {
@@ -2962,26 +2962,26 @@ expression:
                     case TYPE_BOOL: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.bool_val * $3->value.bool_val; // c99 bool is int
-                        printf("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%lld -> %s * %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
+                        generate("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%lld -> %s * %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_INT: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.bool_val * $3->value.int_val;
-                        printf("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%lld -> %s * %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
+                        generate("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%lld -> %s * %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = $1->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        printf("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        printf("\t\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
+                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
+                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = temp_symbol->value.double_val * $3->value.double_val;
-                        printf("F_MUL %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        printf("\t> expression -> expression MULTIPLY expression (%g -> %s * %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
+                        generate("F_MUL %s %s %s\n", temp_symbol->name, $3->name, $$->name);
+                        logging("> expression -> expression MULTIPLY expression (%g -> %s * %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
                         break;
                     }
                     case TYPE_STRING: {
@@ -3025,8 +3025,8 @@ expression:
                         }
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = ($3->value.int_val)? $1->value.int_val / $3->value.int_val : 0;
-                        printf("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression DIVISION expression (%lld -> %lld / %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
+                        generate("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression DIVISION expression (%lld -> %lld / %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
@@ -3036,11 +3036,11 @@ expression:
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = (double) $1->value.int_val;
-                        printf("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        printf("\t\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
+                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
+                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
 
                         $$->value.double_val = ($3->value.double_val)? temp_symbol->value.double_val / $3->value.double_val : 0.0;
-                        printf("\t> expression -> expression DIVISION expression (%g -> %lld / %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
+                        logging("> expression -> expression DIVISION expression (%g -> %lld / %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
                         break;
                     }
                     case TYPE_BOOL: {
@@ -3050,8 +3050,8 @@ expression:
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = ($3->value.bool_val)? ($1->value.int_val / ($3->value.bool_val ? 1 : 0)) : 0;
                         // convert bool to int & prevent division by zero when $3 is false and $3 isn't static checkable
-                        printf("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression DIVISION expression (%lld -> %lld / %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
+                        generate("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression DIVISION expression (%lld -> %lld / %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_STRING: {
@@ -3078,11 +3078,11 @@ expression:
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = (double) $3->value.int_val;
-                        printf("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        printf("\t\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
+                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
+                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
 
                         $$->value.double_val = $1->value.double_val / temp_symbol->value.double_val;
-                        printf("\t> expression -> expression DIVISION expression (%g -> %g / %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
+                        logging("> expression -> expression DIVISION expression (%g -> %g / %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
@@ -3091,8 +3091,8 @@ expression:
                         }
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = $1->value.double_val / $3->value.double_val;
-                        printf("F_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression DIVISION expression (%g -> %g / %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
+                        generate("F_DIV %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression DIVISION expression (%g -> %g / %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
                         break;
                     }
                     case TYPE_BOOL: {
@@ -3101,14 +3101,14 @@ expression:
                         }
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = $3->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        printf("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        printf("\t\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
+                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
+                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
 
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = ($3->value.bool_val)? ($1->value.double_val / temp_symbol->value.double_val) : 0.0;
                         // prevent division by zero when $3 is false and $3 isn't static checkable
-                        printf("F_DIV %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        printf("\t> expression -> expression DIVISION expression (%g -> %g / %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
+                        generate("F_DIV %s %s %s\n", $1->name, temp_symbol->name, $$->name);
+                        logging("> expression -> expression DIVISION expression (%g -> %g / %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_STRING: {
@@ -3143,8 +3143,8 @@ expression:
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = ($3->value.bool_val) ? ($1->value.bool_val / $3->value.bool_val) : 0;
                         // convert bool to int & prevent division by zero when $3 is false and $3 isn't static checkable
-                        printf("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression DIVISION expression (%lld -> %s / %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
+                        generate("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression DIVISION expression (%lld -> %s / %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
                         break;
                     }
                     case TYPE_INT: {
@@ -3154,8 +3154,8 @@ expression:
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = ($3->value.int_val)? $1->value.bool_val / $3->value.int_val : 0;
                         // prevent division by zero when $3 is zero and $3 isn't static checkable
-                        printf("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        printf("\t> expression -> expression DIVISION expression (%lld -> %s / %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
+                        generate("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
+                        logging("> expression -> expression DIVISION expression (%lld -> %s / %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
                         break;
                     }
                     case TYPE_DOUBLE: {
@@ -3164,14 +3164,14 @@ expression:
                         }
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         temp_symbol->value.double_val = $1->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        printf("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        printf("\t\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
+                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
+                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
 
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = ($3->value.double_val) ? (temp_symbol->value.double_val / $3->value.double_val) : 0.0;
                         // prevent division by zero when $3 is zero and $3 isn't static checkable
-                        printf("F_DIV %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        printf("\t> expression -> expression DIVISION expression (%g -> %s / %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
+                        generate("F_DIV %s %s %s\n", temp_symbol->name, $3->name, $$->name);
+                        logging("> expression -> expression DIVISION expression (%g -> %s / %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
                         break;
                     }
                     case TYPE_STRING: {
@@ -3202,8 +3202,8 @@ expression:
             case TYPE_INT: {
                 $$ = add_temp_symbol(TYPE_INT);
                 $$->value.int_val = -$2->value.int_val;
-                printf("I_UMINUS %s %s\n", $2->name, $$->name);
-                printf("\t> expression -> MINUS expression (expression -> %lld)\n", $$->value.int_val);
+                generate("I_UMINUS %s %s\n", $2->name, $$->name);
+                logging("> expression -> MINUS expression (expression -> %lld)\n", $$->value.int_val);
 
                 $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
                 break;
@@ -3211,8 +3211,8 @@ expression:
             case TYPE_DOUBLE: {
                 $$ = add_temp_symbol(TYPE_DOUBLE);
                 $$->value.double_val = -$2->value.double_val;
-                printf("F_UMINUS %s %s\n", $2->name, $$->name);
-                printf("\t> expression -> MINUS expression (expression -> %g)\n", $$->value.double_val);
+                generate("F_UMINUS %s %s\n", $2->name, $$->name);
+                logging("> expression -> MINUS expression (expression -> %g)\n", $$->value.double_val);
 
                 $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
                 break;
@@ -3228,8 +3228,8 @@ expression:
             case TYPE_BOOL: {
                 $$ = add_temp_symbol(TYPE_INT);
                 $$->value.int_val = -$2->value.bool_val;
-                printf("I_UMINUS %s %s\n", $2->name, $$->name);
-                printf("\t> expression -> MINUS expression (expression -> -%s)\n", $2->value.bool_val ? "true" : "false");
+                generate("I_UMINUS %s %s\n", $2->name, $$->name);
+                logging("> expression -> MINUS expression (expression -> -%s)\n", $2->value.bool_val ? "true" : "false");
 
                 $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
                 break;
@@ -3246,23 +3246,23 @@ expression:
         $$ = $2;
         switch ($2->type) {
             case TYPE_INT: {
-                printf("\t> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%lld))\n", $2->value.int_val);
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%lld))\n", $2->value.int_val);
                 break;
             }
             case TYPE_DOUBLE: {
-                printf("\t> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%g))\n", $2->value.double_val);
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%g))\n", $2->value.double_val);
                 break;
             }
             case TYPE_STRING: {
-                printf("\t> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->value.str_val);
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->value.str_val);
                 break;
             }
             case TYPE_BOOL: {
-                printf("\t> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->value.bool_val ? "true" : "false");
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->value.bool_val ? "true" : "false");
                 break;
             }
             case TYPE_PROGRAM_NAME: {
-                printf("\t> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->name);
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->name);
                 break;
             }
             default: {
@@ -3302,24 +3302,24 @@ expression:
         switch ($2->type) {
             case TYPE_BOOL: {
                 $$->value.bool_val = !$2->value.bool_val;
-                printf("NOT %s %s\n", $2->name, $$->name);
-                printf("\t> expression -> NOT expression (expression -> !%s)\n", $2->value.bool_val ? "true" : "false");
+                generate("NOT %s %s\n", $2->name, $$->name);
+                logging("> expression -> NOT expression (expression -> !%s)\n", $2->value.bool_val ? "true" : "false");
                 break;
             }
             case TYPE_INT: {
                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                 int_to_bool($2, temp_symbol);
                 $$->value.bool_val = !temp_symbol->value.bool_val;
-                printf("NOT %s %s\n", temp_symbol->name, $$->name);
-                printf("\t> expression -> NOT expression (expression -> !%lld)\n", $2->value.int_val);
+                generate("NOT %s %s\n", temp_symbol->name, $$->name);
+                logging("> expression -> NOT expression (expression -> !%lld)\n", $2->value.int_val);
                 break;
             }
             case TYPE_DOUBLE: {
                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
                 double_to_bool($2, temp_symbol);
                 $$->value.bool_val = !temp_symbol->value.bool_val;
-                printf("NOT %s %s\n", temp_symbol->name, $$->name);
-                printf("\t> expression -> NOT expression (expression -> !%g)\n", $2->value.double_val);
+                generate("NOT %s %s\n", temp_symbol->name, $$->name);
+                logging("> expression -> NOT expression (expression -> !%g)\n", $2->value.double_val);
                 break;
             }
             case TYPE_STRING: {
@@ -3356,18 +3356,18 @@ expression:
                     case TYPE_INT: {
                         $$ = add_temp_symbol(TYPE_INT);
                         $$->value.int_val = $1->value.int_array[index];
-                        printf("I_STORE %s[%zu] %s\n", $1->name, index, $$->name);
+                        generate("I_STORE %s[%zu] %s\n", $1->name, index, $$->name);
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
+                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
                         free(dimensions);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         $$ = add_temp_symbol(TYPE_DOUBLE);
                         $$->value.double_val = $1->value.double_array[index];
-                        printf("F_STORE %s[%zu] %s\n", $1->name, index, $$->name);
+                        generate("F_STORE %s[%zu] %s\n", $1->name, index, $$->name);
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
+                        logging("> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
                         free(dimensions);
                         break;
                     }
@@ -3376,16 +3376,16 @@ expression:
                         $$->value.str_val = strdup($1->value.str_array[index]);
                         yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
+                        logging("> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
                         free(dimensions);
                         break;
                     }
                     case TYPE_BOOL: {
                         $$ = add_temp_symbol(TYPE_BOOL);
                         $$->value.bool_val = $1->value.bool_array[index];
-                        printf("I_STORE %s[%zu] %s\n", $1->name, index, $$->name);
+                        generate("I_STORE %s[%zu] %s\n", $1->name, index, $$->name);
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
+                        logging("> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
                         free(dimensions);
                         break;
                     }
@@ -3405,18 +3405,18 @@ expression:
                     case TYPE_INT: {
                         // we won't do any semantic propogation here, since we are not sure about the real array offset
                         $$ = add_temp_symbol(TYPE_INT);
-                        printf("I_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
+                        generate("I_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
+                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
                         free(dimensions);
                         break;
                     }
                     case TYPE_DOUBLE: {
                         // we won't do any semantic propogation here, since we are not sure about the real array offset
                         $$ = add_temp_symbol(TYPE_DOUBLE);
-                        printf("F_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
+                        generate("F_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
+                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
                         free(dimensions);
                         break;
                     }
@@ -3425,16 +3425,16 @@ expression:
                         $$ = add_temp_symbol(TYPE_STRING);
                         yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
+                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
                         free(dimensions);
                         break;
                     }
                     case TYPE_BOOL: {
                         // we won't do any semantic propogation here, since we are not sure about the real array offset
                         $$ = add_temp_symbol(TYPE_BOOL);
-                        printf("I_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
+                        generate("I_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
                         dimensions = array_dimensions_to_string($1->array_pointer);
-                        printf("\t> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
+                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
                         free(dimensions);
                         break;
                     }
@@ -3451,7 +3451,7 @@ expression:
         }
         else {
             $$ = $1;
-            printf("\t> expression -> id (expression -> %s)\n", $1->name);
+            logging("> expression -> id (expression -> %s)\n", $1->name);
         }
 
         $$->is_static_checkable = $1->is_static_checkable; // propagate static checkability
@@ -3459,24 +3459,24 @@ expression:
     | INTEGER_LITERAL_MICROEX {
         $$ = add_temp_symbol(TYPE_INT);
         $$->value.int_val = $1;
-        printf("I_STORE %lld %s\n", $1, $$->name);
-        printf("\t> expression -> INTEGER_LITERAL (expression -> %lld)\n", $1);
+        generate("I_STORE %lld %s\n", $1, $$->name);
+        logging("> expression -> INTEGER_LITERAL (expression -> %lld)\n", $1);
 
         $$->is_static_checkable = true; // integer literals are always static checkable
     }
     | FLOAT_LITERAL_MICROEX {
         $$ = add_temp_symbol(TYPE_DOUBLE);
         $$->value.double_val = $1;
-        printf("F_STORE %g %s\n", $1, $$->name);
-        printf("\t> expression -> FLOAT_LITERAL (expression -> %g)\n", $1);
+        generate("F_STORE %g %s\n", $1, $$->name);
+        logging("> expression -> FLOAT_LITERAL (expression -> %g)\n", $1);
 
         $$->is_static_checkable = true; // float literals are always static checkable
     }
     | EXP_FLOAT_LITERAL_MICROEX {
         $$ = add_temp_symbol(TYPE_DOUBLE);
         $$->value.double_val = $1;
-        printf("F_STORE %g %s\n", $1, $$->name);
-        printf("\t> expression -> EXP_FLOAT_LITERAL (expression -> %g)\n", $1);
+        generate("F_STORE %g %s\n", $1, $$->name);
+        logging("> expression -> EXP_FLOAT_LITERAL (expression -> %g)\n", $1);
 
         $$->is_static_checkable = true; // exp float literals are always static checkable
     }
@@ -3487,23 +3487,23 @@ expression:
         $$ = add_temp_symbol(TYPE_STRING);
         $$->value.str_val = $1; // $1 is a valid string by yytext
         yyerror_warning_test_mode("STRING_LITERAL is not supported yet and won't generate code for it.", "Feature", true, true);
-        printf("\t> expression -> STRING_LITERAL (expression -> %s)\n", $1);
+        logging("> expression -> STRING_LITERAL (expression -> %s)\n", $1);
 
         $$->is_static_checkable = true; // string literals are always static checkable
     }
     | TRUE_LITERAL_MICROEX {
         $$ = add_temp_symbol(TYPE_BOOL);
         $$->value.bool_val = true;
-        printf("I_STORE 1 %s\n", $$->name);
-        printf("\t> expression -> TRUE_LITERAL (expression -> true)\n");
+        generate("I_STORE 1 %s\n", $$->name);
+        logging("> expression -> TRUE_LITERAL (expression -> true)\n");
 
         $$->is_static_checkable = true; // boolean literals are always static checkable
     }
     | FALSE_LITERAL_MICROEX {
         $$ = add_temp_symbol(TYPE_BOOL);
         $$->value.bool_val = false;
-        printf("I_STORE 0 %s\n", $$->name);
-        printf("\t> expression -> FALSE_LITERAL (expression -> false)\n");
+        generate("I_STORE 0 %s\n", $$->name);
+        logging("> expression -> FALSE_LITERAL (expression -> false)\n");
 
         $$->is_static_checkable = true; // boolean literals are always static checkable
     }
@@ -3522,11 +3522,11 @@ read_statement:
                     size_t index = get_array_offset(current->symbol_ptr->array_info, current->symbol_ptr->array_pointer);
                     switch (current->symbol_ptr->type) {
                         case TYPE_INT: {
-                            printf("CALL read_i %s[%zu]\n", current->symbol_ptr->name, index);
+                            generate("CALL read_i %s[%zu]\n", current->symbol_ptr->name, index);
                             break;
                         }
                         case TYPE_DOUBLE: {
-                            printf("CALL read_f %s[%zu]\n", current->symbol_ptr->name, index);
+                            generate("CALL read_f %s[%zu]\n", current->symbol_ptr->name, index);
                             break;
                         }
                         case TYPE_STRING: {
@@ -3534,7 +3534,7 @@ read_statement:
                             break;
                         }
                         case TYPE_BOOL: {
-                            printf("CALL read_b %s[%zu]\n", current->symbol_ptr->name, index);
+                            generate("CALL read_b %s[%zu]\n", current->symbol_ptr->name, index);
                             break;
                         }
                         case TYPE_PROGRAM_NAME: {
@@ -3551,11 +3551,11 @@ read_statement:
             else {
                 switch (current->symbol_ptr->type) {
                     case TYPE_INT: {
-                        printf("CALL read_i %s\n", current->symbol_ptr->name);
+                        generate("CALL read_i %s\n", current->symbol_ptr->name);
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        printf("CALL read_f %s\n", current->symbol_ptr->name);
+                        generate("CALL read_f %s\n", current->symbol_ptr->name);
                         break;
                     }
                     case TYPE_STRING: {
@@ -3563,7 +3563,7 @@ read_statement:
                         break;
                     }
                     case TYPE_BOOL: {
-                        printf("CALL read_b %s\n", current->symbol_ptr->name);
+                        generate("CALL read_b %s\n", current->symbol_ptr->name);
                         break;
                     }
                     default: {
@@ -3597,7 +3597,7 @@ read_statement:
             strcat(ids_name.str, current->symbol_ptr->name);
             if (current->symbol_ptr->array_pointer.dimensions > 0) {
                 dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
-                if (realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
+                if (!realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");
                 }
@@ -3606,7 +3606,7 @@ read_statement:
             }
             current = current->next;
         }
-        printf("\t> read_statement -> read left_parent id_list right_parent semicolon (read_statement -> read(%s);)\n", ids_name.str);
+        logging("> read_statement -> read left_parent id_list right_parent semicolon (read_statement -> read(%s);)\n", ids_name.str);
         free(ids_name.str);
         free_id_list();
     }
@@ -3622,11 +3622,11 @@ write_statement:
             }
             switch (current->symbol_ptr->type) {
                 case TYPE_INT: {
-                    printf("CALL write_i %s\n", current->symbol_ptr->name);
+                    generate("CALL write_i %s\n", current->symbol_ptr->name);
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    printf("CALL write_f %s\n", current->symbol_ptr->name);
+                    generate("CALL write_f %s\n", current->symbol_ptr->name);
                     break;
                 }
                 case TYPE_STRING: {
@@ -3634,7 +3634,7 @@ write_statement:
                     break;
                 }
                 case TYPE_BOOL: {
-                    printf("CALL write_b %s\n", current->symbol_ptr->name);
+                    generate("CALL write_b %s\n", current->symbol_ptr->name);
                     break;
                 }
                 case TYPE_PROGRAM_NAME: {
@@ -3671,7 +3671,7 @@ write_statement:
             // expression semantics record is already handle array access in expression rule
             current = current->next;
         }
-        printf("\t> write_statement -> write left_parent expression_list right_parent semicolon (write_statement -> write(%s);)\n", expressions_name.str);
+        logging("> write_statement -> write left_parent expression_list right_parent semicolon (write_statement -> write(%s);)\n", expressions_name.str);
         free(expressions_name.str);
         free_expression_list();
     }
@@ -3680,7 +3680,7 @@ expression_list:
     expression {
         $$ = $1;
         add_expression_node($1);
-        printf("\t> expression_list -> expression (expression_list -> %s)\n", $1->name);
+        logging("> expression_list -> expression (expression_list -> %s)\n", $1->name);
     }
     | expression_list COMMA_MICROEX expression {
         $$ = $1;
@@ -3713,18 +3713,18 @@ expression_list:
             // expression semantics record is already handle array access in expression rule
             current = current->next;
         }
-        printf("\t> expression_list -> expression_list COMMA expression (expression_list -> %s)\n", expressions_name.str);
+        logging("> expression_list -> expression_list COMMA expression (expression_list -> %s)\n", expressions_name.str);
         free(expressions_name.str);
     }
     ;
 // if statement
 if_statement:
     if_prefix if_suffix {
-        printf("%s:\n", $1->name); // false label for if condition isn't true
-        printf("\t> if_statement -> if_prefix if_suffix\n");
+        generate("%s:\n", $1->name); // false label for if condition isn't true
+        logging("> if_statement -> if_prefix if_suffix\n");
     }
     | if_else_prefix if_suffix {
-        printf("\t> if_statement -> if_else_prefix if_suffix\n");
+        logging("> if_statement -> if_else_prefix if_suffix\n");
     }
     ;
 if_prefix:
@@ -3735,23 +3735,23 @@ if_prefix:
         switch ($3->type) {
             case TYPE_INT:
             case TYPE_BOOL: {
-                printf("I_CMP 0 %s\n", $3->name);
-                printf("JNE %s\n", true_label->name);
-                printf("JUMP %s\n", false_label->name);
-                printf("%s:\n", true_label->name);
+                generate("I_CMP 0 %s\n", $3->name);
+                generate("JNE %s\n", true_label->name);
+                generate("JUMP %s\n", false_label->name);
+                generate("%s:\n", true_label->name);
                 if ($3->type == TYPE_INT) {
-                    printf("\t> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%lld) then)\n", $3->value.int_val);
+                    logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%lld) then)\n", $3->value.int_val);
                 } else {
-                    printf("\t> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%s) then)\n", $3->value.bool_val ? "true" : "false");
+                    logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%s) then)\n", $3->value.bool_val ? "true" : "false");
                 }
                 break;
             }
             case TYPE_DOUBLE: {
-                printf("F_CMP 0.0 %s\n", $3->name);
-                printf("JNE %s\n", true_label->name);
-                printf("JUMP %s\n", false_label->name);
-                printf("%s:\n", true_label->name);
-                printf("\t> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%g) then)\n", $3->value.double_val);
+                generate("F_CMP 0.0 %s\n", $3->name);
+                generate("JNE %s\n", true_label->name);
+                generate("JUMP %s\n", false_label->name);
+                generate("%s:\n", true_label->name);
+                logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%g) then)\n", $3->value.double_val);
                 break;
             }
             case TYPE_STRING: {
@@ -3771,13 +3771,13 @@ if_prefix:
     ;
 if_else_prefix:
     if_prefix statement_list ELSE_MICROEX {
-        printf("%s:\n", $1->name); // false label for if condition isn't true
-        printf("\t> if_statement -> if_prefix statement_list else if_suffix\n");
+        generate("%s:\n", $1->name); // false label for if condition isn't true
+        logging("> if_statement -> if_prefix statement_list else if_suffix\n");
     }
     ;
 if_suffix:
     statement_list ENDIF_MICROEX {
-        printf("\t> if_suffix -> statement_list endif\n");
+        logging("> if_suffix -> statement_list endif\n");
     }
     ;
 
@@ -3792,11 +3792,11 @@ for_statement:
                     case TYPE_INT: {
                         if ($1.for_direction == DIRECTION_TO) {
                             $1.for_variable->value.int_array[index]++;
-                            printf("INC %s[%zu]\n", $1.for_variable->name, index);
+                            generate("INC %s[%zu]\n", $1.for_variable->name, index);
                         }
                         else {
                             $1.for_variable->value.int_array[index]--;
-                            printf("DEC %s[%zu]\n", $1.for_variable->name, index);
+                            generate("DEC %s[%zu]\n", $1.for_variable->name, index);
                         }
                         break;
                     }
@@ -3804,12 +3804,12 @@ for_statement:
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         if ($1.for_direction == DIRECTION_TO) {
                             $1.for_variable->value.double_array[index]++;
-                            printf("F_ADD %s[%zu] 1.0 %s\n", $1.for_variable->name, index, temp_symbol->name);
+                            generate("F_ADD %s[%zu] 1.0 %s\n", $1.for_variable->name, index, temp_symbol->name);
                         } else {
                             $1.for_variable->value.double_array[index]--;
-                            printf("F_SUB %s[%zu] 1.0 %s\n", $1.for_variable->name, index, temp_symbol->name);
+                            generate("F_SUB %s[%zu] 1.0 %s\n", $1.for_variable->name, index, temp_symbol->name);
                         }
-                        printf("F_STORE %s %s[%zu]\n", temp_symbol->name, $1.for_variable->name, index);
+                        generate("F_STORE %s %s[%zu]\n", temp_symbol->name, $1.for_variable->name, index);
                         break;
                     }
                     case TYPE_BOOL:
@@ -3826,21 +3826,21 @@ for_statement:
                 switch ($1.for_variable->type) {
                     case TYPE_INT: {
                         if ($1.for_direction == DIRECTION_TO) {
-                            printf("INC %s[%s]\n", $1.for_variable->name, offset->name);
+                            generate("INC %s[%s]\n", $1.for_variable->name, offset->name);
                         }
                         else {
-                            printf("DEC %s[%s]\n", $1.for_variable->name, offset->name);
+                            generate("DEC %s[%s]\n", $1.for_variable->name, offset->name);
                         }
                         break;
                     }
                     case TYPE_DOUBLE: {
                         symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                         if ($1.for_direction == DIRECTION_TO) {
-                            printf("F_ADD %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
+                            generate("F_ADD %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
                         } else {
-                            printf("F_SUB %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
+                            generate("F_SUB %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
                         }
-                        printf("F_STORE %s %s[%s]\n", temp_symbol->name, $1.for_variable->name, offset->name);
+                        generate("F_STORE %s %s[%s]\n", temp_symbol->name, $1.for_variable->name, offset->name);
                         break;
                     }
                     case TYPE_BOOL:
@@ -3858,11 +3858,11 @@ for_statement:
                 case TYPE_INT: {
                     if ($1.for_direction == DIRECTION_TO) {
                         $1.for_variable->value.int_val++;
-                        printf("INC %s\n", $1.for_variable->name);
+                        generate("INC %s\n", $1.for_variable->name);
                     }
                     else {
                         $1.for_variable->value.int_val--;
-                        printf("DEC %s\n", $1.for_variable->name);
+                        generate("DEC %s\n", $1.for_variable->name);
                     }
                     break;
                 }
@@ -3870,12 +3870,12 @@ for_statement:
                     symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                     if ($1.for_direction == DIRECTION_TO) {
                         $1.for_variable->value.double_val++;
-                        printf("F_ADD %s 1.0 %s\n", $1.for_variable->name, temp_symbol->name);
+                        generate("F_ADD %s 1.0 %s\n", $1.for_variable->name, temp_symbol->name);
                     } else {
                         $1.for_variable->value.double_val--;
-                        printf("F_SUB %s 1.0 %s\n", $1.for_variable->name, temp_symbol->name);
+                        generate("F_SUB %s 1.0 %s\n", $1.for_variable->name, temp_symbol->name);
                     }
-                    printf("F_STORE %s %s\n", temp_symbol->name, $1.for_variable->name);
+                    generate("F_STORE %s %s\n", temp_symbol->name, $1.for_variable->name);
                     break;
                 }
                 case TYPE_BOOL:
@@ -3889,10 +3889,10 @@ for_statement:
         }
 
         condition_info info = condition_proccess($1.for_variable, (($1.for_direction == DIRECTION_TO) ? LESS_MICROEX : GREAT_MICROEX), $1.for_end_expression);
-        printf("I_CMP 0 %s\n", info.result_ptr->name);
-        printf("JNE %s\n", $1.for_start_label->name);
-        printf("%s\n", $1.for_end_label->name); // end label for for loop
-        printf("\t> for_statement -> for_prefix statement_list endfor\n");
+        generate("I_CMP 0 %s\n", info.result_ptr->name);
+        generate("JNE %s\n", $1.for_start_label->name);
+        generate("%s\n", $1.for_end_label->name); // end label for for loop
+        logging("> for_statement -> for_prefix statement_list endfor\n");
     }
 for_prefix:
     FOR_MICROEX LEFT_PARENT_MICROEX id ASSIGN_MICROEX expression direction expression RIGHT_PARENT_MICROEX {
@@ -3925,15 +3925,15 @@ for_prefix:
                             case TYPE_BOOL: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %s))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %s))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %lld))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %lld))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %g))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %g))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -3943,21 +3943,21 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("I_STORE %s %s[%zu]\n", $5->name, $3->name, index);
+                                generate("I_STORE %s %s[%zu]\n", $5->name, $3->name, index);
                                 break;
                             }
                             case TYPE_INT: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %s))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %s))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %lld))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %lld))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %g))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %g))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -3967,21 +3967,21 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("I_STORE %s %s[%zu]\n", $5->name, $3->name, index);
+                                generate("I_STORE %s %s[%zu]\n", $5->name, $3->name, index);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %s))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %s))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %lld))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %lld))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %g))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %g))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -3991,7 +3991,7 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("F_TO_I %s %s[%zu]\n", $5->name, $3->name, index);
+                                generate("F_TO_I %s %s[%zu]\n", $5->name, $3->name, index);
                                 break;
                             }
                             case TYPE_STRING: 
@@ -4008,15 +4008,15 @@ for_prefix:
                             case TYPE_BOOL: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %s))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %s))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %lld))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %lld))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %g))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %g))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4026,21 +4026,21 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("I_TO_F %s %s[%zu]\n", $5->name, $3->name, index);
+                                generate("I_TO_F %s %s[%zu]\n", $5->name, $3->name, index);
                                 break;
                             }
                             case TYPE_INT: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %s))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %s))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %lld))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %lld))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %g))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %g))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4050,21 +4050,21 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("I_TO_F %s %s[%zu]\n", $5->name, $3->name, index);
+                                generate("I_TO_F %s %s[%zu]\n", $5->name, $3->name, index);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %s))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %s))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %lld))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %lld))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %g))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %g))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4074,7 +4074,7 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("F_STORE %s %s[%zu]\n", $5->name, $3->name, index);
+                                generate("F_STORE %s %s[%zu]\n", $5->name, $3->name, index);
                                 break;
                             }
                             case TYPE_STRING: 
@@ -4103,15 +4103,15 @@ for_prefix:
                             case TYPE_BOOL: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4121,21 +4121,21 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                                generate("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
                                 break;
                             }
                             case TYPE_INT: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4145,21 +4145,21 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                                generate("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4169,7 +4169,7 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("F_TO_I %s %s[%s]\n", $5->name, $3->name, offset->name);
+                                generate("F_TO_I %s %s[%s]\n", $5->name, $3->name, offset->name);
                                 break;
                             }
                             case TYPE_STRING:
@@ -4186,15 +4186,15 @@ for_prefix:
                             case TYPE_BOOL: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4204,21 +4204,21 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
+                                generate("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
                                 break;
                             }
                             case TYPE_INT: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4228,21 +4228,21 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
+                                generate("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 switch ($7->type) {
                                     case TYPE_BOOL: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                         break;
                                     }
                                     case TYPE_INT: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                         break;
                                     }
                                     case TYPE_DOUBLE: {
-                                        printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                         break;
                                     }
                                     case TYPE_STRING:
@@ -4252,7 +4252,7 @@ for_prefix:
                                         break;
                                     }
                                 }
-                                printf("F_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                                generate("F_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
                                 break;
                             }
                             case TYPE_STRING:
@@ -4281,15 +4281,15 @@ for_prefix:
                         case TYPE_INT: {
                             switch ($7->type) {
                                 case TYPE_BOOL: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %s))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %s))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %lld))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %lld))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %g))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %g))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4299,21 +4299,21 @@ for_prefix:
                                     break;
                                 }
                             }
-                            printf("I_STORE %s %s\n", $5->name, $3->name);
+                            generate("I_STORE %s %s\n", $5->name, $3->name);
                             break;
                         }
                         case TYPE_BOOL: {
                             switch ($7->type) {
                                 case TYPE_BOOL: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %s))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %s))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %lld))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %lld))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %g))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %g))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4323,21 +4323,21 @@ for_prefix:
                                     break;
                                 }
                             }
-                            printf("I_STORE %s %s\n", $5->name, $3->name);
+                            generate("I_STORE %s %s\n", $5->name, $3->name);
                             break;
                         }
                         case TYPE_DOUBLE: {
                             switch ($7->type) {
                                 case TYPE_BOOL: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %s))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %s))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %lld))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %lld))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %g))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %g))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4347,7 +4347,7 @@ for_prefix:
                                     break;
                                 }
                             }
-                            printf("F_TO_I %s %s\n", $5->name, $3->name);
+                            generate("F_TO_I %s %s\n", $5->name, $3->name);
                             break;
                         }
                         case TYPE_STRING:
@@ -4364,15 +4364,15 @@ for_prefix:
                         case TYPE_INT: {
                             switch ($7->type) {
                                 case TYPE_BOOL: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %s))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %s))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %lld))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %lld))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %g))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %g))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4382,21 +4382,21 @@ for_prefix:
                                     break;
                                 }
                             }
-                            printf("I_TO_F %s %s\n", $5->name, $3->name);
+                            generate("I_TO_F %s %s\n", $5->name, $3->name);
                             break;
                         }
                         case TYPE_BOOL: {
                             switch ($7->type) {
                                 case TYPE_BOOL: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %s))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %s))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %lld))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %lld))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    printf("\t> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %g))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %g))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4406,7 +4406,7 @@ for_prefix:
                                     break;
                                 }
                             }
-                            printf("I_TO_F %s %s\n", $5->name, $3->name);
+                            generate("I_TO_F %s %s\n", $5->name, $3->name);
                             break;
                         }
                         case TYPE_STRING:
@@ -4430,15 +4430,15 @@ for_prefix:
         if (!$5->is_static_checkable) {
             switch ($5->type) {
                 case TYPE_INT: {
-                    printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.int_val);
+                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.int_val);
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.double_val);
+                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.double_val);
                     break;
                 }
                 case TYPE_BOOL: {
-                    printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.bool_val ? "true" : "false");
+                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.bool_val ? "true" : "false");
                     break;
                 }
                 case TYPE_STRING:
@@ -4452,15 +4452,15 @@ for_prefix:
         if (!$7->is_static_checkable) {
             switch ($7->type) {
                 case TYPE_INT: {
-                    printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.int_val);
+                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.int_val);
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.double_val);
+                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.double_val);
                     break;
                 }
                 case TYPE_BOOL: {
-                    printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.bool_val ? "true" : "false");
+                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.bool_val ? "true" : "false");
                     break;
                 }
                 case TYPE_STRING:
@@ -4475,10 +4475,10 @@ for_prefix:
         label *for_start_label = add_label();
         label *for_end_label = add_label();
         condition_info info = condition_proccess($3, (($6 == DIRECTION_TO)? LESS_MICROEX : GREAT_MICROEX), $7);
-        printf("I_CMP 0 %s\n", info.result_ptr->name);
-        printf("JNE %s\n", for_start_label->name);
-        printf("J %s\n", for_end_label->name);
-        printf("%s:\n", for_start_label->name);
+        generate("I_CMP 0 %s\n", info.result_ptr->name);
+        generate("JNE %s\n", for_start_label->name);
+        generate("J %s\n", for_end_label->name);
+        generate("%s:\n", for_start_label->name);
 
         $$.for_start_label = for_start_label;
         $$.for_end_label = for_end_label;
@@ -4492,11 +4492,11 @@ for_prefix:
 direction:
     TO_MICROEX {
         $$ = DIRECTION_TO;
-        printf("\t> direction -> to\n");
+        logging("> direction -> to\n");
     }
     | DOWNTO_MICROEX {
         $$ = DIRECTION_DOWNTO;
-        printf("\t> direction -> downto\n");
+        logging("> direction -> downto\n");
     }
     ;
 
@@ -4508,24 +4508,24 @@ while_statement:
                 size_t index = get_array_offset($1.while_condition->array_info, $1.while_condition->array_pointer);
                 switch ($1.while_condition->type) {
                     case TYPE_INT: {
-                        printf("I_CMP 0 %s[%zu]\n", $1.while_condition->name, index);
-                        printf("JNE %s\n", $1.while_start_label->name);
+                        generate("I_CMP 0 %s[%zu]\n", $1.while_condition->name, index);
+                        generate("JNE %s\n", $1.while_start_label->name);
 
-                        printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                        logging("> while_statement -> while_prefix statement_list endwhile\n");
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        printf("F_CMP 0.0 %s[%zu]\n", $1.while_condition->name, index);
-                        printf("JNE %s\n", $1.while_start_label->name);
+                        generate("F_CMP 0.0 %s[%zu]\n", $1.while_condition->name, index);
+                        generate("JNE %s\n", $1.while_start_label->name);
 
-                        printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                        logging("> while_statement -> while_prefix statement_list endwhile\n");
                         break;
                     }
                     case TYPE_BOOL: {
-                        printf("I_CMP 0 %s[%zu]\n", $1.while_condition->name, index);
-                        printf("JNE %s\n", $1.while_start_label->name);
+                        generate("I_CMP 0 %s[%zu]\n", $1.while_condition->name, index);
+                        generate("JNE %s\n", $1.while_start_label->name);
 
-                        printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                        logging("> while_statement -> while_prefix statement_list endwhile\n");
                         break;
                     }
                     case TYPE_STRING:
@@ -4540,24 +4540,24 @@ while_statement:
                 symbol *offset = get_array_offset_unstatic($1.while_condition->array_info, $1.while_condition->array_pointer);
                 switch ($1.while_condition->type) {
                     case TYPE_INT: {
-                        printf("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
-                        printf("JNE %s\n", $1.while_start_label->name);
+                        generate("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
+                        generate("JNE %s\n", $1.while_start_label->name);
 
-                        printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                        logging("> while_statement -> while_prefix statement_list endwhile\n");
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        printf("F_CMP 0.0 %s[%s]\n", $1.while_condition->name, offset->name);
-                        printf("JNE %s\n", $1.while_start_label->name);
+                        generate("F_CMP 0.0 %s[%s]\n", $1.while_condition->name, offset->name);
+                        generate("JNE %s\n", $1.while_start_label->name);
 
-                        printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                        logging("> while_statement -> while_prefix statement_list endwhile\n");
                         break;
                     }
                     case TYPE_BOOL: {
-                        printf("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
-                        printf("JNE %s\n", $1.while_start_label->name);
+                        generate("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
+                        generate("JNE %s\n", $1.while_start_label->name);
 
-                        printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                        logging("> while_statement -> while_prefix statement_list endwhile\n");
                         break;
                     }
                     case TYPE_STRING:
@@ -4572,24 +4572,24 @@ while_statement:
         else {
             switch ($1.while_condition->type) {
                 case TYPE_BOOL: {
-                    printf("I_CMP 0 %s\n", $1.while_condition->name);
-                    printf("JNE %s\n", $1.while_start_label->name);
+                    generate("I_CMP 0 %s\n", $1.while_condition->name);
+                    generate("JNE %s\n", $1.while_start_label->name);
 
-                    printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                    logging("> while_statement -> while_prefix statement_list endwhile\n");
                     break;
                 }
                 case TYPE_INT: {
-                    printf("I_CMP 0 %s\n", $1.while_condition->name);
-                    printf("JNE %s\n", $1.while_start_label->name);
+                    generate("I_CMP 0 %s\n", $1.while_condition->name);
+                    generate("JNE %s\n", $1.while_start_label->name);
 
-                    printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                    logging("> while_statement -> while_prefix statement_list endwhile\n");
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    printf("F_CMP 0.0 %s\n", $1.while_condition->name);
-                    printf("JNE %s\n", $1.while_start_label->name);
+                    generate("F_CMP 0.0 %s\n", $1.while_condition->name);
+                    generate("JNE %s\n", $1.while_start_label->name);
 
-                    printf("\t> while_statement -> while_prefix statement_list endwhile\n");
+                    logging("> while_statement -> while_prefix statement_list endwhile\n");
                     break;
                 }
                 case TYPE_STRING:
@@ -4601,7 +4601,7 @@ while_statement:
             }
         }
 
-        printf("%s:\n", $1.while_end_label->name);
+        generate("%s:\n", $1.while_end_label->name);
     }
     ;
 while_prefix:
@@ -4618,32 +4618,32 @@ while_prefix:
                 size_t index = get_array_offset($3->array_info, $3->array_pointer);
                 switch ($3->type) {
                     case TYPE_INT: {
-                        printf("I_CMP 0 %s[%zu]\n", $3->name, index);
-                        printf("JNE %s\n", while_start_label->name);
+                        generate("I_CMP 0 %s[%zu]\n", $3->name, index);
+                        generate("JNE %s\n", while_start_label->name);
 
-                        printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%lld))\n", $3->value.int_array[index]);
+                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%lld))\n", $3->value.int_array[index]);
                         if (!$3->is_static_checkable) {
-                            printf("\t\t> %s[%zu] = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.int_array[index]);
+                            logging("\t> %s[%zu] = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.int_array[index]);
                         }
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        printf("F_CMP 0.0 %s[%zu]\n", $3->name, index);
-                        printf("JNE %s\n", while_start_label->name);
+                        generate("F_CMP 0.0 %s[%zu]\n", $3->name, index);
+                        generate("JNE %s\n", while_start_label->name);
 
-                        printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%g))\n", $3->value.double_array[index]);
+                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%g))\n", $3->value.double_array[index]);
                         if (!$3->is_static_checkable) {
-                            printf("\t\t> %s[%zu] = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.double_array[index]);
+                            logging("\t> %s[%zu] = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.double_array[index]);
                         }
                         break;
                     }
                     case TYPE_BOOL: {
-                        printf("I_CMP 0 %s[%zu]\n", $3->name, index);
-                        printf("JNE %s\n", while_start_label->name);
+                        generate("I_CMP 0 %s[%zu]\n", $3->name, index);
+                        generate("JNE %s\n", while_start_label->name);
 
-                        printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s))\n", $3->value.bool_array[index] ? "true" : "false");
+                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s))\n", $3->value.bool_array[index] ? "true" : "false");
                         if (!$3->is_static_checkable) {
-                            printf("\t\t> %s[%zu] = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.bool_array[index] ? "true" : "false");
+                            logging("\t> %s[%zu] = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.bool_array[index] ? "true" : "false");
                         }
                         break;
                     }
@@ -4660,24 +4660,24 @@ while_prefix:
                 dimensions = array_dimensions_to_string($3->array_pointer);
                 switch ($3->type) {
                     case TYPE_INT: {
-                        printf("I_CMP 0 %s[%s]\n", $3->name, offset->name);
-                        printf("JNE %s\n", while_start_label->name);
+                        generate("I_CMP 0 %s[%s]\n", $3->name, offset->name);
+                        generate("JNE %s\n", while_start_label->name);
 
-                        printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        printf("F_CMP 0.0 %s[%s]\n", $3->name, offset->name);
-                        printf("JNE %s\n", while_start_label->name);
+                        generate("F_CMP 0.0 %s[%s]\n", $3->name, offset->name);
+                        generate("JNE %s\n", while_start_label->name);
 
-                        printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
                         break;
                     }
                     case TYPE_BOOL: {
-                        printf("I_CMP 0 %s[%s]\n", $3->name, offset->name);
-                        printf("JNE %s\n", while_start_label->name);
+                        generate("I_CMP 0 %s[%s]\n", $3->name, offset->name);
+                        generate("JNE %s\n", while_start_label->name);
 
-                        printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
                         break;
                     }
                     case TYPE_STRING:
@@ -4692,32 +4692,32 @@ while_prefix:
         else {
             switch ($3->type) {
                 case TYPE_BOOL: {
-                    printf("I_CMP 0 %s\n", $3->name);
-                    printf("JNE %s\n", while_start_label->name);
+                    generate("I_CMP 0 %s\n", $3->name);
+                    generate("JNE %s\n", while_start_label->name);
 
-                    printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s))\n", $3->value.bool_val ? "true" : "false");
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s))\n", $3->value.bool_val ? "true" : "false");
                     if (!$3->is_static_checkable) {
-                        printf("\t\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                        logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
                     }
                     break;
                 }
                 case TYPE_INT: {
-                    printf("I_CMP 0 %s\n", $3->name);
-                    printf("JNE %s\n", while_start_label->name);
+                    generate("I_CMP 0 %s\n", $3->name);
+                    generate("JNE %s\n", while_start_label->name);
 
-                    printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%lld))\n", $3->value.int_val);
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%lld))\n", $3->value.int_val);
                     if (!$3->is_static_checkable) {
-                        printf("\t\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                        logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                     }
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    printf("F_CMP 0.0 %s\n", $3->name);
-                    printf("JNE %s\n", while_start_label->name);
+                    generate("F_CMP 0.0 %s\n", $3->name);
+                    generate("JNE %s\n", while_start_label->name);
 
-                    printf("\t> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%g))\n", $3->value.double_val);
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%g))\n", $3->value.double_val);
                     if (!$3->is_static_checkable) {
-                        printf("\t\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                        logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                     }
                     break;
                 }
@@ -4734,8 +4734,8 @@ while_prefix:
         $$.while_end_label = while_end_label;
         $$.while_condition = $3;
 
-        printf("J %s\n", while_end_label->name);
-        printf("%s:\n", while_start_label->name);
+        generate("J %s\n", while_end_label->name);
+        generate("%s:\n", while_start_label->name);
     }
     ;
 %%

@@ -130,6 +130,9 @@ void yyerror_warning(const char *msg, const char *error_name, bool is_warning);
 void yyerror_warning_test_mode(const char *msg, const char *error_name, bool is_warning, bool need_test_mode);
 int yylex();
 
+void generate(const char *format, ...);
+void logging(const char *format, ...);
+
 char *data_type_to_string(data_type type);
 char *array_range_to_string(array_type array_info);
 char *array_dimensions_to_string(array_type array_info);
