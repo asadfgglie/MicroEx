@@ -77,6 +77,10 @@ bool [Bb][Oo][Oo][Ll]
 to [Tt][Oo]
 downto [Dd][Oo][Ww][Nn][Tt][Oo]
 
+fn [Ff][Nn]
+return [Rr][Ee][Tt][Uu][Rr][Nn]
+fnend [Ff][Nn][Ee][Nn][Dd]
+
 %%
 
 {empty_word} {
@@ -160,6 +164,9 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
     line_word_count += yyleng;
     if (!is_multi_line_comment) {
         yylval.str_val = strdup(yytext);
+        if (yylval.str_val == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
         logging("$ lexer got token: `%s`, scan: `%s`\n", "STRING_LITERAL", yytext);
         return STRING_LITERAL_MICROEX;
     }
@@ -436,6 +443,27 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
         return BOOL_MICROEX;
     }
 }
+{fn} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment)  {
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "FN", yytext);
+        return FN_MICROEX;
+    }
+}
+{return} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment)  {
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "RETURN", yytext);
+        return RETURN_MICROEX;
+    }
+}
+{fnend} {
+    line_word_count += yyleng;
+    if (!is_multi_line_comment)  {
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "FNEND", yytext);
+        return FNEND_MICROEX;
+    }
+}
 
 {id} {
     line_word_count += yyleng;
@@ -553,7 +581,11 @@ char *data_array_type_to_string(data_type type) {
         }
         case TYPE_PROGRAM_NAME: {
             yyerror_name("Program name does not have a data array type.", "Parsing");
-            return NULL; // Program name does not have a data array type.
+            return NULL; // This will never be reached, but added to avoid compiler warnings.
+        }
+        case TYPE_FUNCTION: {
+            yyerror_name("Function does not have a data array type.", "Parsing");
+            return NULL; // This will never be reached, but added to avoid compiler warnings.
         }
         default: {
             yyerror_name("Unknown data type", "Parsing");
@@ -594,6 +626,13 @@ char *data_type_to_string(data_type type) {
             }
             return result;
         }
+        case TYPE_FUNCTION: {
+            result = strdup("function");
+            if (result == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            return result;
+        }
         default: {
             yyerror_name("Unknown data type", "Parsing");
             return NULL; // This will never be reached, but added to avoid compiler warnings.
@@ -601,35 +640,81 @@ char *data_type_to_string(data_type type) {
     }
 }
 
-symbol *get_symbol(const char *name) {
-    symbol *s;
-    HASH_FIND_STR(symbol_table, name, s); // s = NULL if not found
-    if (s != NULL) {
-        return s;
-    }
-
-    add_symbol(name);
-    HASH_FIND_STR(symbol_table, name, s);
-    return s;
-}
-
-void add_symbol(const char *name) {
+symbol *add_symbol(const char *name) {
     symbol *s = (symbol *)malloc(sizeof(symbol));
     if (s == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
 
-    s->name = strdup(name);
-    s->type = TYPE_UNKNOWN;
-    s->array_info.dimensions = 0;
-    s->array_info.dimension_sizes = NULL;
-    s->array_info.is_static_checkable = true;
-    s->array_pointer.dimensions = 0;
-    s->array_pointer.dimension_sizes = NULL;
-    s->array_pointer.is_static_checkable = true;
-    s->is_static_checkable = true;
+    SYMBOL_INIT(s, strdup(name));
+    if (s->name == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
 
     HASH_ADD_STR(symbol_table, name, s);
+
+    return s;
+}
+
+/**
+ * Add a function symbol to `current_function_info->local_symbol_table`.
+ * Returns a pointer to the symbol in `current_function_info->local_symbol_table`.
+ */
+symbol *add_function_symbol(const char *name) {
+    if (current_function_info == NULL) {
+        yyerror_name("Function symbol should be added when parsing function statement.", "Parsing");
+    }
+
+    char *tmp = (char *)malloc(sizeof(char) * (strlen(FN_LOCAL_SYMBOL_PREFIX) + strlen(name) + 1));
+    if (tmp == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+    tmp[0] = '\0';
+    sprintf(tmp, "%s%s", FN_LOCAL_SYMBOL_PREFIX, name);
+
+    symbol *s = (symbol *)malloc(sizeof(symbol));
+    if (s == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+
+    SYMBOL_INIT(s, tmp);
+
+    HASH_ADD_STR(current_function_info->local_symbol_table, name, s);
+
+    return s;
+}
+
+symbol *get_symbol(const char *name) {
+    symbol *s;
+
+    if (current_function_info != NULL) {
+        // parsing funciton statement
+        // try to find local variable
+        char *tmp = (char *)malloc(sizeof(char) * (strlen(FN_LOCAL_SYMBOL_PREFIX) + strlen(name) + 1));
+        if (tmp == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+        tmp[0] = '\0';
+
+        sprintf(tmp, "%s%s", FN_LOCAL_SYMBOL_PREFIX, name);
+        HASH_FIND_STR(current_function_info->local_symbol_table, tmp, s);
+
+        if (s != NULL) {
+            return s; // return local variable symbol
+        }
+    }
+
+    HASH_FIND_STR(symbol_table, name, s); // s = NULL if not found
+    if (s != NULL) {
+        // return global variable
+        return s;
+    }
+
+    if (current_function_info != NULL) {
+        // parsing function statement
+        return add_function_symbol(name);
+    }
+    return add_symbol(name);
 }
 
 /**
@@ -638,33 +723,36 @@ void add_symbol(const char *name) {
  */
 symbol *add_temp_symbol(data_type type) {
     size_t index = HASH_COUNT(temp_symbol_table);
-    char *name = (char *)malloc(sizeof(char) * (strlen(TEMP_SYMBOL_PREFIX) + SIZE_T_CHARLEN));
-    if (name == NULL) {
-        yyerror_name("Out of memory when malloc.", "Parsing");
-    }
-    name[0] = '\0';
     char *type_str = data_type_to_string(type);
-    sprintf(name, "%s%s&%zu", TEMP_SYMBOL_PREFIX, type_str, index);
+    
+    char *name = NULL;
+
+    if (current_function_info == NULL) {
+        name = (char *)malloc(sizeof(char) * (strlen(TEMP_SYMBOL_PREFIX) + strlen(type_str) + SIZE_T_CHARLEN));
+        if (name == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+        name[0] = '\0';
+        sprintf(name, "%s%s&%zu", TEMP_SYMBOL_PREFIX, type_str, index);
+    }
+    else {
+        name = (char *)malloc(sizeof(char) * (strlen(FN_LOCAL_SYMBOL_PREFIX TEMP_SYMBOL_PREFIX) + strlen(type_str) + SIZE_T_CHARLEN));
+        if (name == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+        name[0] = '\0';
+        sprintf(name, "%s%s&%zu", FN_LOCAL_SYMBOL_PREFIX TEMP_SYMBOL_PREFIX, type_str, index);
+    }
+    
     free(type_str);
 
     symbol *s = (symbol *)malloc(sizeof(symbol));
     if (s == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
-    s->name = name;
-    s->type = type;
     
-    s->array_info.dimensions = 0;
-    s->array_info.dimension_sizes = NULL;
-    s->array_info.dimension_sizes_symbol = NULL;
-    s->array_info.is_static_checkable = true;
-
-    s->array_pointer.dimensions = 0;
-    s->array_pointer.dimension_sizes = NULL;
-    s->array_pointer.dimension_sizes_symbol = NULL;
-    s->array_pointer.is_static_checkable = true;
-
-    s->is_static_checkable = true;
+    SYMBOL_INIT(s, name);
+    s->type = type;
 
     HASH_ADD_STR(temp_symbol_table, name, s);
 
@@ -672,23 +760,12 @@ symbol *add_temp_symbol(data_type type) {
     if (s == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
-    s->name = strdup(name);
+    
+    SYMBOL_INIT(s, strdup(name));
     if (s->name == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
     s->type = type;
-
-    s->array_info.dimensions = 0;
-    s->array_info.dimension_sizes = NULL;
-    s->array_info.dimension_sizes_symbol = NULL;
-    s->array_info.is_static_checkable = true;
-
-    s->array_pointer.dimensions = 0;
-    s->array_pointer.dimension_sizes = NULL;
-    s->array_pointer.dimension_sizes_symbol = NULL;
-    s->array_pointer.is_static_checkable = true;
-    
-    s->is_static_checkable = true;
 
     HASH_ADD_STR(symbol_table, name, s);
     

@@ -2,12 +2,47 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#define DTYPE_NAME_LEN 10 // strlen(data_type) maximun output
 #define SIZE_T_CHARLEN 30 // for size_t to string conversion, 30 is enough for 64-bit size_t
 #define MAX_ERROR_MSG_LEN 256
-#define TEMP_SYMBOL_PREFIX "temp&" // `&` ensures that symbols do not conflict with user-defined symbols
-#define LABEL_PREFIX "label&" // `&` ensures that labels do not conflict with user-defined labels
+// `&` ensures that symbols do not conflict with user-defined symbols
+#define TEMP_SYMBOL_PREFIX "temp&"
+// "%s%zu", TEMP_SYMBOL_PREFIX, NUMBER_OF_TEMP_SYMBOL_TABLE
+#define FN_LOCAL_SYMBOL_PREFIX "fn&"
+// full temp prefix: "%s%s", FN_LOCAL_SYMBOL_PREFIX, TEMP_SYMBOL_PREFIX
+// full function local var prefix: "%s", FN_LOCAL_SYMBOL_PREFIX
+#define FN_RETURN_SYMBOL_PREFIX "ret&"
+#define FN_ARG_LABEL_PREFIX "fn_arg&"
+// `fn_arg&` ensures that symbol do not conflict with user-defined/auto-generated symbols
+#define LABEL_PREFIX "label&"
+
+#define SYMBOL_INIT(s, name_var) do {               \
+    s->name = name_var;                             \
+    s->type = TYPE_UNKNOWN;                         \
+                                                    \
+    s->array_info.dimensions = 0;                   \
+    s->array_info.dimension_sizes = NULL;           \
+    s->array_info.is_static_checkable = true;       \
+                                                    \
+    s->array_pointer.dimensions = 0;                \
+    s->array_pointer.dimension_sizes = NULL;        \
+    s->array_pointer.is_static_checkable = true;    \
+                                                    \
+    s->function_info = NULL;                        \
+    s->is_static_checkable = true;                  \
+} while (false)
+
+
 
 typedef struct symbol symbol;
+
+typedef struct function_info {
+    size_t argc; // number of args
+    symbol **args; // positional args
+    symbol *return_arg; // return args
+    
+    symbol *local_symbol_table; // store local variables
+} function_info;
 
 typedef enum data_type {
     TYPE_UNKNOWN,
@@ -18,7 +53,9 @@ typedef enum data_type {
     TYPE_DOUBLE,
     TYPE_BOOL,
 
-    TYPE_STRING, // autrally, this will not be used in microex, but for future compatibility
+    TYPE_FUNCTION,
+
+    TYPE_STRING, // actually, this will not be used in microex, but for future compatibility
 } data_type; // data type for symbol table
 
 typedef enum direction {
@@ -40,8 +77,12 @@ typedef struct {
 typedef struct symbol {
     char *name;
     data_type type;
+
     array_type array_info; // used for declare array and shape
     array_type array_pointer; // used for expression to locate array index
+    // all array infomation will be ignore if symbol is function
+
+    function_info *function_info; // Not NULL when type == TYPE_FUNCTION
 
     union {
         long long int_val;
@@ -62,7 +103,8 @@ typedef struct symbol {
     } value;
 
     bool is_static_checkable; 
-    // whether this symbol can be checked at static time, e.g. variable, function, etc.
+    // whether this symbol can be checked at static time, e.g. variable, array, etc.
+    // function symbol should be checkable
 
     UT_hash_handle hh;
 } symbol; // symbol/name to symbol for yacc
@@ -101,6 +143,7 @@ typedef struct node {
 typedef struct {
     node* head;
     node* tail;
+    size_t len;
 } list;
 
 typedef struct {
@@ -108,9 +151,22 @@ typedef struct {
     size_t capacity;
 } reallocable_char;
 
-extern symbol *symbol_table; // global symbol table set, initialized in yacc code
-extern symbol *temp_symbol_table; // temporary symbol table for intermediate variables
-extern label *label_table; // global label table set, initialized in yacc code
+typedef struct {
+    data_type return_type;
+    symbol *symbol_ptr;
+} function_head;
+
+
+extern symbol *symbol_table; 
+// global symbol table set, store all global variable/symbol
+extern symbol *temp_symbol_table; 
+// temporary symbol table for intermediate variables, subset of `symbol_table`
+extern function_info *current_function_info; 
+// local symbol table set, store all local variable/symbol
+
+extern label *label_table; 
+// global label table set, initialized in yacc code
+
 extern unsigned long long line_count, line_word_count;
 extern bool is_multi_line_comment;
 extern bool is_test_mode;
@@ -118,7 +174,6 @@ extern bool is_test_mode;
 bool realloc_char(reallocable_char *rc, size_t new_size);
 
 symbol *get_symbol(const char *name);
-void add_symbol(const char *name);
 label *add_label();
 void free_symbol_table();
 void free_label_table();

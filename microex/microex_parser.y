@@ -10,18 +10,32 @@
     // ensure that temporary variable do not conflict with user-defined variables
     // temporary variables must exist in the symbol table
 
+    function_info *current_function_info = NULL;
+    // Not NULL when parsing function statement
+    // when parsing function statement, here will store all local variable
+    // after function statement parsing done, it will turn back to NULL
+    // nested function is not allow in microex
+
     label *label_table = NULL;
     // label table for jump instructions
     // ensure that labels do not conflict with user-defined variables
 
     list id_list = {
         .head = NULL,
-        .tail = NULL
+        .tail = NULL,
+        .len = 0
     };
 
     list expression_list = {
         .head = NULL,
-        .tail = NULL
+        .tail = NULL,
+        .len = 0
+    };
+
+    list arg_list = {
+        .head = NULL,
+        .tail = NULL,
+        .len = 0
     };
 
     char *dimensions = NULL;
@@ -40,6 +54,7 @@
             list_ptr->tail->next = new_node;
             list_ptr->tail = new_node;
         }
+        list_ptr->len++;
     }
 
     void free_list(list *list_ptr) {
@@ -54,20 +69,28 @@
 
         list_ptr->head = NULL;
         list_ptr->tail = NULL;
+        list_ptr->len = 0;
     }
 
-    void add_id_node(symbol* symbol_ptr) {
+    void add_id_node(symbol *symbol_ptr) {
         add_node(symbol_ptr, &id_list);
     }
     void free_id_list() {
         free_list(&id_list);
     }
 
-    void add_expression_node(symbol* symbol_ptr) {
+    void add_expression_node(symbol *symbol_ptr) {
         add_node(symbol_ptr, &expression_list);
     }
     void free_expression_list() {
         free_list(&expression_list);
+    }
+
+    void add_arg_node(symbol *symbol_ptr) {
+        add_node(symbol_ptr, &arg_list);
+    }
+    void free_arg_list() {
+        free_list(&arg_list);
     }
 
     /**
@@ -1497,6 +1520,141 @@
 
         return info;
     }
+
+    void function_declare_proccess(function_head head) {
+        data_type return_type = head.return_type;
+        symbol *function_ptr = head.symbol_ptr;
+
+        if (current_function_info != NULL) {
+            yyerror("Nested function is not allowed.");
+        }
+
+        if (function_ptr->type != TYPE_UNKNOWN) {
+            yyerror_name("Symbol already declared.", "Redeclaration");
+        }
+        
+        function_ptr->type = TYPE_FUNCTION;
+        function_ptr->function_info = (function_info *)malloc(sizeof(function_info));
+        if (function_ptr->function_info == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+
+        current_function_info = function_ptr->function_info;
+
+        current_function_info->argc = arg_list.len;
+        current_function_info->args = (symbol **)malloc(sizeof(symbol *) * arg_list.len);
+        if (current_function_info->args == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+        char *return_name = (char *)malloc(sizeof(char) * (strlen(function_ptr->name) + strlen(FN_RETURN_SYMBOL_PREFIX) + 1));
+        if (return_name == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+        return_name[0] = '\0';
+        sprintf(return_name, "%s%s", FN_RETURN_SYMBOL_PREFIX, function_ptr->name);
+        current_function_info->return_arg = get_symbol(return_name);
+        current_function_info->return_arg->type = return_type;
+        current_function_info->local_symbol_table = NULL;
+
+        char *type_str;
+        node *current = arg_list.head;
+
+        generate("%s_ARGS:\n", function_ptr->name);
+        // use label for marking function args since label do not affect execution
+        size_t index = 0;
+        while (current != NULL) {
+            generate("%s%s:\n", FN_ARG_LABEL_PREFIX, current->symbol_ptr->name);
+            current_function_info->args[index] = current->symbol_ptr;
+            
+            current = current->next;
+            index++;
+        }
+
+        current = arg_list.head;
+        // declare position arg
+        while (current != NULL) {
+            if (current->symbol_ptr->array_pointer.dimensions > 0) {
+                for (size_t i = 0; i < current->symbol_ptr->array_pointer.dimensions; i++) {
+                    if (current->symbol_ptr->array_pointer.dimension_sizes[i] <= 0) {
+                        yyerror_name("Array dimension must be greater than 0 when declaring.", "Index");
+                    }
+                }
+                char *array_dimensions = array_range_to_string(current->symbol_ptr->array_pointer);
+                type_str = data_array_type_to_string(current->symbol_ptr->type);
+
+                generate("DECLARE %s %s %s\n", current->symbol_ptr->name, type_str, array_dimensions);
+                free(type_str);
+                free(array_dimensions);
+                current->symbol_ptr->array_info = current->symbol_ptr->array_pointer;
+                array_type tmp = {
+                    .dimensions = 0,
+                    .dimension_sizes = NULL,
+                    .is_static_checkable = true
+                };
+                current->symbol_ptr->array_pointer = tmp;
+
+                size_t array_size = array_range(current->symbol_ptr->array_info);
+                switch (current->symbol_ptr->type) {
+                    case TYPE_INT: {
+                        current->symbol_ptr->value.int_array = (long long *)calloc(array_size, sizeof(long long));
+                        if (current->symbol_ptr->value.int_array == NULL) {
+                            yyerror_name("Out of memory when calloc.", "Parsing");
+                        }
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        current->symbol_ptr->value.double_array = (double *)calloc(array_size, sizeof(double));
+                        if (current->symbol_ptr->value.double_array == NULL) {
+                            yyerror_name("Out of memory when calloc.", "Parsing");
+                        }
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        current->symbol_ptr->value.str_array = (char **)calloc(array_size, sizeof(char *));
+                        if (current->symbol_ptr->value.str_array == NULL) {
+                            yyerror_name("Out of memory when calloc.", "Parsing");
+                        }
+                        yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                        break;
+                    }
+                    case TYPE_BOOL: {
+                        current->symbol_ptr->value.bool_array = (bool *)calloc(array_size, sizeof(bool));
+                        if (current->symbol_ptr->value.bool_array == NULL) {
+                            yyerror_name("Out of memory when calloc.", "Parsing");
+                        }
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME: {
+                        yyerror("Cannot declare program name as variable.");
+                        break;
+                    }
+                    default: {
+                        yyerror_name("Unknown data type in declare statement.", "Parsing");
+                        break;
+                    }
+                }
+            }
+            else {
+                type_str = data_type_to_string(current->symbol_ptr->type);
+                generate("DECLARE %s %s\n", current->symbol_ptr->name, type_str);
+                free(type_str);
+            }
+            // we don't need to initialize since position arg will be determined when function is called
+
+            current = current->next;
+        }
+        
+        type_str = data_type_to_string(function_ptr->type);
+        generate("DECLARE %s %s\n", function_ptr->name, type_str);
+        free(type_str);
+        
+
+        type_str = data_type_to_string(return_type);
+        generate("DECLARE %s %s\n", return_name, type_str);
+        free(type_str);
+
+        free_arg_list();
+    }
 %}
 
 %union {
@@ -1511,6 +1669,7 @@
     label *label_ptr;
     for_info for_info;
     while_info while_info;
+    function_head function_head;
 }
 
 %token PROGRAM_MICROEX
@@ -1562,6 +1721,10 @@
 %token TO_MICROEX
 %token DOWNTO_MICROEX
 
+%token FN_MICROEX
+%token RETURN_MICROEX
+%token FNEND_MICROEX
+
 %type <type> type
 %type <symbol_ptr> program_title
 %type <symbol_ptr> id_list
@@ -1575,6 +1738,9 @@
 %type <label_ptr> if_prefix
 %type <for_info> for_prefix
 %type <while_info> while_prefix
+%type <symbol_ptr> arg
+%type <symbol_ptr> arg_list
+%type <function_head> function_statement_head
 
 %left OR_MICROEX
 %left AND_MICROEX
@@ -1645,6 +1811,276 @@ statement:
     | while_statement {
         logging("> statement -> while_statement\n");
     }
+    | function_statement {
+        logging("> statement -> function_statement\n");
+    }
+    ;
+
+// function declare statement
+function_statement:
+    function_statement_prefix statement_list RETURN_MICROEX expression FNEND_MICROEX {
+        data_type return_type = current_function_info->return_arg->type;
+        char *type_str = data_type_to_string(return_type);
+        switch ($4->type) {
+            case TYPE_INT: {
+                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
+                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
+                    yyerror_name(tmp, "Type");
+                }
+
+                if (return_type == TYPE_INT) {
+                    current_function_info->return_arg->value.int_val = $4->value.int_val;
+                    generate("I_STORE %s %s\n", $4->name, current_function_info->return_arg->name);
+                }
+                else if (return_type == TYPE_BOOL) {
+                    current_function_info->return_arg->value.bool_val = ($4->value.int_val) ? 1 : 0;
+                    int_to_bool($4, current_function_info->return_arg);
+                }
+                else {
+                    current_function_info->return_arg->value.double_val = (double)$4->value.int_val;
+                    generate("I_TO_F %s %s\n", $4->name, current_function_info->return_arg->name);
+                }
+
+                break;
+            }
+            case TYPE_BOOL: {
+                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
+                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
+                    yyerror_name(tmp, "Type");
+                }
+
+                if (return_type == TYPE_INT) {
+                    current_function_info->return_arg->value.int_val = $4->value.bool_val;
+                    generate("I_STORE %s %s\n", $4->name, current_function_info->return_arg->name);
+                }
+                else if (return_type == TYPE_BOOL) {
+                    current_function_info->return_arg->value.bool_val = $4->value.bool_val;
+                    generate("I_STORE %s %s\n", $4->name, current_function_info->return_arg->name);
+                }
+                else {
+                    current_function_info->return_arg->value.double_val = (double)$4->value.bool_val;
+                    generate("I_TO_F %s %s\n", $4->name, current_function_info->return_arg->name);
+                }
+
+                break;
+            }
+            case TYPE_DOUBLE: {
+                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
+                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
+                    yyerror_name(tmp, "Type");
+                }
+
+                if (return_type == TYPE_INT) {
+                    current_function_info->return_arg->value.int_val = $4->value.double_val;
+                    generate("F_TO_I %s %s\n", $4->name, current_function_info->return_arg->name);
+                }
+                else if (return_type == TYPE_BOOL) {
+                    current_function_info->return_arg->value.bool_val = $4->value.double_val;
+                    double_to_bool($4, current_function_info->return_arg);
+                }
+                else {
+                    current_function_info->return_arg->value.double_val = $4->value.double_val;
+                    generate("F_STORE %s %s\n", $4->name, current_function_info->return_arg->name);
+                }
+
+                break;
+            }
+            case TYPE_STRING: {
+                if (return_type != TYPE_STRING) {
+                    char *tmp = (char *)malloc(sizeof(char) * (48 + strlen(type_str)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Return variable type should be String, but is %s", type_str);
+                    yyerror_name(tmp, "Type");
+                }
+                current_function_info->return_arg->value.str_val = strdup($4->value.str_val);
+                if (current_function_info->return_arg->value.str_val == NULL) {
+                    yyerror_name("Out of memory when calloc.", "Parsing");
+                } 
+                yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                break;
+            }
+            case TYPE_PROGRAM_NAME: {
+                yyerror_name("Program name type should not become expression type.", "Parsing");
+                break;
+            }
+            default: {
+                yyerror_name("Unknown data type in function statement.", "Parsing");
+                break;
+            }
+        }
+
+        generate("RETURN %s\n", current_function_info->return_arg->name);
+
+        current_function_info = NULL;
+        // parsing done of function statement
+        free(type_str);
+    }
+    ;
+function_statement_prefix:
+    function_statement_head RIGHT_PARENT_MICROEX {
+        char *type_str = data_type_to_string($1.return_type);
+        logging("function_statement_prefix -> function_statement_head RIGHT_PARENT_MICROEX (function_statement_prefix -> fn %s %s ())\n", type_str, $1.symbol_ptr->name);
+        free(type_str);
+        function_declare_proccess($1);
+    }
+    | function_statement_head arg_list RIGHT_PARENT_MICROEX {
+        size_t args_name_len = 1; // start with 1 for null terminator
+        node *current = arg_list.head;
+        while (current != NULL) {
+            args_name_len += strlen(current->symbol_ptr->name) + DTYPE_NAME_LEN;
+            // for type_str
+            if (current->next != NULL) {
+                args_name_len += 2; // for ", "
+            }
+            current = current->next;
+        }
+
+        reallocable_char args_name = {
+            .str = (char *)malloc(sizeof(char) * args_name_len), 
+            .capacity = args_name_len
+        };
+        if (args_name.str == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+        args_name.str[0] = '\0';
+        char *type_str = NULL;
+        current = arg_list.head;
+        while (current != NULL) {
+            if (args_name.str[0] != '\0') {
+                strcat(args_name.str, ", ");
+            }
+            type_str = data_type_to_string(current->symbol_ptr->type);
+            strcat(args_name.str, type_str);
+            free(type_str);
+            strcat(args_name.str, current->symbol_ptr->name);
+            if (current->symbol_ptr->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+                if (!realloc_char(&args_name, args_name.capacity + strlen(dimensions) + 1)) {
+                    // +1 for null terminator
+                    yyerror_name("Out of memory when realloc.", "Parsing");
+                }
+                strcat(args_name.str, dimensions);
+                free(dimensions);
+            }
+            current = current->next;
+        }
+
+        type_str = data_type_to_string($1.return_type);
+        logging("function_statement_prefix -> function_statement_head RIGHT_PARENT_MICROEX (function_statement_prefix -> fn %s %s (%s))\n", type_str, $1.symbol_ptr->name, args_name.str);
+        free(args_name.str);
+        free(type_str);
+        function_declare_proccess($1);
+    }
+    ;
+function_statement_head:
+    FN_MICROEX type ID_MICROEX LEFT_PARENT_MICROEX {
+        $$.return_type = $2;
+        $$.symbol_ptr = $3;
+        char *type_str = data_type_to_string($2);
+        logging("function_statement_head -> FN type ID ( (function_statement_head -> fn %s %s ()\n", type_str, $3->name);
+        free(type_str);
+    }
+    ;
+arg_list:
+    arg {
+        $$ = $1;
+        add_arg_node($1);
+        char *type_str = data_type_to_string($1->type);
+        logging("> arg_list -> arg (arg_list -> %s %s)\n", type_str, $1->name);
+        free(type_str);
+    }
+    | arg_list COMMA_MICROEX arg {
+        $$ = $1;
+        add_id_node($3);
+
+        size_t args_name_len = 1; // start with 1 for null terminator
+        node *current = arg_list.head;
+        while (current != NULL) {
+            args_name_len += strlen(current->symbol_ptr->name) + DTYPE_NAME_LEN;
+            // for type_str
+            if (current->next != NULL) {
+                args_name_len += 2; // for ", "
+            }
+            current = current->next;
+        }
+
+        reallocable_char args_name = {
+            .str = (char *)malloc(sizeof(char) * args_name_len), 
+            .capacity = args_name_len
+        };
+        if (args_name.str == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+        args_name.str[0] = '\0';
+        char *type_str = NULL;
+        current = arg_list.head;
+        while (current != NULL) {
+            if (args_name.str[0] != '\0') {
+                strcat(args_name.str, ", ");
+            }
+            type_str = data_type_to_string(current->symbol_ptr->type);
+            strcat(args_name.str, type_str);
+            free(type_str);
+            strcat(args_name.str, current->symbol_ptr->name);
+            if (current->symbol_ptr->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+                if (!realloc_char(&args_name, args_name.capacity + strlen(dimensions) + 1)) {
+                    // +1 for null terminator
+                    yyerror_name("Out of memory when realloc.", "Parsing");
+                }
+                strcat(args_name.str, dimensions);
+                free(dimensions);
+            }
+            current = current->next;
+        }
+        logging("> arg_list -> arg_list comma arg (arg_list -> %s)\n", args_name.str);
+        free(args_name.str);
+    }
+    ;
+arg:
+    type id {
+        $$ = $2;
+        if ($$->type != TYPE_UNKNOWN) {
+            // symbol is a global symbol
+            yyerror("Function arg\'s name should not same as global variables name.");
+        }
+
+        if ($$->array_pointer.dimensions > 0) {
+            if (!$$->array_pointer.is_static_checkable) {
+                yyerror("Function array arg\'s dimensions should be static checkable.");
+            }
+        }
+
+        $$->type = $1;
+        char *type_str = data_type_to_string($1);
+        if ($$->array_pointer.dimensions == 0) {
+            logging("> arg -> type id (arg -> %s %s)\n", type_str, $2->name);
+        }
+        else {
+            dimensions = array_dimensions_to_string($$->array_pointer);
+            logging("> arg -> type id (arg -> %s %s%s)\n", type_str, $2->name, dimensions);
+            free(dimensions);
+        }
+        free(type_str);
+    }
     ;
 
 // declare statement
@@ -1674,12 +2110,12 @@ declare_statement:
                 free(type_str);
                 free(array_dimensions);
                 current->symbol_ptr->array_info = current->symbol_ptr->array_pointer;
-                array_type empty_pointer = {
+                array_type tmp = {
                     .dimensions = 0,
                     .dimension_sizes = NULL,
                     .is_static_checkable = true
                 };
-                current->symbol_ptr->array_pointer = empty_pointer;
+                current->symbol_ptr->array_pointer = tmp;
 
                 size_t array_size = array_range(current->symbol_ptr->array_info);
                 switch ($4) {
@@ -1890,7 +2326,7 @@ id:
 array_dimension:
     LEFT_BRACKET_MICROEX expression RIGHT_BRACKET_MICROEX {
         if ($2->type != TYPE_INT && $2->type != TYPE_BOOL) {
-            yyerror_name("Array dimension must be integer greater than 0.", "Index");
+            yyerror_name("Array dimension must be integer greater euqal than 0.", "Index");
         }
         symbol *temp_symbol = $2;
         if ($2->type == TYPE_BOOL) {
@@ -3456,6 +3892,199 @@ expression:
 
         $$->is_static_checkable = $1->is_static_checkable; // propagate static checkability
     }
+    // function call
+    | ID_MICROEX LEFT_PARENT_MICROEX id_list RIGHT_PARENT_MICROEX {
+        if ($1->type == TYPE_UNKNOWN) {
+            yyerror_name("Function not declared.", "Undeclared");
+        }
+        char *tmp;
+        if ($1->type != TYPE_FUNCTION) {
+            tmp = (char *)malloc(sizeof(char) * (strlen($1->name) + 20));
+            if (tmp == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            tmp[0] = '\0';
+            sprintf(tmp, "%s is not a function.", $1->name);
+            yyerror_name(tmp, "Type");
+        }
+        if ($1->function_info->argc != id_list.len) {
+            tmp = (char *)malloc(sizeof(char) * (41 + 2 * SIZE_T_CHARLEN));
+            sprintf(tmp, "Unexcept number of args, except %zu, got %zu", $1->function_info->argc, id_list.len);
+            yyerror_name(tmp, "ArgsNumbers");
+        }
+
+        $$ = add_temp_symbol($1->function_info->return_arg->type);
+        size_t i = 0;
+        size_t ids_name_len = 1; // start with 1 for null terminator
+        node *current = id_list.head;
+        while (current != NULL) {
+            if ($1->function_info->args[i]->type != current->symbol_ptr->type) {
+                char *type1 = data_type_to_string($1->function_info->args[i]->type);
+                char *type2 = data_type_to_string(current->symbol_ptr->type);
+                tmp = (char *)malloc(sizeof(char) * (48 + strlen(type1) + strlen(type2) + SIZE_T_CHARLEN));
+                if (tmp == NULL) {
+                    yyerror_name("Out of memory when malloc.", "Parsing");
+                }
+                tmp[0] = '\0';
+                sprintf(tmp, "Args at position %zu except type %s, but got %s.", i, type1, type2);
+                yyerror_name(tmp, "Type");
+            }
+            if ($1->function_info->args[i]->array_info.dimensions > 0) {
+                char *dim1 = array_dimensions_to_string($1->function_info->args[i]->array_info);
+                if ($1->function_info->args[i]->array_info.dimensions != current->symbol_ptr->array_pointer.dimensions) {
+                    char *dim2 = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+                    tmp = (char *)malloc(sizeof(char) * (59 + SIZE_T_CHARLEN + strlen(dim1) + strlen(dim2)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Args at position %zu except array dimensions %s, but got %s", i, dim1, dim2);
+                    yyerror_name(tmp, "Type");
+                }
+                
+                // copy value to arg's array
+                // all function now only call by value
+                size_t max_index = array_range($1->function_info->args[i]->array_info);
+                for (size_t index = 0; index < max_index; i++) {
+                    switch (current->symbol_ptr->type) {
+                        case TYPE_INT:
+                        case TYPE_BOOL: {
+                            if (current->symbol_ptr->type == TYPE_INT) {
+                                $1->function_info->args[i]->value.int_array[index] = current->symbol_ptr->value.int_array[index];
+                            }
+                            else {
+                                $1->function_info->args[i]->value.bool_array[index] = current->symbol_ptr->value.bool_array[index];
+                            }
+                            generate("I_STORE %s%s %s%s\n", current->symbol_ptr->name, dim1, $1->function_info->args[i]->name, dim1);
+                            break;
+                        }
+                        case TYPE_DOUBLE: {
+                            $1->function_info->args[i]->value.double_array[index] = current->symbol_ptr->value.double_array[index];
+                            generate("F_STORE %s%s %s%s\n", current->symbol_ptr->name, dim1, $1->function_info->args[i]->name, dim1);
+                            break;
+                        }
+                        case TYPE_STRING: {
+                            $1->function_info->args[i]->value.str_array[index] = (char *)realloc($1->function_info->args[i]->value.str_array[index], strlen(current->symbol_ptr->value.str_array[index]) + 1);
+                            if ($1->function_info->args[i]->value.str_array[index] == NULL) {
+                                yyerror_name("Out of memory when realloc.", "Parsing");
+                            }
+                            strcpy($1->function_info->args[i]->value.str_array[index], current->symbol_ptr->value.str_array[index]);
+                            yyerror_warning_test_mode("STRING_LITERAL is not supported yet and won't generate code for it.", "Feature", true, true);
+                            break;
+                        }
+                        case TYPE_PROGRAM_NAME:
+                        case TYPE_FUNCTION:
+                        default: {
+                            yyerror_name("Impossible data type when parsing.", "Parsing");
+                            break;
+                        }
+                    }
+                }
+            }
+            else {
+                switch (current->symbol_ptr->type) {
+                    case TYPE_INT:
+                    case TYPE_BOOL: {
+                        if (current->symbol_ptr->type == TYPE_INT) {
+                            $1->function_info->args[i]->value.int_val = current->symbol_ptr->value.int_val;
+                        }
+                        else {
+                            $1->function_info->args[i]->value.bool_val = current->symbol_ptr->value.bool_val;
+                        }
+                        generate("I_STORE %s %s\n", current->symbol_ptr->name, $1->function_info->args[i]->name);
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        $1->function_info->args[i]->value.double_val = current->symbol_ptr->value.double_val;
+                        generate("F_STORE %s%s %s%s\n", current->symbol_ptr->name, $1->function_info->args[i]->name);
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        $1->function_info->args[i]->value.str_val = (char *)realloc($1->function_info->args[i]->value.str_val, strlen(current->symbol_ptr->value.str_val) + 1);
+                        if ($1->function_info->args[i]->value.str_val == NULL) {
+                            yyerror_name("Out of memory when realloc.", "Parsing");
+                        }
+                        strcpy($1->function_info->args[i]->value.str_val, current->symbol_ptr->value.str_val);
+                        yyerror_warning_test_mode("STRING_LITERAL is not supported yet and won't generate code for it.", "Feature", true, true);
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME:
+                    case TYPE_FUNCTION:
+                    default: {
+                        yyerror_name("Impossible data type when parsing.", "Parsing");
+                        break;
+                    }
+                }
+            }
+
+            $1->function_info->args[i]->is_static_checkable = current->symbol_ptr->is_static_checkable;
+
+            ids_name_len += strlen(current->symbol_ptr->name);
+            if (current->next != NULL) {
+                ids_name_len += 2; // for ", "
+            }
+            current = current->next;
+            i++;
+        }
+        
+        reallocable_char ids_name = {
+            .str = (char *)malloc(sizeof(char) * ids_name_len), 
+            .capacity = ids_name_len
+        };
+        if (ids_name.str == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+        ids_name.str[0] = '\0';
+        current = id_list.head;
+        while (current != NULL) {
+            if (ids_name.str[0] != '\0') {
+                strcat(ids_name.str, ", ");
+            }
+            strcat(ids_name.str, current->symbol_ptr->name);
+            if (current->symbol_ptr->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+                if (!realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
+                    // +1 for null terminator
+                    yyerror_name("Out of memory when realloc.", "Parsing");
+                }
+                strcat(ids_name.str, dimensions);
+                free(dimensions);
+            }
+            current = current->next;
+        }
+
+        generate("CALL %s %s\n", $1->name, $$->name);
+        logging("> expression -> ID LEFT_PARENT id_list RIGHT_PARENT (expression -> %s(%s))\n", $1->name, ids_name.str);
+        free(ids_name.str);
+
+        $$->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
+    }
+    | ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX {
+        if ($1->type == TYPE_UNKNOWN) {
+            yyerror_name("Function not declared.", "Undeclared");
+        }
+        char *tmp;
+        if ($1->type != TYPE_FUNCTION) {
+            tmp = (char *)malloc(sizeof(char) * (strlen($1->name) + 20));
+            if (tmp == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            tmp[0] = '\0';
+            sprintf(tmp, "%s is not a function.", $1->name);
+            yyerror_name(tmp, "Type");
+        }
+        if ($1->function_info->argc != id_list.len) {
+            tmp = (char *)malloc(sizeof(char) * (41 + 2 * SIZE_T_CHARLEN));
+            sprintf(tmp, "Unexcept number of args, except %zu, got %zu", $1->function_info->argc, id_list.len);
+            yyerror_name(tmp, "ArgsNumbers");
+        }
+
+        $$ = add_temp_symbol($1->function_info->return_arg->type);
+        generate("CALL %s %s\n", $1->name, $$->name);
+        logging("expression -> ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX (expression -> %s())\n", $1->name);
+
+        $$->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
+    }
     | INTEGER_LITERAL_MICROEX {
         $$ = add_temp_symbol(TYPE_INT);
         $$->value.int_val = $1;
@@ -3515,7 +4144,7 @@ read_statement:
         size_t ids_name_len = 1; // 1 for null terminator
         while (current != NULL) {
             if (current->symbol_ptr->type == TYPE_UNKNOWN) {
-                yyerror_name("Error: Variable not declared.", "Undeclared");
+                yyerror_name("Variable not declared.", "Undeclared");
             }
             if (current->symbol_ptr->array_pointer.dimensions > 0) { // array access
                 if (current->symbol_ptr->array_pointer.is_static_checkable) {
@@ -3618,7 +4247,7 @@ write_statement:
         size_t expressions_name_len = 1; // 1 for null terminator
         while (current != NULL) {
             if (current->symbol_ptr->type == TYPE_UNKNOWN) {
-                yyerror_name("Error: Variable not declared.", "Undeclared");
+                yyerror_name("Variable not declared.", "Undeclared");
             }
             switch (current->symbol_ptr->type) {
                 case TYPE_INT: {
@@ -3897,7 +4526,7 @@ for_statement:
 for_prefix:
     FOR_MICROEX LEFT_PARENT_MICROEX id ASSIGN_MICROEX expression direction expression RIGHT_PARENT_MICROEX {
         if ($3->type == TYPE_UNKNOWN) {
-            yyerror_name("Error: Variable not declared.", "Undeclared");
+            yyerror_name("Variable not declared.", "Undeclared");
         }
         if ($3->type != TYPE_INT && $3->type != TYPE_DOUBLE) {
             yyerror_name("Loop variable must be of type int or double.", "Type");
