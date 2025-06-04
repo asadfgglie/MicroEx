@@ -177,6 +177,7 @@ extern bool is_test_mode;
 bool realloc_char(reallocable_char *rc, size_t new_size);
 
 symbol *get_symbol(char *name_ptr);
+symbol *add_function_symbol(const char *name_ptr);
 label *add_label();
 void free_symbol_table();
 void free_label_table();

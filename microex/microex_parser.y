@@ -1528,6 +1528,7 @@
     void function_prefix_process(function_head head) {
         data_type return_type = head.return_type;
         symbol *function_ptr = head.symbol_ptr;
+        char *type_str;
 
         current_function_info->argc = arg_list.len;
         current_function_info->args = (symbol **)malloc(sizeof(symbol *) * arg_list.len);
@@ -1535,16 +1536,17 @@
             yyerror_name("Out of memory when malloc.", "Parsing");
         }
         char *return_name = (char *)malloc(sizeof(char) * (strlen(function_ptr->name) + strlen(FN_RETURN_SYMBOL_PREFIX) + 1));
+        type_str = data_type_to_string(return_type);
         if (return_name == NULL) {
             yyerror_name("Out of memory when malloc.", "Parsing");
         }
         return_name[0] = '\0';
-        sprintf(return_name, "%s%s", FN_RETURN_SYMBOL_PREFIX, function_ptr->name);
+        sprintf(return_name, "%s%s", FN_RETURN_SYMBOL_PREFIX, type_str);
         current_function_info->return_arg = get_symbol(return_name);
         current_function_info->return_arg->type = return_type;
         current_function_info->local_symbol_table = NULL;
+        free(type_str);
 
-        char *type_str;
         node *current = arg_list.head;
 
         generate("%s%s:\n", FN_NAME_LABEL_PREFIX, function_ptr->name);
@@ -1639,7 +1641,7 @@
         
 
         type_str = data_type_to_string(return_type);
-        generate("DECLARE %s %s\n", return_name, type_str);
+        generate("DECLARE %s %s\n", current_function_info->return_arg->name, type_str);
         free(type_str);
 
         free_arg_list();
@@ -1865,6 +1867,7 @@ program:
     program_title
     program_body {
         generate("HALT %s\n", $1->name);
+        generate("\n");
         logging("> program -> program_title program_body\n");
         logging("\t> Program done with name: `%s`\n", $1->name);
 
@@ -1881,12 +1884,12 @@ program_title:
         generate("START %s\n", $2->name);
         logging("> program_title -> program id (program_title -> program %s)\n", $2->name);
         logging("\t> Program start with name: `%s`\n", $2->name);
+        
+        generate("\n");
     }
     ;
 program_body:
-    BEGIN_MICROEX
-        statement_list
-    END_MICROEX {
+    BEGIN_MICROEX statement_list END_MICROEX {
         logging("> program_body -> begin statement_list end\n");
     }
     ;
@@ -1931,11 +1934,15 @@ function_statement:
         function_statement_process($4);
 
         logging("> function_statement -> function_statement_prefix statement_list RETURN expression SEMICOLON FNEND\n");
+        
+        generate("\n");
     }
     | function_statement_prefix RETURN_MICROEX expression  SEMICOLON_MICROEX FNEND_MICROEX {
         function_statement_process($3);
 
         logging("> function_statement -> function_statement_prefix RETURN expression SEMICOLON FNEND\n");
+        
+        generate("\n");
     }
     ;
 function_statement_prefix:
@@ -2109,7 +2116,18 @@ declare_statement:
         size_t ids_name_len = 1; // start with 1 for null terminator
         while (current != NULL) {
             if (current->symbol_ptr->type != TYPE_UNKNOWN) {
-                yyerror_name("Variable already declared.", "Redeclaration");
+                if (current_function_info == NULL) {
+                    yyerror_name("Variable already declared.", "Redeclaration");
+                }
+                else {
+                    // shawdow global variable
+                    symbol *tmp = add_function_symbol(current->symbol_ptr->name);
+                    tmp->type = current->symbol_ptr->type;
+                    tmp->array_pointer = current->symbol_ptr->array_pointer;
+                    tmp->is_static_checkable = true;
+
+                    current->symbol_ptr = tmp;
+                }
             }
             current->symbol_ptr->type = $4;
             if (current->symbol_ptr->array_pointer.dimensions > 0) {
@@ -2276,6 +2294,8 @@ declare_statement:
         free(ids_name.str);
         
         free_id_list();
+
+        generate("\n");
     }
     ;
 id_list:
@@ -2998,6 +3018,8 @@ assignment_statement:
         $1->is_static_checkable = $3->is_static_checkable && $1->array_pointer.is_static_checkable; 
         // propagate static checkability
         // if array_pointer is not static checkable, then the whole assignment is not static checkable
+        
+        generate("\n");
     }
     ;
 expression:
@@ -4262,6 +4284,8 @@ read_statement:
         logging("> read_statement -> read left_parent id_list right_parent semicolon (read_statement -> read(%s);)\n", ids_name.str);
         free(ids_name.str);
         free_id_list();
+        
+        generate("\n");
     }
     ;
 // write statement
@@ -4327,6 +4351,8 @@ write_statement:
         logging("> write_statement -> write left_parent expression_list right_parent semicolon (write_statement -> write(%s);)\n", expressions_name.str);
         free(expressions_name.str);
         free_expression_list();
+        
+        generate("\n");
     }
     ;
 expression_list:
@@ -4375,9 +4401,13 @@ if_statement:
     if_prefix if_suffix {
         generate("%s:\n", $1->name); // false label for if condition isn't true
         logging("> if_statement -> if_prefix if_suffix\n");
+        
+        generate("\n");
     }
     | if_else_prefix if_suffix {
         logging("> if_statement -> if_else_prefix if_suffix\n");
+        
+        generate("\n");
     }
     ;
 if_prefix:
@@ -4546,6 +4576,8 @@ for_statement:
         generate("JNE %s\n", $1.for_start_label->name);
         generate("%s\n", $1.for_end_label->name); // end label for for loop
         logging("> for_statement -> for_prefix statement_list endfor\n");
+        
+        generate("\n");
     }
 for_prefix:
     FOR_MICROEX LEFT_PARENT_MICROEX id ASSIGN_MICROEX expression direction expression RIGHT_PARENT_MICROEX {
@@ -5255,6 +5287,8 @@ while_statement:
         }
 
         generate("%s:\n", $1.while_end_label->name);
+        
+        generate("\n");
     }
     ;
 while_prefix:

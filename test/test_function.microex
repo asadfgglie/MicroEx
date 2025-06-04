@@ -28,5 +28,17 @@ begin
         return y;
     fnend
 
-    c := y;
+    declare a, b as integer;
+    a := 1;
+    b := 2;
+    c := add(a, b) * (a + b);
+
+    fn integer test_local()
+        declare c as integer; %% shadow global variable
+        c := -1;
+        return c;
+    fnend
+
+    declare boolean_var as bool;
+    boolean_var := c == test_local();
 end
