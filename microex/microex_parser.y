@@ -327,7 +327,7 @@
      * @param expr2 The second expression to evaluate.
      * @return A symbol representing the result of the condition. Propagates static checkability from expr1 and expr2.
      */
-    condition_info condition_proccess(symbol *expr1, size_t condition, symbol *expr2) {
+    condition_info condition_process(symbol *expr1, size_t condition, symbol *expr2) {
         if (expr1 == NULL || expr2 == NULL) {
             yyerror_name("expr1 or expr2 symbol is NULL.", "Parsing");
         }
@@ -383,7 +383,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -426,7 +426,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -465,7 +465,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -487,7 +487,7 @@
                         break;
                     }
                     default: {
-                        yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                        yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                         break;
                     }
                 }
@@ -528,7 +528,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -571,7 +571,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -610,7 +610,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -632,7 +632,7 @@
                         break;
                     }
                     default: {
-                        yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                        yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                         break;
                     }
                 }
@@ -673,7 +673,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -716,7 +716,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -755,7 +755,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -770,7 +770,7 @@
                         break;
                     }
                     default: {
-                        yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                        yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                         break;
                     }
                 }
@@ -811,7 +811,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -854,7 +854,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -897,7 +897,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -915,7 +915,7 @@
                         break;
                     }
                     default: {
-                        yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                        yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                         break;
                     }
                 }
@@ -956,7 +956,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -999,7 +999,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1038,7 +1038,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1060,7 +1060,7 @@
                         break;
                     }
                     default: {
-                        yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                        yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                         break;
                     }
                 }
@@ -1101,7 +1101,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1144,7 +1144,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1183,7 +1183,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1205,7 +1205,7 @@
                         break;
                     }
                     default: {
-                        yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                        yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                         break;
                     }
                 }
@@ -1250,7 +1250,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1293,7 +1293,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1332,7 +1332,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1347,7 +1347,7 @@
                         break;
                     }
                     default: {
-                        yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                        yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                         break;
                     }
                 }
@@ -1392,7 +1392,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1435,7 +1435,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1474,7 +1474,7 @@
                                 break;
                             }
                             default: {
-                                yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                                yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                                 break;
                             }
                         }
@@ -1489,14 +1489,14 @@
                         break;
                     }
                     default: {
-                        yyerror_name("Unknown data type in `condition_proccess`.", "Parsing");
+                        yyerror_name("Unknown data type in `condition_process`.", "Parsing");
                         break;
                     }
                 }
                 break;
             }
             default: {
-                yyerror_name("Unknown condition in `condition_proccess`.", "Parsing");
+                yyerror_name("Unknown condition in `condition_process`.", "Parsing");
                 break;
             }
         }
@@ -1521,25 +1521,13 @@
         return info;
     }
 
-    void function_declare_proccess(function_head head) {
+    /**
+     * Process function declaration head.
+     * This function generates the necessary assembly code.
+     */
+    void function_prefix_process(function_head head) {
         data_type return_type = head.return_type;
         symbol *function_ptr = head.symbol_ptr;
-
-        if (current_function_info != NULL) {
-            yyerror("Nested function is not allowed.");
-        }
-
-        if (function_ptr->type != TYPE_UNKNOWN) {
-            yyerror_name("Symbol already declared.", "Redeclaration");
-        }
-        
-        function_ptr->type = TYPE_FUNCTION;
-        function_ptr->function_info = (function_info *)malloc(sizeof(function_info));
-        if (function_ptr->function_info == NULL) {
-            yyerror_name("Out of memory when malloc.", "Parsing");
-        }
-
-        current_function_info = function_ptr->function_info;
 
         current_function_info->argc = arg_list.len;
         current_function_info->args = (symbol **)malloc(sizeof(symbol *) * arg_list.len);
@@ -1559,12 +1547,13 @@
         char *type_str;
         node *current = arg_list.head;
 
-        generate("%s_ARGS:\n", function_ptr->name);
+        generate("%s%s:\n", FN_NAME_LABEL_PREFIX, function_ptr->name);
         // use label for marking function args since label do not affect execution
         size_t index = 0;
         while (current != NULL) {
             generate("%s%s:\n", FN_ARG_LABEL_PREFIX, current->symbol_ptr->name);
             current_function_info->args[index] = current->symbol_ptr;
+            HASH_ADD_STR(current_function_info->local_symbol_table, name, current->symbol_ptr);
             
             current = current->next;
             index++;
@@ -1654,6 +1643,126 @@
         free(type_str);
 
         free_arg_list();
+    }
+
+    /**
+     * Process function statement for return statement.
+     * This function generates the necessary assembly code.
+    */
+    void function_statement_process(symbol *expr_ptr) {
+        data_type return_type = current_function_info->return_arg->type;
+        char *type_str = data_type_to_string(return_type);
+        switch (expr_ptr->type) {
+            case TYPE_INT: {
+                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
+                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
+                    yyerror_name(tmp, "Type");
+                }
+
+                if (return_type == TYPE_INT) {
+                    current_function_info->return_arg->value.int_val = expr_ptr->value.int_val;
+                    generate("I_STORE %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                }
+                else if (return_type == TYPE_BOOL) {
+                    current_function_info->return_arg->value.bool_val = (expr_ptr->value.int_val) ? 1 : 0;
+                    int_to_bool(expr_ptr, current_function_info->return_arg);
+                }
+                else {
+                    current_function_info->return_arg->value.double_val = (double)expr_ptr->value.int_val;
+                    generate("I_TO_F %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                }
+
+                break;
+            }
+            case TYPE_BOOL: {
+                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
+                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
+                    yyerror_name(tmp, "Type");
+                }
+
+                if (return_type == TYPE_INT) {
+                    current_function_info->return_arg->value.int_val = expr_ptr->value.bool_val;
+                    generate("I_STORE %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                }
+                else if (return_type == TYPE_BOOL) {
+                    current_function_info->return_arg->value.bool_val = expr_ptr->value.bool_val;
+                    generate("I_STORE %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                }
+                else {
+                    current_function_info->return_arg->value.double_val = (double)expr_ptr->value.bool_val;
+                    generate("I_TO_F %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                }
+
+                break;
+            }
+            case TYPE_DOUBLE: {
+                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
+                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
+                    yyerror_name(tmp, "Type");
+                }
+
+                if (return_type == TYPE_INT) {
+                    current_function_info->return_arg->value.int_val = expr_ptr->value.double_val;
+                    generate("F_TO_I %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                }
+                else if (return_type == TYPE_BOOL) {
+                    current_function_info->return_arg->value.bool_val = expr_ptr->value.double_val;
+                    double_to_bool(expr_ptr, current_function_info->return_arg);
+                }
+                else {
+                    current_function_info->return_arg->value.double_val = expr_ptr->value.double_val;
+                    generate("F_STORE %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                }
+
+                break;
+            }
+            case TYPE_STRING: {
+                if (return_type != TYPE_STRING) {
+                    char *tmp = (char *)malloc(sizeof(char) * (48 + strlen(type_str)));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Return variable type should be String, but is %s", type_str);
+                    yyerror_name(tmp, "Type");
+                }
+                current_function_info->return_arg->value.str_val = strdup(expr_ptr->value.str_val);
+                if (current_function_info->return_arg->value.str_val == NULL) {
+                    yyerror_name("Out of memory when calloc.", "Parsing");
+                } 
+                yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                break;
+            }
+            case TYPE_PROGRAM_NAME: {
+                yyerror_name("Program name type should not become expression type.", "Parsing");
+                break;
+            }
+            default: {
+                yyerror_name("Unknown data type in function statement.", "Parsing");
+                break;
+            }
+        }
+
+        generate("RETURN %s\n", current_function_info->return_arg->name);
+
+        current_function_info = NULL;
+        // parsing done of function statement
+        free(type_str);
     }
 %}
 
@@ -1818,134 +1927,29 @@ statement:
 
 // function declare statement
 function_statement:
-    function_statement_prefix statement_list RETURN_MICROEX expression FNEND_MICROEX {
-        data_type return_type = current_function_info->return_arg->type;
-        char *type_str = data_type_to_string(return_type);
-        switch ($4->type) {
-            case TYPE_INT: {
-                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
-                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
-                    if (tmp == NULL) {
-                        yyerror_name("Out of memory when malloc.", "Parsing");
-                    }
-                    tmp[0] = '\0';
-                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
-                    yyerror_name(tmp, "Type");
-                }
+    function_statement_prefix statement_list RETURN_MICROEX expression SEMICOLON_MICROEX FNEND_MICROEX {
+        function_statement_process($4);
 
-                if (return_type == TYPE_INT) {
-                    current_function_info->return_arg->value.int_val = $4->value.int_val;
-                    generate("I_STORE %s %s\n", $4->name, current_function_info->return_arg->name);
-                }
-                else if (return_type == TYPE_BOOL) {
-                    current_function_info->return_arg->value.bool_val = ($4->value.int_val) ? 1 : 0;
-                    int_to_bool($4, current_function_info->return_arg);
-                }
-                else {
-                    current_function_info->return_arg->value.double_val = (double)$4->value.int_val;
-                    generate("I_TO_F %s %s\n", $4->name, current_function_info->return_arg->name);
-                }
+        logging("> function_statement -> function_statement_prefix statement_list RETURN expression SEMICOLON FNEND\n");
+    }
+    | function_statement_prefix RETURN_MICROEX expression  SEMICOLON_MICROEX FNEND_MICROEX {
+        function_statement_process($3);
 
-                break;
-            }
-            case TYPE_BOOL: {
-                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
-                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
-                    if (tmp == NULL) {
-                        yyerror_name("Out of memory when malloc.", "Parsing");
-                    }
-                    tmp[0] = '\0';
-                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
-                    yyerror_name(tmp, "Type");
-                }
-
-                if (return_type == TYPE_INT) {
-                    current_function_info->return_arg->value.int_val = $4->value.bool_val;
-                    generate("I_STORE %s %s\n", $4->name, current_function_info->return_arg->name);
-                }
-                else if (return_type == TYPE_BOOL) {
-                    current_function_info->return_arg->value.bool_val = $4->value.bool_val;
-                    generate("I_STORE %s %s\n", $4->name, current_function_info->return_arg->name);
-                }
-                else {
-                    current_function_info->return_arg->value.double_val = (double)$4->value.bool_val;
-                    generate("I_TO_F %s %s\n", $4->name, current_function_info->return_arg->name);
-                }
-
-                break;
-            }
-            case TYPE_DOUBLE: {
-                if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
-                    char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
-                    if (tmp == NULL) {
-                        yyerror_name("Out of memory when malloc.", "Parsing");
-                    }
-                    tmp[0] = '\0';
-                    sprintf(tmp, "Return variable type should be numeric, but is %s", type_str);
-                    yyerror_name(tmp, "Type");
-                }
-
-                if (return_type == TYPE_INT) {
-                    current_function_info->return_arg->value.int_val = $4->value.double_val;
-                    generate("F_TO_I %s %s\n", $4->name, current_function_info->return_arg->name);
-                }
-                else if (return_type == TYPE_BOOL) {
-                    current_function_info->return_arg->value.bool_val = $4->value.double_val;
-                    double_to_bool($4, current_function_info->return_arg);
-                }
-                else {
-                    current_function_info->return_arg->value.double_val = $4->value.double_val;
-                    generate("F_STORE %s %s\n", $4->name, current_function_info->return_arg->name);
-                }
-
-                break;
-            }
-            case TYPE_STRING: {
-                if (return_type != TYPE_STRING) {
-                    char *tmp = (char *)malloc(sizeof(char) * (48 + strlen(type_str)));
-                    if (tmp == NULL) {
-                        yyerror_name("Out of memory when malloc.", "Parsing");
-                    }
-                    tmp[0] = '\0';
-                    sprintf(tmp, "Return variable type should be String, but is %s", type_str);
-                    yyerror_name(tmp, "Type");
-                }
-                current_function_info->return_arg->value.str_val = strdup($4->value.str_val);
-                if (current_function_info->return_arg->value.str_val == NULL) {
-                    yyerror_name("Out of memory when calloc.", "Parsing");
-                } 
-                yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                break;
-            }
-            case TYPE_PROGRAM_NAME: {
-                yyerror_name("Program name type should not become expression type.", "Parsing");
-                break;
-            }
-            default: {
-                yyerror_name("Unknown data type in function statement.", "Parsing");
-                break;
-            }
-        }
-
-        generate("RETURN %s\n", current_function_info->return_arg->name);
-
-        current_function_info = NULL;
-        // parsing done of function statement
-        free(type_str);
+        logging("> function_statement -> function_statement_prefix RETURN expression SEMICOLON FNEND\n");
     }
     ;
 function_statement_prefix:
     function_statement_head RIGHT_PARENT_MICROEX {
         char *type_str = data_type_to_string($1.return_type);
-        logging("function_statement_prefix -> function_statement_head RIGHT_PARENT_MICROEX (function_statement_prefix -> fn %s %s ())\n", type_str, $1.symbol_ptr->name);
+        logging("> function_statement_prefix -> function_statement_head RIGHT_PARENT (function_statement_prefix -> fn %s %s ())\n", type_str, $1.symbol_ptr->name);
         free(type_str);
-        function_declare_proccess($1);
+        function_prefix_process($1);
     }
     | function_statement_head arg_list RIGHT_PARENT_MICROEX {
         size_t args_name_len = 1; // start with 1 for null terminator
         node *current = arg_list.head;
         while (current != NULL) {
-            args_name_len += strlen(current->symbol_ptr->name) + DTYPE_NAME_LEN;
+            args_name_len += strlen(current->symbol_ptr->name) + DTYPE_NAME_LEN + 1;
             // for type_str
             if (current->next != NULL) {
                 args_name_len += 2; // for ", "
@@ -1970,6 +1974,7 @@ function_statement_prefix:
             type_str = data_type_to_string(current->symbol_ptr->type);
             strcat(args_name.str, type_str);
             free(type_str);
+            strcat(args_name.str, " ");
             strcat(args_name.str, current->symbol_ptr->name);
             if (current->symbol_ptr->array_pointer.dimensions > 0) {
                 dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
@@ -1984,18 +1989,35 @@ function_statement_prefix:
         }
 
         type_str = data_type_to_string($1.return_type);
-        logging("function_statement_prefix -> function_statement_head RIGHT_PARENT_MICROEX (function_statement_prefix -> fn %s %s (%s))\n", type_str, $1.symbol_ptr->name, args_name.str);
+        logging("> function_statement_prefix -> function_statement_head RIGHT_PARENT (function_statement_prefix -> fn %s %s (%s))\n", type_str, $1.symbol_ptr->name, args_name.str);
         free(args_name.str);
         free(type_str);
-        function_declare_proccess($1);
+        function_prefix_process($1);
     }
     ;
 function_statement_head:
     FN_MICROEX type ID_MICROEX LEFT_PARENT_MICROEX {
+        if (current_function_info != NULL) {
+            yyerror("Nested function is not allowed.");
+        }
+
+        if ($3->type != TYPE_UNKNOWN) {
+            yyerror_name("Symbol already declared.", "Redeclaration");
+        }
+        
+        $3->type = TYPE_FUNCTION;
+        $3->function_info = (function_info *)malloc(sizeof(function_info));
+        if ($3->function_info == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
+
+        current_function_info = $3->function_info;
+        current_function_info->name = $3->name;
+
         $$.return_type = $2;
         $$.symbol_ptr = $3;
         char *type_str = data_type_to_string($2);
-        logging("function_statement_head -> FN type ID ( (function_statement_head -> fn %s %s ()\n", type_str, $3->name);
+        logging("> function_statement_head -> FN type ID LEFT_PARENT (function_statement_head -> fn %s %s ()\n", type_str, $3->name);
         free(type_str);
     }
     ;
@@ -2009,12 +2031,12 @@ arg_list:
     }
     | arg_list COMMA_MICROEX arg {
         $$ = $1;
-        add_id_node($3);
+        add_arg_node($3);
 
         size_t args_name_len = 1; // start with 1 for null terminator
         node *current = arg_list.head;
         while (current != NULL) {
-            args_name_len += strlen(current->symbol_ptr->name) + DTYPE_NAME_LEN;
+            args_name_len += strlen(current->symbol_ptr->name) + DTYPE_NAME_LEN + 1;
             // for type_str
             if (current->next != NULL) {
                 args_name_len += 2; // for ", "
@@ -2039,6 +2061,7 @@ arg_list:
             type_str = data_type_to_string(current->symbol_ptr->type);
             strcat(args_name.str, type_str);
             free(type_str);
+            strcat(args_name.str, " ");
             strcat(args_name.str, current->symbol_ptr->name);
             if (current->symbol_ptr->array_pointer.dimensions > 0) {
                 dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
@@ -2058,10 +2081,6 @@ arg_list:
 arg:
     type id {
         $$ = $2;
-        if ($$->type != TYPE_UNKNOWN) {
-            // symbol is a global symbol
-            yyerror("Function arg\'s name should not same as global variables name.");
-        }
 
         if ($$->array_pointer.dimensions > 0) {
             if (!$$->array_pointer.is_static_checkable) {
@@ -2070,13 +2089,13 @@ arg:
         }
 
         $$->type = $1;
-        char *type_str = data_type_to_string($1);
+        char *type_str = data_type_to_string($$->type);
         if ($$->array_pointer.dimensions == 0) {
-            logging("> arg -> type id (arg -> %s %s)\n", type_str, $2->name);
+            logging("> arg -> type id (arg -> %s %s)\n", type_str, $$->name);
         }
         else {
             dimensions = array_dimensions_to_string($$->array_pointer);
-            logging("> arg -> type id (arg -> %s %s%s)\n", type_str, $2->name, dimensions);
+            logging("> arg -> type id (arg -> %s %s%s)\n", type_str, $$->name, dimensions);
             free(dimensions);
         }
         free(type_str);
@@ -3710,28 +3729,28 @@ expression:
         // since propagate static checkability inherited from $2, so we don't need to set it again
     }
     | expression GREAT_MICROEX expression {
-        $$ = condition_proccess($1, GREAT_MICROEX, $3).result_ptr;
+        $$ = condition_process($1, GREAT_MICROEX, $3).result_ptr;
     }
     | expression LESS_MICROEX expression {
-        $$ = condition_proccess($1, LESS_MICROEX, $3).result_ptr;
+        $$ = condition_process($1, LESS_MICROEX, $3).result_ptr;
     }
     | expression GREAT_EQUAL_MICROEX expression {
-        $$ = condition_proccess($1, GREAT_EQUAL_MICROEX, $3).result_ptr;
+        $$ = condition_process($1, GREAT_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression LESS_EQUAL_MICROEX expression {
-        $$ = condition_proccess($1, LESS_EQUAL_MICROEX, $3).result_ptr;
+        $$ = condition_process($1, LESS_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression EQUAL_MICROEX expression {
-        $$ = condition_proccess($1, EQUAL_MICROEX, $3).result_ptr;
+        $$ = condition_process($1, EQUAL_MICROEX, $3).result_ptr;
     }
     | expression NOT_EQUAL_MICROEX expression {
-        $$ = condition_proccess($1, NOT_EQUAL_MICROEX, $3).result_ptr;
+        $$ = condition_process($1, NOT_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression AND_MICROEX expression {
-        $$ = condition_proccess($1, AND_MICROEX, $3).result_ptr;
+        $$ = condition_process($1, AND_MICROEX, $3).result_ptr;
     }
     | expression OR_MICROEX expression {
-        $$ = condition_proccess($1, OR_MICROEX, $3).result_ptr;
+        $$ = condition_process($1, OR_MICROEX, $3).result_ptr;
     }
     | NOT_MICROEX expression {
         $$ = add_temp_symbol(TYPE_BOOL);
@@ -3919,15 +3938,18 @@ expression:
         node *current = id_list.head;
         while (current != NULL) {
             if ($1->function_info->args[i]->type != current->symbol_ptr->type) {
-                char *type1 = data_type_to_string($1->function_info->args[i]->type);
-                char *type2 = data_type_to_string(current->symbol_ptr->type);
-                tmp = (char *)malloc(sizeof(char) * (48 + strlen(type1) + strlen(type2) + SIZE_T_CHARLEN));
-                if (tmp == NULL) {
-                    yyerror_name("Out of memory when malloc.", "Parsing");
+                if (($1->function_info->args[i]->type != TYPE_INT && $1->function_info->args[i]->type != TYPE_BOOL && $1->function_info->args[i]->type != TYPE_DOUBLE) ||
+                    (current->symbol_ptr->type != TYPE_INT && current->symbol_ptr->type != TYPE_BOOL && current->symbol_ptr->type != TYPE_DOUBLE)) {
+                    char *type1 = data_type_to_string($1->function_info->args[i]->type);
+                    char *type2 = data_type_to_string(current->symbol_ptr->type);
+                    tmp = (char *)malloc(sizeof(char) * (48 + strlen(type1) + strlen(type2) + SIZE_T_CHARLEN));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Args at position %zu except type %s, but got %s.", i, type1, type2);
+                    yyerror_name(tmp, "Type");
                 }
-                tmp[0] = '\0';
-                sprintf(tmp, "Args at position %zu except type %s, but got %s.", i, type1, type2);
-                yyerror_name(tmp, "Type");
             }
             if ($1->function_info->args[i]->array_info.dimensions > 0) {
                 char *dim1 = array_dimensions_to_string($1->function_info->args[i]->array_info);
@@ -4057,6 +4079,8 @@ expression:
         logging("> expression -> ID LEFT_PARENT id_list RIGHT_PARENT (expression -> %s(%s))\n", $1->name, ids_name.str);
         free(ids_name.str);
 
+        free_id_list();
+
         $$->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
     }
     | ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX {
@@ -4081,7 +4105,7 @@ expression:
 
         $$ = add_temp_symbol($1->function_info->return_arg->type);
         generate("CALL %s %s\n", $1->name, $$->name);
-        logging("expression -> ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX (expression -> %s())\n", $1->name);
+        logging("> expression -> ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX (expression -> %s())\n", $1->name);
 
         $$->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
     }
@@ -4517,7 +4541,7 @@ for_statement:
             }
         }
 
-        condition_info info = condition_proccess($1.for_variable, (($1.for_direction == DIRECTION_TO) ? LESS_MICROEX : GREAT_MICROEX), $1.for_end_expression);
+        condition_info info = condition_process($1.for_variable, (($1.for_direction == DIRECTION_TO) ? LESS_MICROEX : GREAT_MICROEX), $1.for_end_expression);
         generate("I_CMP 0 %s\n", info.result_ptr->name);
         generate("JNE %s\n", $1.for_start_label->name);
         generate("%s\n", $1.for_end_label->name); // end label for for loop
@@ -5103,7 +5127,7 @@ for_prefix:
 
         label *for_start_label = add_label();
         label *for_end_label = add_label();
-        condition_info info = condition_proccess($3, (($6 == DIRECTION_TO)? LESS_MICROEX : GREAT_MICROEX), $7);
+        condition_info info = condition_process($3, (($6 == DIRECTION_TO)? LESS_MICROEX : GREAT_MICROEX), $7);
         generate("I_CMP 0 %s\n", info.result_ptr->name);
         generate("JNE %s\n", for_start_label->name);
         generate("J %s\n", for_end_label->name);

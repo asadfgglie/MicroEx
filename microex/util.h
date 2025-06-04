@@ -1,6 +1,7 @@
 #include "../lib/uthash.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #define DTYPE_NAME_LEN 10 // strlen(data_type) maximun output
 #define SIZE_T_CHARLEN 30 // for size_t to string conversion, 30 is enough for 64-bit size_t
@@ -14,6 +15,7 @@
 #define FN_RETURN_SYMBOL_PREFIX "ret&"
 #define FN_ARG_LABEL_PREFIX "fn_arg&"
 // `fn_arg&` ensures that symbol do not conflict with user-defined/auto-generated symbols
+#define FN_NAME_LABEL_PREFIX "fn_name&"
 #define LABEL_PREFIX "label&"
 
 #define SYMBOL_INIT(s, name_var) do {               \
@@ -37,6 +39,7 @@
 typedef struct symbol symbol;
 
 typedef struct function_info {
+    char *name; // function name, same pointer with symbol->name
     size_t argc; // number of args
     symbol **args; // positional args
     symbol *return_arg; // return args
@@ -173,7 +176,7 @@ extern bool is_test_mode;
 
 bool realloc_char(reallocable_char *rc, size_t new_size);
 
-symbol *get_symbol(const char *name);
+symbol *get_symbol(char *name_ptr);
 label *add_label();
 void free_symbol_table();
 void free_label_table();

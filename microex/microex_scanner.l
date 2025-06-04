@@ -640,13 +640,13 @@ char *data_type_to_string(data_type type) {
     }
 }
 
-symbol *add_symbol(const char *name) {
+symbol *add_symbol(const char *name_ptr) {
     symbol *s = (symbol *)malloc(sizeof(symbol));
     if (s == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
 
-    SYMBOL_INIT(s, strdup(name));
+    SYMBOL_INIT(s, strdup(name_ptr));
     if (s->name == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
@@ -660,61 +660,69 @@ symbol *add_symbol(const char *name) {
  * Add a function symbol to `current_function_info->local_symbol_table`.
  * Returns a pointer to the symbol in `current_function_info->local_symbol_table`.
  */
-symbol *add_function_symbol(const char *name) {
+symbol *add_function_symbol(const char *name_ptr) {
     if (current_function_info == NULL) {
         yyerror_name("Function symbol should be added when parsing function statement.", "Parsing");
     }
 
-    char *tmp = (char *)malloc(sizeof(char) * (strlen(FN_LOCAL_SYMBOL_PREFIX) + strlen(name) + 1));
-    if (tmp == NULL) {
+    char *name = (char *)malloc(sizeof(char) * (strlen(FN_LOCAL_SYMBOL_PREFIX) + strlen(current_function_info->name) + strlen(name_ptr) + 2));
+    if (name == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
-    tmp[0] = '\0';
-    sprintf(tmp, "%s%s", FN_LOCAL_SYMBOL_PREFIX, name);
+    name[0] = '\0';
+    sprintf(name, "%s%s&%s", FN_LOCAL_SYMBOL_PREFIX, current_function_info->name, name_ptr);
 
     symbol *s = (symbol *)malloc(sizeof(symbol));
     if (s == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
 
-    SYMBOL_INIT(s, tmp);
+    SYMBOL_INIT(s, name);
 
     HASH_ADD_STR(current_function_info->local_symbol_table, name, s);
 
     return s;
 }
 
-symbol *get_symbol(const char *name) {
+symbol *get_symbol(char *name_ptr) {
     symbol *s;
+    char *name;
 
     if (current_function_info != NULL) {
         // parsing funciton statement
         // try to find local variable
-        char *tmp = (char *)malloc(sizeof(char) * (strlen(FN_LOCAL_SYMBOL_PREFIX) + strlen(name) + 1));
-        if (tmp == NULL) {
+        name = (char *)malloc(sizeof(char) * (strlen(FN_LOCAL_SYMBOL_PREFIX) + strlen(current_function_info->name) + strlen(name_ptr) + 2));
+        if (name == NULL) {
             yyerror_name("Out of memory when malloc.", "Parsing");
         }
-        tmp[0] = '\0';
+        name[0] = '\0';
 
-        sprintf(tmp, "%s%s", FN_LOCAL_SYMBOL_PREFIX, name);
-        HASH_FIND_STR(current_function_info->local_symbol_table, tmp, s);
+        sprintf(name, "%s%s&%s", FN_LOCAL_SYMBOL_PREFIX, current_function_info->name, name_ptr);
+
+        HASH_FIND_STR(current_function_info->local_symbol_table, name, s);
 
         if (s != NULL) {
             return s; // return local variable symbol
         }
     }
+    
+    name = name_ptr;
 
     HASH_FIND_STR(symbol_table, name, s); // s = NULL if not found
+    
     if (s != NULL) {
         // return global variable
         return s;
     }
 
     if (current_function_info != NULL) {
-        // parsing function statement
-        return add_function_symbol(name);
+        // add new local variable
+        return add_function_symbol(name_ptr);
     }
-    return add_symbol(name);
+    else {
+        // add new global variable
+        return add_symbol(name_ptr);
+    }
 }
 
 /**

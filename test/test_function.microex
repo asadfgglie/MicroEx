@@ -1,0 +1,32 @@
+%%%
+ %% Example of function call
+%%%
+program function_test
+
+begin
+    fn integer add(integer a, integer b)
+        return a + b;
+    fnend
+
+    fn real f(real c1, real x, real c2)
+        declare tmp as real; %% declare local variable, only can be used in `f`
+        %% local variable name can same as global variable, but it will shadow global variable
+        tmp := c1 * x;
+        tmp := tmp + c2;
+        return tmp;
+    fnend
+
+    declare c, d, e as integer; %% all variables not declare in function are global variable
+    c := 10;
+    d := 20;
+    e := add(c, d);
+    declare y as real;
+    y := f(c, d, e);
+
+    fn real test_global()
+        %% function can access global variable, but variable should declare before function declaration
+        return y;
+    fnend
+
+    c := y;
+end
