@@ -31,7 +31,7 @@ begin
     declare a, b as integer;
     a := 1;
     b := 2;
-    c := add(a, b) * (a + b);
+    c := add(a + b, a * b) * (a + b);
 
     fn integer test_local()
         declare c as integer; %% shadow global variable

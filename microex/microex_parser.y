@@ -3934,7 +3934,7 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable; // propagate static checkability
     }
     // function call
-    | ID_MICROEX LEFT_PARENT_MICROEX id_list RIGHT_PARENT_MICROEX {
+    | ID_MICROEX LEFT_PARENT_MICROEX expression_list RIGHT_PARENT_MICROEX {
         if ($1->type == TYPE_UNKNOWN) {
             yyerror_name("Function not declared.", "Undeclared");
         }
@@ -3948,16 +3948,16 @@ expression:
             sprintf(tmp, "%s is not a function.", $1->name);
             yyerror_name(tmp, "Type");
         }
-        if ($1->function_info->argc != id_list.len) {
+        if ($1->function_info->argc != expression_list.len) {
             tmp = (char *)malloc(sizeof(char) * (41 + 2 * SIZE_T_CHARLEN));
-            sprintf(tmp, "Unexcept number of args, except %zu, got %zu", $1->function_info->argc, id_list.len);
+            sprintf(tmp, "Unexcept number of args, except %zu, got %zu", $1->function_info->argc, expression_list.len);
             yyerror_name(tmp, "ArgsNumbers");
         }
 
         $$ = add_temp_symbol($1->function_info->return_arg->type);
         size_t i = 0;
-        size_t ids_name_len = 1; // start with 1 for null terminator
-        node *current = id_list.head;
+        size_t exprs_name_len = 1; // start with 1 for null terminator
+        node *current = expression_list.head;
         while (current != NULL) {
             if ($1->function_info->args[i]->type != current->symbol_ptr->type) {
                 if (($1->function_info->args[i]->type != TYPE_INT && $1->function_info->args[i]->type != TYPE_BOOL && $1->function_info->args[i]->type != TYPE_DOUBLE) ||
@@ -4063,45 +4063,45 @@ expression:
 
             $1->function_info->args[i]->is_static_checkable = current->symbol_ptr->is_static_checkable;
 
-            ids_name_len += strlen(current->symbol_ptr->name);
+            exprs_name_len += strlen(current->symbol_ptr->name);
             if (current->next != NULL) {
-                ids_name_len += 2; // for ", "
+                exprs_name_len += 2; // for ", "
             }
             current = current->next;
             i++;
         }
         
-        reallocable_char ids_name = {
-            .str = (char *)malloc(sizeof(char) * ids_name_len), 
-            .capacity = ids_name_len
+        reallocable_char exprs_name = {
+            .str = (char *)malloc(sizeof(char) * exprs_name_len), 
+            .capacity = exprs_name_len
         };
-        if (ids_name.str == NULL) {
+        if (exprs_name.str == NULL) {
             yyerror_name("Out of memory when malloc.", "Parsing");
         }
-        ids_name.str[0] = '\0';
-        current = id_list.head;
+        exprs_name.str[0] = '\0';
+        current = expression_list.head;
         while (current != NULL) {
-            if (ids_name.str[0] != '\0') {
-                strcat(ids_name.str, ", ");
+            if (exprs_name.str[0] != '\0') {
+                strcat(exprs_name.str, ", ");
             }
-            strcat(ids_name.str, current->symbol_ptr->name);
+            strcat(exprs_name.str, current->symbol_ptr->name);
             if (current->symbol_ptr->array_pointer.dimensions > 0) {
                 dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
-                if (!realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
+                if (!realloc_char(&exprs_name, exprs_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");
                 }
-                strcat(ids_name.str, dimensions);
+                strcat(exprs_name.str, dimensions);
                 free(dimensions);
             }
             current = current->next;
         }
 
         generate("CALL %s %s\n", $1->name, $$->name);
-        logging("> expression -> ID LEFT_PARENT id_list RIGHT_PARENT (expression -> %s(%s))\n", $1->name, ids_name.str);
-        free(ids_name.str);
+        logging("> expression -> ID LEFT_PARENT expression_list RIGHT_PARENT (expression -> %s(%s))\n", $1->name, exprs_name.str);
+        free(exprs_name.str);
 
-        free_id_list();
+        free_expression_list();
 
         $$->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
     }
