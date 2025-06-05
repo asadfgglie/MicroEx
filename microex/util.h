@@ -17,6 +17,7 @@
 // `fn_arg&` ensures that symbol do not conflict with user-defined/auto-generated symbols
 #define FN_NAME_LABEL_PREFIX "fn_name&"
 #define LABEL_PREFIX "label&"
+#define LINE_PREFIX "line&"
 
 #define SYMBOL_INIT(s, name_var) do {               \
     s->name = name_var;                             \
@@ -141,6 +142,10 @@ typedef struct {
 typedef struct node {
     struct node* next;
     symbol* symbol_ptr;
+
+    array_type array_pointer;
+    // use for access array when parsing `id_list` since if parsing `arr[0], arr[1]`
+    // in id_list, all node->symbol_ptr->array_pointer will be same as last node
 } node;
 
 typedef struct {
@@ -200,3 +205,4 @@ char *data_array_type_to_string(data_type type);
 symbol *get_array_offset_unstatic(array_type array_info, array_type array_pointer);
 size_t get_array_offset(array_type array_info, array_type array_pointer);
 size_t array_range(array_type array_info);
+void copy_array_info(array_type *decs, array_type *src);

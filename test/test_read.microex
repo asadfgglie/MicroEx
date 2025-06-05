@@ -1,0 +1,22 @@
+%%%
+ %% This is a test file for read statement.
+ %% Each variable affected by read statement will be unstatic-checkable.
+%%%
+
+program test_read
+begin
+    declare i, j, k as integer;
+    
+    read(i, j, k); %% read integer into `i`, `j`, `k`
+
+    declare f, d as real;
+
+    read(f, d); %% read real into `f`, `d`
+
+    read(f, i); %% read real into `f`, and read integer into `i`
+
+    declare arr[5] as integer;
+
+    read(arr[0], arr[1], arr[2], arr[3], arr[4]);
+    %% read 5 integers into `arr[0]`, `arr[1]`, `arr[2]`, `arr[3]`, `arr[4]`
+end

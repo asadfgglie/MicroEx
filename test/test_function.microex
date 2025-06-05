@@ -8,7 +8,7 @@ begin
         return a + b;
     fnend
 
-    fn real f(real c1, real x, real c2)
+    fn real f(integer c1, integer x, integer c2)
         declare tmp as real; %% declare local variable, only can be used in `f`
         %% local variable name can same as global variable, but it will shadow global variable
         tmp := c1 * x;
@@ -25,6 +25,7 @@ begin
 
     fn real test_global()
         %% function can access global variable, but variable should declare before function declaration
+        %% function only can access global variable s.t. declare before function declaration
         return y;
     fnend
 
@@ -41,4 +42,16 @@ begin
 
     declare boolean_var as bool;
     boolean_var := c == test_local();
+
+    declare arr[2][3] as integer;
+
+    fn integer test_array()
+        %% currently not support array as parameter, so array need to declare as global variable
+        declare a1, a2 as integer;
+        a1 := arr[0][0] + arr[0][1] + arr[0][2];
+        a2 := arr[1][0] + arr[1][1] + arr[1][2];
+        return a1 * a2;
+    fnend
+
+    y := test_array();
 end

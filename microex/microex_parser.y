@@ -46,6 +46,7 @@
         node* new_node = (node*)malloc(sizeof(node));
         new_node->symbol_ptr = symbol_ptr;
         new_node->next = NULL;
+        new_node->array_pointer = symbol_ptr->array_pointer;
 
         if (list_ptr->head == NULL) {
             list_ptr->head = new_node;
@@ -63,6 +64,14 @@
 
         while (current != NULL) {
             next_node = current->next;
+            if (current->array_pointer.dimensions > 0){
+                if (current->array_pointer.dimension_sizes != NULL) {
+                    free(current->array_pointer.dimension_sizes);
+                }
+                if (current->array_pointer.dimension_sizes_symbol != NULL) {
+                    free(current->array_pointer.dimension_sizes_symbol);
+                }
+            }
             free(current);
             current = next_node;
         }
@@ -1564,22 +1573,23 @@
         current = arg_list.head;
         // declare position arg
         while (current != NULL) {
-            if (current->symbol_ptr->array_pointer.dimensions > 0) {
-                for (size_t i = 0; i < current->symbol_ptr->array_pointer.dimensions; i++) {
-                    if (current->symbol_ptr->array_pointer.dimension_sizes[i] <= 0) {
+            if (current->array_pointer.dimensions > 0) {
+                for (size_t i = 0; i < current->array_pointer.dimensions; i++) {
+                    if (current->array_pointer.dimension_sizes[i] <= 0) {
                         yyerror_name("Array dimension must be greater than 0 when declaring.", "Index");
                     }
                 }
-                char *array_dimensions = array_range_to_string(current->symbol_ptr->array_pointer);
+                char *array_dimensions = array_range_to_string(current->array_pointer);
                 type_str = data_array_type_to_string(current->symbol_ptr->type);
 
                 generate("DECLARE %s %s %s\n", current->symbol_ptr->name, type_str, array_dimensions);
                 free(type_str);
                 free(array_dimensions);
-                current->symbol_ptr->array_info = current->symbol_ptr->array_pointer;
+                copy_array_info(&(current->symbol_ptr->array_info), &(current->array_pointer));
                 array_type tmp = {
                     .dimensions = 0,
                     .dimension_sizes = NULL,
+                    .dimension_sizes_symbol = NULL,
                     .is_static_checkable = true
                 };
                 current->symbol_ptr->array_pointer = tmp;
@@ -1983,8 +1993,8 @@ function_statement_prefix:
             free(type_str);
             strcat(args_name.str, " ");
             strcat(args_name.str, current->symbol_ptr->name);
-            if (current->symbol_ptr->array_pointer.dimensions > 0) {
-                dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+            if (current->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->array_pointer);
                 if (!realloc_char(&args_name, args_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");
@@ -2070,8 +2080,8 @@ arg_list:
             free(type_str);
             strcat(args_name.str, " ");
             strcat(args_name.str, current->symbol_ptr->name);
-            if (current->symbol_ptr->array_pointer.dimensions > 0) {
-                dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+            if (current->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->array_pointer);
                 if (!realloc_char(&args_name, args_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");
@@ -2090,9 +2100,7 @@ arg:
         $$ = $2;
 
         if ($$->array_pointer.dimensions > 0) {
-            if (!$$->array_pointer.is_static_checkable) {
-                yyerror("Function array arg\'s dimensions should be static checkable.");
-            }
+            yyerror("Currently not support array as args.");
         }
 
         $$->type = $1;
@@ -2123,17 +2131,17 @@ declare_statement:
                     // shawdow global variable
                     symbol *tmp = add_function_symbol(current->symbol_ptr->name);
                     tmp->type = current->symbol_ptr->type;
-                    tmp->array_pointer = current->symbol_ptr->array_pointer;
+                    tmp->array_pointer = current->array_pointer;
                     tmp->is_static_checkable = true;
 
                     current->symbol_ptr = tmp;
                 }
             }
             current->symbol_ptr->type = $4;
-            if (current->symbol_ptr->array_pointer.dimensions > 0) {
-                if (current->symbol_ptr->array_pointer.is_static_checkable) {
-                    for (size_t i = 0; i < current->symbol_ptr->array_pointer.dimensions; i++) {
-                        if (current->symbol_ptr->array_pointer.dimension_sizes[i] <= 0) {
+            if (current->array_pointer.dimensions > 0) {
+                if (current->array_pointer.is_static_checkable) {
+                    for (size_t i = 0; i < current->array_pointer.dimensions; i++) {
+                        if (current->array_pointer.dimension_sizes[i] <= 0) {
                             yyerror_name("Array dimension must be greater than 0 when declaring.", "Index");
                         }
                     }
@@ -2141,15 +2149,16 @@ declare_statement:
                 else {
                     yyerror_name("Array dimension must be static checkable when declaring.", "Compile");
                 }
-                char *array_dimensions = array_range_to_string(current->symbol_ptr->array_pointer);
+                char *array_dimensions = array_range_to_string(current->array_pointer);
                 char *type_str = data_array_type_to_string($4);
                 generate("DECLARE %s %s %s\n", current->symbol_ptr->name, type_str, array_dimensions);
                 free(type_str);
                 free(array_dimensions);
-                current->symbol_ptr->array_info = current->symbol_ptr->array_pointer;
+                copy_array_info(&(current->symbol_ptr->array_info), &(current->array_pointer));
                 array_type tmp = {
                     .dimensions = 0,
                     .dimension_sizes = NULL,
+                    .dimension_sizes_symbol = NULL,
                     .is_static_checkable = true
                 };
                 current->symbol_ptr->array_pointer = tmp;
@@ -2332,8 +2341,8 @@ id_list:
                 strcat(ids_name.str, ", ");
             }
             strcat(ids_name.str, current->symbol_ptr->name);
-            if (current->symbol_ptr->array_pointer.dimensions > 0) {
-                dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+            if (current->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->array_pointer);
                 if (!realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");
@@ -3960,23 +3969,20 @@ expression:
         node *current = expression_list.head;
         while (current != NULL) {
             if ($1->function_info->args[i]->type != current->symbol_ptr->type) {
-                if (($1->function_info->args[i]->type != TYPE_INT && $1->function_info->args[i]->type != TYPE_BOOL && $1->function_info->args[i]->type != TYPE_DOUBLE) ||
-                    (current->symbol_ptr->type != TYPE_INT && current->symbol_ptr->type != TYPE_BOOL && current->symbol_ptr->type != TYPE_DOUBLE)) {
-                    char *type1 = data_type_to_string($1->function_info->args[i]->type);
-                    char *type2 = data_type_to_string(current->symbol_ptr->type);
-                    tmp = (char *)malloc(sizeof(char) * (48 + strlen(type1) + strlen(type2) + SIZE_T_CHARLEN));
-                    if (tmp == NULL) {
-                        yyerror_name("Out of memory when malloc.", "Parsing");
-                    }
-                    tmp[0] = '\0';
-                    sprintf(tmp, "Args at position %zu except type %s, but got %s.", i, type1, type2);
-                    yyerror_name(tmp, "Type");
+                char *type1 = data_type_to_string($1->function_info->args[i]->type);
+                char *type2 = data_type_to_string(current->symbol_ptr->type);
+                tmp = (char *)malloc(sizeof(char) * (48 + strlen(type1) + strlen(type2) + SIZE_T_CHARLEN));
+                if (tmp == NULL) {
+                    yyerror_name("Out of memory when malloc.", "Parsing");
                 }
+                tmp[0] = '\0';
+                sprintf(tmp, "Args at position %zu except type %s, but got %s.", i, type1, type2);
+                yyerror_name(tmp, "Type");
             }
             if ($1->function_info->args[i]->array_info.dimensions > 0) {
                 char *dim1 = array_dimensions_to_string($1->function_info->args[i]->array_info);
-                if ($1->function_info->args[i]->array_info.dimensions != current->symbol_ptr->array_pointer.dimensions) {
-                    char *dim2 = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+                if ($1->function_info->args[i]->array_info.dimensions != current->array_pointer.dimensions) {
+                    char *dim2 = array_dimensions_to_string(current->array_pointer);
                     tmp = (char *)malloc(sizeof(char) * (59 + SIZE_T_CHARLEN + strlen(dim1) + strlen(dim2)));
                     if (tmp == NULL) {
                         yyerror_name("Out of memory when malloc.", "Parsing");
@@ -4085,8 +4091,8 @@ expression:
                 strcat(exprs_name.str, ", ");
             }
             strcat(exprs_name.str, current->symbol_ptr->name);
-            if (current->symbol_ptr->array_pointer.dimensions > 0) {
-                dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+            if (current->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->array_pointer);
                 if (!realloc_char(&exprs_name, exprs_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");
@@ -4192,9 +4198,9 @@ read_statement:
             if (current->symbol_ptr->type == TYPE_UNKNOWN) {
                 yyerror_name("Variable not declared.", "Undeclared");
             }
-            if (current->symbol_ptr->array_pointer.dimensions > 0) { // array access
-                if (current->symbol_ptr->array_pointer.is_static_checkable) {
-                    size_t index = get_array_offset(current->symbol_ptr->array_info, current->symbol_ptr->array_pointer);
+            if (current->array_pointer.dimensions > 0) { // array access
+                if (current->array_pointer.is_static_checkable) {
+                    size_t index = get_array_offset(current->symbol_ptr->array_info, current->array_pointer);
                     switch (current->symbol_ptr->type) {
                         case TYPE_INT: {
                             generate("CALL read_i %s[%zu]\n", current->symbol_ptr->name, index);
@@ -4270,8 +4276,8 @@ read_statement:
                 strcat(ids_name.str, ", ");
             }
             strcat(ids_name.str, current->symbol_ptr->name);
-            if (current->symbol_ptr->array_pointer.dimensions > 0) {
-                dimensions = array_dimensions_to_string(current->symbol_ptr->array_pointer);
+            if (current->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->array_pointer);
                 if (!realloc_char(&ids_name, ids_name.capacity + strlen(dimensions) + 1)) {
                     // +1 for null terminator
                     yyerror_name("Out of memory when realloc.", "Parsing");

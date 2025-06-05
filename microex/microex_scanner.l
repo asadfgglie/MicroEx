@@ -19,6 +19,8 @@
 
     bool verbose = false;
     FILE *output;
+
+    void line_label();
 %}
 
 empty_word [ \t]+
@@ -89,6 +91,8 @@ fnend [Ff][Nn][Ee][Nn][Dd]
 {new_line} {
     line_count += 1;
     line_word_count = 0;
+
+    line_label();
 }
 {line_comment} {
     if (yytext[yyleng - 1] == '\n') {
@@ -499,6 +503,27 @@ bool realloc_char(reallocable_char *rc, size_t new_size) {
     return true;
 }
 
+void copy_array_info(array_type *decs, array_type *src) {
+    decs->dimensions = src->dimensions;
+    decs->is_static_checkable = src->is_static_checkable;
+    if (src->dimensions > 0) {
+        if (src->dimension_sizes != NULL) {
+            decs->dimension_sizes = (size_t *)malloc(sizeof(size_t) * decs->dimensions);
+            if (decs->dimension_sizes == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            memcpy(decs->dimension_sizes, src->dimension_sizes, sizeof(size_t) * decs->dimensions);
+        }
+        if (src->dimension_sizes_symbol != NULL) {
+            decs->dimension_sizes_symbol = (symbol **)malloc(sizeof(symbol *) * decs->dimensions);
+            if (decs->dimension_sizes_symbol == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            memcpy(decs->dimension_sizes_symbol, src->dimension_sizes_symbol, sizeof(size_t) * decs->dimensions);
+        }
+    }
+}
+
 size_t array_range(array_type array_info) {
     size_t index_range = 1;
     if (!array_info.is_static_checkable) {
@@ -806,7 +831,12 @@ void free_symbol_table() {
         HASH_DEL(symbol_table, current_symbol);
         free(current_symbol->name);
         if (current_symbol->array_info.dimensions > 0) {
-            free(current_symbol->array_info.dimension_sizes);
+            if (current_symbol->array_info.dimension_sizes != NULL) {
+                free(current_symbol->array_info.dimension_sizes);
+            }
+            if (current_symbol->array_info.dimension_sizes_symbol != NULL) {
+                free(current_symbol->array_info.dimension_sizes_symbol);
+            }
             switch (current_symbol->type) {
                 case TYPE_INT: {
                     free(current_symbol->value.int_array);
@@ -832,11 +862,13 @@ void free_symbol_table() {
                 }
             }
         }
-        if (current_symbol->array_pointer.dimension_sizes != NULL) {
-            free(current_symbol->array_pointer.dimension_sizes);
-        }
-        if (current_symbol->array_pointer.dimension_sizes_symbol != NULL) {
-            free(current_symbol->array_pointer.dimension_sizes_symbol);
+        if (current_symbol->array_pointer.dimensions > 0) {
+            if (current_symbol->array_pointer.dimension_sizes != NULL) {
+                free(current_symbol->array_pointer.dimension_sizes);
+            }
+            if (current_symbol->array_pointer.dimension_sizes_symbol != NULL) {
+                free(current_symbol->array_pointer.dimension_sizes_symbol);
+            }
         }
         if (current_symbol->type == TYPE_STRING) {
             free(current_symbol->value.str_val);
@@ -1054,6 +1086,10 @@ void logging(const char *format, ...) {
     va_end(args);
 }
 
+void line_label() {
+    generate("%s%llu:\n", LINE_PREFIX, line_count);
+}
+
 // for Bison yacc to call parser
 int main(int argc, char **argv) {
     struct cag_option options[] = {
@@ -1144,6 +1180,7 @@ int main(int argc, char **argv) {
         }
     }
 
+    line_label();
     int result = yyparse();
     
     if (is_multi_line_comment) {
