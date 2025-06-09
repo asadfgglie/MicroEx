@@ -185,7 +185,7 @@ I_MUL i i temp&integer&6
 comment&Calculating_offset&5:
 I_STORE 0 temp&integer&7
 I_STORE 1 temp&integer&8
-I_MUL temp&integer&8 0 temp&integer&10
+I_MUL temp&integer&8 i temp&integer&10
 I_ADD temp&integer&7 temp&integer&10 temp&integer&9
 I_STORE temp&integer&9 temp&integer&7
 I_MUL temp&integer&8 10 temp&integer&10

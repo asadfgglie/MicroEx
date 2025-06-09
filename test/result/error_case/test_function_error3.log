@@ -94,25 +94,6 @@ I_STORE 0 temp&integer&1
 	$ lexer got token: `RIGHT_PARENT`, scan: `)`
 	> id -> ID (id -> a)
 	> expression -> id (expression -> a)
-	> expression_list -> expression (expression_list -> a[0])
-	> Calculating offset for array access.
-comment&Calculating_offset&1:
-I_STORE 0 temp&integer&3
-I_STORE 1 temp&integer&4
-I_MUL temp&integer&4 0 temp&integer&6
-I_ADD temp&integer&3 temp&integer&6 temp&integer&5
-I_STORE temp&integer&5 temp&integer&3
-I_MUL temp&integer&4 10 temp&integer&6
-I_STORE temp&integer&6 temp&integer&4
-I_STORE a[temp&integer&3] temp&integer&7
-	> extract array access: expression -> a[0]
-I_STORE temp&integer&7 fn&test&a
-CALL test temp&integer&2
-	> expression -> ID LEFT_PARENT expression_list RIGHT_PARENT (expression -> test(temp&integer&7[0]))
-	$ lexer got token: `SEMICOLON`, scan: `;`
-	> Calculating offset for array access.
-comment&Calculating_offset&2:
-I_STORE 0 temp&integer&8
-I_STORE 1 temp&integer&9
-Index Error: Array index out of bounds.
-	at line (9:20)
+	> expression_list -> expression (expression_list -> a)
+Type Error: Args at position 0 except non-array symbol, but got array symbol.
+	at line (9:19)

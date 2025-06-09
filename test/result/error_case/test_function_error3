@@ -34,17 +34,3 @@ I_STORE 0 a[9]
 
 line&9:
 I_STORE 0 temp&integer&1
-comment&Calculating_offset&1:
-I_STORE 0 temp&integer&3
-I_STORE 1 temp&integer&4
-I_MUL temp&integer&4 0 temp&integer&6
-I_ADD temp&integer&3 temp&integer&6 temp&integer&5
-I_STORE temp&integer&5 temp&integer&3
-I_MUL temp&integer&4 10 temp&integer&6
-I_STORE temp&integer&6 temp&integer&4
-I_STORE a[temp&integer&3] temp&integer&7
-I_STORE temp&integer&7 fn&test&a
-CALL test temp&integer&2
-comment&Calculating_offset&2:
-I_STORE 0 temp&integer&8
-I_STORE 1 temp&integer&9

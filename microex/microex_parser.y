@@ -259,17 +259,25 @@
      * @param expr2 The second expression to evaluate.
      * @return A symbol representing the result of the condition. Propagates static checkability from expr1 and expr2.
      */
-    condition_info condition_process(symbol *expr1, size_t condition, symbol *expr2) {
-        if (expr1 == NULL || expr2 == NULL) {
+    condition_info condition_process(node *expr1, size_t condition, node *expr2) {
+        if(expr1->symbol_ptr->array_info.dimensions > 0 && expr1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if(expr2->symbol_ptr->array_info.dimensions > 0 && expr2->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
+        if (expr1->symbol_ptr == NULL || expr2->symbol_ptr == NULL) {
             yyerror_name("expr1 or expr2 symbol is NULL.", "Parsing");
         }
-        if (expr1 == expr2) {
-            yyerror_name("expr1 and expr2 symbols cannot be the same.", "Parsing");
-        }
+
+        expr1->symbol_ptr = extract_array_symbol(expr1->symbol_ptr);
+        expr2->symbol_ptr = extract_array_symbol(expr2->symbol_ptr);
+
         bool is_code_generation = true; // flag to indicate if code generation is needed
 
         symbol *result = add_temp_symbol(TYPE_BOOL);
-        result->is_static_checkable = expr1->is_static_checkable && expr2->is_static_checkable; // propagate static checkability
+        result->is_static_checkable = expr1->symbol_ptr->is_static_checkable && expr2->symbol_ptr->is_static_checkable; // propagate static checkability
 
         label *true_label, *false_label, *end_label;
         if (condition != AND_MICROEX && condition != OR_MICROEX && condition != NOT_MICROEX) {
@@ -281,28 +289,28 @@
 
         switch (condition) {
             case NOT_EQUAL_MICROEX: {
-                switch (expr1->type) {
+                switch (expr1->symbol_ptr->type) {
                     case TYPE_INT: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.int_val != expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val != expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val != expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val != expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.int_val != expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val != expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
@@ -322,30 +330,30 @@
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val != temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val != temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
-                                result->value.bool_val = (expr1->value.double_val != expr2->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val != expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val != temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val != temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
@@ -365,26 +373,26 @@
                         break;
                     }
                     case TYPE_BOOL: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.bool_val != expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val != expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.double_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.double_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val != expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val != expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.bool_val != expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val != expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JNE %s\n", true_label->name);
                                 break;
                             }
@@ -404,8 +412,8 @@
                         break;
                     }
                     case TYPE_STRING: {
-                        if (expr2->type == TYPE_STRING) {
-                            result->value.bool_val = (strcmp(expr1->value.str_val, expr2->value.str_val) != 0);
+                        if (expr2->symbol_ptr->type == TYPE_STRING) {
+                            result->value.bool_val = (strcmp(expr1->symbol_ptr->value.str_val, expr2->symbol_ptr->value.str_val) != 0);
                             yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                             is_code_generation = false; // no code generation for string comparison
                         }
@@ -426,28 +434,28 @@
                 break;
             }
             case EQUAL_MICROEX: {
-                switch (expr1->type) {
+                switch (expr1->symbol_ptr->type) {
                     case TYPE_INT: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.int_val == expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val == expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val == expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val == expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.int_val == expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val == expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
@@ -467,30 +475,30 @@
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val == temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val == temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
-                                result->value.bool_val = (expr1->value.double_val == expr2->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val == expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val == temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val == temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
@@ -510,26 +518,26 @@
                         break;
                     }
                     case TYPE_BOOL: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.bool_val == expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val == expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.double_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.double_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val == expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val == expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.bool_val == expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val == expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JEQ %s\n", true_label->name);
                                 break;
                             }
@@ -549,8 +557,8 @@
                         break;
                     }
                     case TYPE_STRING: {
-                        if (expr2->type == TYPE_STRING) {
-                            result->value.bool_val = (strcmp(expr1->value.str_val, expr2->value.str_val) == 0);
+                        if (expr2->symbol_ptr->type == TYPE_STRING) {
+                            result->value.bool_val = (strcmp(expr1->symbol_ptr->value.str_val, expr2->symbol_ptr->value.str_val) == 0);
                             yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                             is_code_generation = false; // no code generation for string comparison
                         }
@@ -571,28 +579,28 @@
                 break;
             }
             case GREAT_MICROEX: {
-                switch (expr1->type) {
+                switch (expr1->symbol_ptr->type) {
                     case TYPE_INT: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.int_val > expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val > expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val > expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val > expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.int_val > expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val > expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
@@ -612,30 +620,30 @@
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val > temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val > temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
-                                result->value.bool_val = (expr1->value.double_val > expr2->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val > expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val > temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val > temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
@@ -655,26 +663,26 @@
                         break;
                     }
                     case TYPE_BOOL: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.bool_val > expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val > expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val > expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val > expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.bool_val > expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val > expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGT %s\n", true_label->name);
                                 break;
                             }
@@ -709,28 +717,28 @@
                 break;
             }
             case LESS_MICROEX: {
-                switch (expr1->type) {
+                switch (expr1->symbol_ptr->type) {
                     case TYPE_INT: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.int_val < expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val < expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val < expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val < expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.int_val < expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val < expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
@@ -750,30 +758,30 @@
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val < temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val < temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
-                                result->value.bool_val = (expr1->value.double_val < expr2->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val < expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val < temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val < temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
@@ -797,26 +805,26 @@
                         break;
                     }
                     case TYPE_BOOL: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.bool_val < expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val < expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val < expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val < expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.bool_val < expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val < expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLT %s\n", true_label->name);
                                 break;
                             }
@@ -836,8 +844,8 @@
                         break;
                     }
                     case TYPE_STRING: {
-                        if (expr2->type == TYPE_STRING) {
-                            result->value.bool_val = (strcmp(expr1->value.str_val, expr2->value.str_val) < 0);
+                        if (expr2->symbol_ptr->type == TYPE_STRING) {
+                            result->value.bool_val = (strcmp(expr1->symbol_ptr->value.str_val, expr2->symbol_ptr->value.str_val) < 0);
                             yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                             is_code_generation = false; // no code generation for string comparison
                         }
@@ -854,28 +862,28 @@
                 break;
             }
             case GREAT_EQUAL_MICROEX: {
-                switch (expr1->type) {
+                switch (expr1->symbol_ptr->type) {
                     case TYPE_INT: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.int_val >= expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val >= expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val >= expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val >= expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.int_val >= expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val >= expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
@@ -895,30 +903,30 @@
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val >= temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val >= temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
-                                result->value.bool_val = (expr1->value.double_val >= expr2->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val >= expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val >= temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val >= temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
@@ -938,26 +946,26 @@
                         break;
                     }
                     case TYPE_BOOL: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.bool_val >= expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val >= expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val >= expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val >= expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.bool_val >= expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val >= expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JGE %s\n", true_label->name);
                                 break;
                             }
@@ -977,8 +985,8 @@
                         break;
                     }
                     case TYPE_STRING: {
-                        if (expr2->type == TYPE_STRING) {
-                            result->value.bool_val = (strcmp(expr1->value.str_val, expr2->value.str_val) >= 0);
+                        if (expr2->symbol_ptr->type == TYPE_STRING) {
+                            result->value.bool_val = (strcmp(expr1->symbol_ptr->value.str_val, expr2->symbol_ptr->value.str_val) >= 0);
                             yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                             is_code_generation = false; // no code generation for string comparison
                         }
@@ -999,28 +1007,28 @@
                 break;
             }
             case LESS_EQUAL_MICROEX: {
-                switch (expr1->type) {
+                switch (expr1->symbol_ptr->type) {
                     case TYPE_INT: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.int_val <= expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val <= expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.int_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val <= expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val <= expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.int_val <= expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.int_val <= expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
@@ -1040,30 +1048,30 @@
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.int_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val <= temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val <= temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
-                                result->value.bool_val = (expr1->value.double_val <= expr2->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val <= expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr2->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr2->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (expr1->value.double_val <= temp_symbol->value.double_val);
-                                generate("F_CMP %s %s\n", expr1->name, temp_symbol->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.double_val <= temp_symbol->value.double_val);
+                                generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
@@ -1083,26 +1091,26 @@
                         break;
                     }
                     case TYPE_BOOL: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
-                                result->value.bool_val = (expr1->value.bool_val <= expr2->value.int_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val <= expr2->symbol_ptr->value.int_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                                temp_symbol->value.double_val = (double) expr1->value.bool_val;
-                                generate("I_TO_F %s %s\n", expr1->name, temp_symbol->name);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.bool_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
 
-                                result->value.bool_val = (temp_symbol->value.double_val <= expr2->value.double_val);
-                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->name);
+                                result->value.bool_val = (temp_symbol->value.double_val <= expr2->symbol_ptr->value.double_val);
+                                generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.bool_val <= expr2->value.bool_val);
-                                generate("I_CMP %s %s\n", expr1->name, expr2->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val <= expr2->symbol_ptr->value.bool_val);
+                                generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
                                 generate("JLE %s\n", true_label->name);
                                 break;
                             }
@@ -1122,8 +1130,8 @@
                         break;
                     }
                     case TYPE_STRING: {
-                        if (expr2->type == TYPE_STRING) {
-                            result->value.bool_val = (strcmp(expr1->value.str_val, expr2->value.str_val) <= 0);
+                        if (expr2->symbol_ptr->type == TYPE_STRING) {
+                            result->value.bool_val = (strcmp(expr1->symbol_ptr->value.str_val, expr2->symbol_ptr->value.str_val) <= 0);
                             yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                             is_code_generation = false; // no code generation for string comparison
                         }
@@ -1144,13 +1152,13 @@
                 break;
             }
             case AND_MICROEX: {
-                switch (expr1->type) {
+                switch (expr1->symbol_ptr->type) {
                     case TYPE_INT: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol1 = add_temp_symbol(TYPE_BOOL), *temp_symbol2 = add_temp_symbol(TYPE_BOOL);
-                                int_to_bool(expr1, temp_symbol1);
-                                int_to_bool(expr2, temp_symbol2);
+                                int_to_bool(expr1->symbol_ptr, temp_symbol1);
+                                int_to_bool(expr2->symbol_ptr, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val && temp_symbol2->value.bool_val);
                                 generate("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
@@ -1158,8 +1166,8 @@
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol1 = add_temp_symbol(TYPE_BOOL), *temp_symbol2 = add_temp_symbol(TYPE_BOOL);
-                                int_to_bool(expr1, temp_symbol1);
-                                double_to_bool(expr2, temp_symbol2);
+                                int_to_bool(expr1->symbol_ptr, temp_symbol1);
+                                double_to_bool(expr2->symbol_ptr, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val && temp_symbol2->value.bool_val);
                                 generate("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
@@ -1167,9 +1175,9 @@
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                                int_to_bool(expr1, temp_symbol);
-                                result->value.bool_val = (temp_symbol->value.bool_val && expr2->value.bool_val);
-                                generate("AND %s %s %s\n", temp_symbol->name, expr2->name, result->name);
+                                int_to_bool(expr1->symbol_ptr, temp_symbol);
+                                result->value.bool_val = (temp_symbol->value.bool_val && expr2->symbol_ptr->value.bool_val);
+                                generate("AND %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1189,11 +1197,11 @@
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol1 = add_temp_symbol(TYPE_BOOL), *temp_symbol2 = add_temp_symbol(TYPE_BOOL);
-                                double_to_bool(expr1, temp_symbol1);
-                                int_to_bool(expr2, temp_symbol2);
+                                double_to_bool(expr1->symbol_ptr, temp_symbol1);
+                                int_to_bool(expr2->symbol_ptr, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val && temp_symbol2->value.bool_val);
                                 generate("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
@@ -1201,8 +1209,8 @@
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol1 = add_temp_symbol(TYPE_BOOL), *temp_symbol2 = add_temp_symbol(TYPE_BOOL);
-                                double_to_bool(expr1, temp_symbol1);
-                                double_to_bool(expr2, temp_symbol2);
+                                double_to_bool(expr1->symbol_ptr, temp_symbol1);
+                                double_to_bool(expr2->symbol_ptr, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val && temp_symbol2->value.bool_val);
                                 generate("AND %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
@@ -1210,9 +1218,9 @@
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                                double_to_bool(expr1, temp_symbol);
-                                result->value.bool_val = (temp_symbol->value.bool_val && expr2->value.bool_val);
-                                generate("AND %s %s %s\n", temp_symbol->name, expr2->name, result->name);
+                                double_to_bool(expr1->symbol_ptr, temp_symbol);
+                                result->value.bool_val = (temp_symbol->value.bool_val && expr2->symbol_ptr->value.bool_val);
+                                generate("AND %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1232,26 +1240,26 @@
                         break;
                     }
                     case TYPE_BOOL: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                                int_to_bool(expr2, temp_symbol);
-                                result->value.bool_val = (expr1->value.bool_val && temp_symbol->value.bool_val);
-                                generate("AND %s %s %s\n", expr1->name, temp_symbol->name, result->name);
+                                int_to_bool(expr2->symbol_ptr, temp_symbol);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val && temp_symbol->value.bool_val);
+                                generate("AND %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                                double_to_bool(expr2, temp_symbol);
-                                result->value.bool_val = (expr1->value.bool_val && temp_symbol->value.bool_val);
-                                generate("AND %s %s %s\n", expr1->name, temp_symbol->name, result->name);
+                                double_to_bool(expr2->symbol_ptr, temp_symbol);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val && temp_symbol->value.bool_val);
+                                generate("AND %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.bool_val && expr2->value.bool_val);
-                                generate("AND %s %s %s\n", expr1->name, expr2->name, result->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val && expr2->symbol_ptr->value.bool_val);
+                                generate("AND %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
                                 is_code_generation = false; // no more code generation for AND operation
                                 break;
                             }
@@ -1286,13 +1294,13 @@
                 break;
             }
             case OR_MICROEX: {
-                switch (expr1->type) {
+                switch (expr1->symbol_ptr->type) {
                     case TYPE_INT: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol1 = add_temp_symbol(TYPE_BOOL), *temp_symbol2 = add_temp_symbol(TYPE_BOOL);
-                                int_to_bool(expr1, temp_symbol1);
-                                int_to_bool(expr2, temp_symbol2);
+                                int_to_bool(expr1->symbol_ptr, temp_symbol1);
+                                int_to_bool(expr2->symbol_ptr, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val || temp_symbol2->value.bool_val);
                                 generate("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
@@ -1300,8 +1308,8 @@
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol1 = add_temp_symbol(TYPE_BOOL), *temp_symbol2 = add_temp_symbol(TYPE_BOOL);
-                                int_to_bool(expr1, temp_symbol1);
-                                double_to_bool(expr2, temp_symbol2);
+                                int_to_bool(expr1->symbol_ptr, temp_symbol1);
+                                double_to_bool(expr2->symbol_ptr, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val || temp_symbol2->value.bool_val);
                                 generate("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
@@ -1309,9 +1317,9 @@
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                                int_to_bool(expr1, temp_symbol);
-                                result->value.bool_val = (temp_symbol->value.bool_val || expr2->value.bool_val);
-                                generate("OR %s %s %s\n", temp_symbol->name, expr2->name, result->name);
+                                int_to_bool(expr1->symbol_ptr, temp_symbol);
+                                result->value.bool_val = (temp_symbol->value.bool_val || expr2->symbol_ptr->value.bool_val);
+                                generate("OR %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1331,11 +1339,11 @@
                         break;
                     }
                     case TYPE_DOUBLE: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol1 = add_temp_symbol(TYPE_BOOL), *temp_symbol2 = add_temp_symbol(TYPE_BOOL);
-                                double_to_bool(expr1, temp_symbol1);
-                                int_to_bool(expr2, temp_symbol2);
+                                double_to_bool(expr1->symbol_ptr, temp_symbol1);
+                                int_to_bool(expr2->symbol_ptr, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val || temp_symbol2->value.bool_val);
                                 generate("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
@@ -1343,8 +1351,8 @@
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol1 = add_temp_symbol(TYPE_BOOL), *temp_symbol2 = add_temp_symbol(TYPE_BOOL);
-                                double_to_bool(expr1, temp_symbol1);
-                                double_to_bool(expr2, temp_symbol2);
+                                double_to_bool(expr1->symbol_ptr, temp_symbol1);
+                                double_to_bool(expr2->symbol_ptr, temp_symbol2);
                                 result->value.bool_val = (temp_symbol1->value.bool_val || temp_symbol2->value.bool_val);
                                 generate("OR %s %s %s\n", temp_symbol1->name, temp_symbol2->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
@@ -1352,9 +1360,9 @@
                             }
                             case TYPE_BOOL: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                                double_to_bool(expr1, temp_symbol);
-                                result->value.bool_val = (temp_symbol->value.bool_val || expr2->value.bool_val);
-                                generate("OR %s %s %s\n", temp_symbol->name, expr2->name, result->name);
+                                double_to_bool(expr1->symbol_ptr, temp_symbol);
+                                result->value.bool_val = (temp_symbol->value.bool_val || expr2->symbol_ptr->value.bool_val);
+                                generate("OR %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1374,26 +1382,26 @@
                         break;
                     }
                     case TYPE_BOOL: {
-                        switch (expr2->type) {
+                        switch (expr2->symbol_ptr->type) {
                             case TYPE_INT: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                                int_to_bool(expr2, temp_symbol);
-                                result->value.bool_val = (expr1->value.bool_val || temp_symbol->value.bool_val);
-                                generate("OR %s %s %s\n", expr1->name, temp_symbol->name, result->name);
+                                int_to_bool(expr2->symbol_ptr, temp_symbol);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val || temp_symbol->value.bool_val);
+                                generate("OR %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                                double_to_bool(expr2, temp_symbol);
-                                result->value.bool_val = (expr1->value.bool_val || temp_symbol->value.bool_val);
-                                generate("OR %s %s %s\n", expr1->name, temp_symbol->name, result->name);
+                                double_to_bool(expr2->symbol_ptr, temp_symbol);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val || temp_symbol->value.bool_val);
+                                generate("OR %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
                             case TYPE_BOOL: {
-                                result->value.bool_val = (expr1->value.bool_val || expr2->value.bool_val);
-                                generate("OR %s %s %s\n", expr1->name, expr2->name, result->name);
+                                result->value.bool_val = (expr1->symbol_ptr->value.bool_val || expr2->symbol_ptr->value.bool_val);
+                                generate("OR %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
                                 is_code_generation = false; // no more code generation for OR operation
                                 break;
                             }
@@ -1443,14 +1451,715 @@
             generate("%s:\n", end_label->name);
         }
 
+        node result_node = {
+            .symbol_ptr = result,
+            .next = NULL,
+            .array_pointer = empty_array_info()
+        };
+
         condition_info info = {
-            .result_ptr = result,
+            .result_node = result_node,
             .true_label_ptr = true_label,
             .false_label_ptr = false_label,
             .end_label_ptr = end_label
         };
 
         return info;
+    }
+
+    /**
+     * Process the operator for `expr1 operator expr2`.
+     * This function generates the necessary assembly code for the operator.
+     * @param operator The operator to process, define by operator token id e.g. PLUS_MICROEX, MINUS_MICROEX, etc.
+     * @param expr1 The first expression to evaluate.
+     * @param expr2 The second expression to evaluate.
+     * @return A symbol representing the result of the operation. Propagates static checkability from expr1 and expr2.
+     */
+    node operator_process(node *expr1, size_t operator, node *expr2) {
+        if(expr1->symbol_ptr->array_info.dimensions > 0 && expr1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if(expr2->symbol_ptr->array_info.dimensions > 0 && expr2->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        
+        if (expr1->symbol_ptr == NULL || expr2->symbol_ptr == NULL) {
+            yyerror_name("expr1 or expr2 symbol is NULL.", "Parsing");
+        }
+
+        expr1->symbol_ptr->array_pointer = expr1->array_pointer;
+        expr1->symbol_ptr = extract_array_symbol(expr1->symbol_ptr);
+        expr1->symbol_ptr->array_pointer = empty_array_info();
+
+        expr2->symbol_ptr->array_pointer = expr2->array_pointer;
+        expr2->symbol_ptr = extract_array_symbol(expr2->symbol_ptr);
+        expr2->symbol_ptr->array_pointer = empty_array_info();
+
+        symbol *result;
+
+        switch (operator) {
+            case PLUS_MICROEX: {
+                switch (expr1->symbol_ptr->type) {
+                    case TYPE_INT: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.int_val + expr2->symbol_ptr->value.int_val;
+                                generate("I_ADD %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression PLUS expression (%lld -> %lld + %lld)\n", result->value.int_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, expr1->symbol_ptr->value.int_val);
+                                
+                                result->value.double_val = temp_symbol->value.double_val + expr2->symbol_ptr->value.double_val;
+                                generate("F_ADD %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
+                                
+                                logging("> expression -> expression PLUS expression (%g -> %lld + %g)\n", result->value.double_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_BOOL: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.int_val + (expr2->symbol_ptr->value.bool_val ? 1 : 0); // convert bool to int
+                                generate("I_ADD %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                
+                                logging("> expression -> expression PLUS expression (%lld -> %lld + %s)\n", result->value.int_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot add int with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot add int with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot add int with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, expr2->symbol_ptr->value.int_val);
+
+                                result->value.double_val = expr1->symbol_ptr->value.double_val + temp_symbol->value.double_val;
+                                generate("F_ADD %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
+
+                                logging("> expression -> expression PLUS expression (%g -> %g + %lld)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = expr1->symbol_ptr->value.double_val + expr2->symbol_ptr->value.double_val;
+                                generate("F_ADD %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression PLUS expression (%g -> %g + %g)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_BOOL: {
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = expr2->symbol_ptr->value.bool_val ? 1.0 : 0.0; // convert bool to double
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = expr1->symbol_ptr->value.double_val + temp_symbol->value.double_val;
+                                generate("F_ADD %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
+                                
+                                logging("> expression -> expression PLUS expression (%g -> %g + %s)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot add double with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot add double with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot add double with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        if (expr2->symbol_ptr->type == TYPE_STRING) {
+                            result = add_temp_symbol(TYPE_STRING);
+                            result->value.str_val = (char *)malloc(strlen(expr1->symbol_ptr->value.str_val) + strlen(expr2->symbol_ptr->value.str_val) + 1);
+                            if (result->value.str_val == NULL) {
+                                yyerror_name("Out of memory when malloc.", "Parsing");
+                            }
+                            result->value.str_val[0] = '\0'; // Initialize to empty string
+                            sprintf(result->value.str_val, "%s%s", expr1->symbol_ptr->value.str_val, expr2->symbol_ptr->value.str_val);
+                            yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                            logging("> expression -> expression PLUS expression (%s -> %s + %s)\n", result->value.str_val, expr1->symbol_ptr->value.str_val, expr2->symbol_ptr->value.str_val);
+                        } else {
+                            yyerror("Cannot add string with non-string type.");
+                        }
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME: {
+                        yyerror_name("Cannot add program name with another type.", "Type");
+                        break;
+                    }
+                    case TYPE_BOOL: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_BOOL: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.bool_val + expr2->symbol_ptr->value.bool_val; // c99 bool is int
+                                generate("I_ADD %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression PLUS expression (%lld -> %s + %s)\n", result->value.int_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.bool_val + expr2->symbol_ptr->value.int_val;
+                                generate("I_ADD %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression PLUS expression (%lld -> %s + %lld)\n", result->value.int_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = expr1->symbol_ptr->value.bool_val ? 1.0 : 0.0; // convert bool to double
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, expr1->symbol_ptr->value.bool_val ? "true" : "false");
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = temp_symbol->value.double_val + expr2->symbol_ptr->value.double_val;
+                                generate("F_ADD %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression PLUS expression (%g -> %s + %g)\n", result->value.double_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot add bool with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot add bool with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot add bool with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        yyerror_name("Unknown data type in expression.", "Parsing");
+                        break;
+                    }
+                }
+                break;
+            }
+            case MINUS_MICROEX: {
+                switch (expr1->symbol_ptr->type) {
+                    case TYPE_INT: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.int_val - expr2->symbol_ptr->value.int_val;
+                                generate("I_SUB %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MINUS expression (%lld -> %lld - %lld)\n", result->value.int_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, expr1->symbol_ptr->value.int_val);
+
+                                result->value.double_val = temp_symbol->value.double_val - expr2->symbol_ptr->value.double_val;
+                                generate("F_SUB %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MINUS expression (%g -> %lld - %g)\n", result->value.double_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_BOOL: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.int_val - (expr2->symbol_ptr->value.bool_val ? 1 : 0); // convert bool to int
+                                generate("I_SUB %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MINUS expression (%lld -> %lld - %s)\n", result->value.int_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot subtract int with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot subtract int with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot subtract int with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, expr2->symbol_ptr->value.int_val);
+
+                                result->value.double_val = expr1->symbol_ptr->value.double_val - temp_symbol->value.double_val;
+                                generate("F_SUB %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
+                                logging("> expression -> expression MINUS expression (%g -> %g - %lld)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = expr1->symbol_ptr->value.double_val - expr2->symbol_ptr->value.double_val;
+                                generate("F_SUB %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MINUS expression (%g -> %g - %g)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_BOOL: {
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = expr2->symbol_ptr->value.bool_val ? 1.0 : 0.0; // convert bool to double
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = expr1->symbol_ptr->value.double_val - temp_symbol->value.double_val;
+                                generate("F_SUB %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
+                                logging("> expression -> expression MINUS expression (%g -> %g - %s)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot subtract double with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot subtract double with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot subtract double with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        yyerror("Cannot subtract string type.");
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME: {
+                        yyerror_name("Cannot subtract program name with another type.", "Type");
+                        break;
+                    }
+                    case TYPE_BOOL: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_BOOL: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.bool_val - expr2->symbol_ptr->value.bool_val; // c99 bool is int
+                                generate("I_SUB %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MINUS expression (%lld -> %s - %s)\n", result->value.int_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.bool_val - expr2->symbol_ptr->value.int_val;
+                                generate("I_SUB %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MINUS expression (%lld -> %s - %lld)\n", result->value.int_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = expr1->symbol_ptr->value.bool_val ? 1.0 : 0.0; // convert bool to double
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, expr1->symbol_ptr->value.bool_val ? "true" : "false");
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = temp_symbol->value.double_val - expr2->symbol_ptr->value.double_val;
+                                generate("F_SUB %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MINUS expression (%g -> %s - %g)\n", result->value.double_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot subtract bool with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot subtract bool with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot subtract bool with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        yyerror_name("Unknown data type in expression.", "Parsing");
+                        break;
+                    }
+                }
+                break;
+            }
+            case MULTIPLY_MICROEX: {
+                switch (expr1->symbol_ptr->type) {
+                    case TYPE_INT: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.int_val * expr2->symbol_ptr->value.int_val;
+                                generate("I_MUL %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%lld -> %lld * %lld)\n", result->value.int_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, expr1->symbol_ptr->value.int_val);
+
+                                result->value.double_val = temp_symbol->value.double_val * expr2->symbol_ptr->value.double_val;
+                                generate("F_MUL %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%g -> %lld * %g)\n", result->value.double_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_BOOL: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.int_val * (expr2->symbol_ptr->value.bool_val ? 1 : 0);
+                                generate("I_MUL %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%lld -> %lld * %s)\n", result->value.int_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot multiply int with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot multiply int with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot multiply int with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, expr2->symbol_ptr->value.int_val);
+
+                                result->value.double_val = expr1->symbol_ptr->value.double_val * temp_symbol->value.double_val;
+                                generate("F_MUL %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%g -> %g * %lld)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = expr1->symbol_ptr->value.double_val * expr2->symbol_ptr->value.double_val;
+                                generate("F_MUL %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%g -> %g * %g)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_BOOL: {
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = expr2->symbol_ptr->value.bool_val ? 1.0 : 0.0; // convert bool to double
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = expr1->symbol_ptr->value.double_val * temp_symbol->value.double_val;
+                                generate("F_MUL %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%g -> %g * %s)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot multiply double with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot multiply double with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot multiply double with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_BOOL: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_BOOL: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.bool_val * expr2->symbol_ptr->value.bool_val; // c99 bool is int
+                                generate("I_MUL %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%lld -> %s * %s)\n", result->value.int_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_INT: {
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = expr1->symbol_ptr->value.bool_val * expr2->symbol_ptr->value.int_val;
+                                generate("I_MUL %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%lld -> %s * %lld)\n", result->value.int_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = expr1->symbol_ptr->value.bool_val ? 1.0 : 0.0; // convert bool to double
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, expr1->symbol_ptr->value.bool_val ? "true" : "false");
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = temp_symbol->value.double_val * expr2->symbol_ptr->value.double_val;
+                                generate("F_MUL %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression MULTIPLY expression (%g -> %s * %g)\n", result->value.double_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot multiply bool with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot multiply bool with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot multiply bool with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        yyerror("Cannot multiply string type.");
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME: {
+                        yyerror_name("Cannot multiply program name with another type.", "Type");
+                        break;
+                    }
+                    default: {
+                        yyerror_name("Unknown data type in expression.", "Parsing");
+                        break;
+                    }
+                }
+                break;
+            }
+            case DIVISION_MICROEX: {
+                switch (expr1->symbol_ptr->type) {
+                    case TYPE_INT: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_INT: {
+                                if (expr2->symbol_ptr->value.int_val == 0 && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = (expr2->symbol_ptr->value.int_val)? expr1->symbol_ptr->value.int_val / expr2->symbol_ptr->value.int_val : 0;
+                                generate("I_DIV %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression DIVISION expression (%lld -> %lld / %lld)\n", result->value.int_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                if (expr2->symbol_ptr->value.double_val == 0.0 && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = (double) expr1->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, expr1->symbol_ptr->value.int_val);
+
+                                result->value.double_val = (expr2->symbol_ptr->value.double_val)? temp_symbol->value.double_val / expr2->symbol_ptr->value.double_val : 0.0;
+                                logging("> expression -> expression DIVISION expression (%g -> %lld / %g)\n", result->value.double_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_BOOL: {
+                                if (expr2->symbol_ptr->value.bool_val == false && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = (expr2->symbol_ptr->value.bool_val)? (expr1->symbol_ptr->value.int_val / (expr2->symbol_ptr->value.bool_val ? 1 : 0)) : 0;
+                                // convert bool to int & prevent division by zero when expr2->symbol_ptr is false and expr2->symbol_ptr isn't static checkable
+                                generate("I_DIV %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression DIVISION expression (%lld -> %lld / %s)\n", result->value.int_val, expr1->symbol_ptr->value.int_val, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot divide int with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot divide int with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot divide int with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_INT: {
+                                if (expr2->symbol_ptr->value.int_val == 0 && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = (double) expr2->symbol_ptr->value.int_val;
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, expr2->symbol_ptr->value.int_val);
+
+                                result->value.double_val = expr1->symbol_ptr->value.double_val / temp_symbol->value.double_val;
+                                logging("> expression -> expression DIVISION expression (%g -> %g / %lld)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                if (expr2->symbol_ptr->value.double_val == 0.0 && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = expr1->symbol_ptr->value.double_val / expr2->symbol_ptr->value.double_val;
+                                generate("F_DIV %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression DIVISION expression (%g -> %g / %g)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_BOOL: {
+                                if (expr2->symbol_ptr->value.bool_val == false && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = expr2->symbol_ptr->value.bool_val ? 1.0 : 0.0; // convert bool to double
+                                generate("I_TO_F %s %s\n", expr2->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = (expr2->symbol_ptr->value.bool_val)? (expr1->symbol_ptr->value.double_val / temp_symbol->value.double_val) : 0.0;
+                                // prevent division by zero when expr2->symbol_ptr is false and expr2->symbol_ptr isn't static checkable
+                                generate("F_DIV %s %s %s\n", expr1->symbol_ptr->name, temp_symbol->name, result->name);
+                                logging("> expression -> expression DIVISION expression (%g -> %g / %s)\n", result->value.double_val, expr1->symbol_ptr->value.double_val, expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot divide double with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot divide double with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot divide double with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        yyerror("Cannot divide string type.");
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME: {
+                        yyerror_name("Cannot divide program name with another type.", "Type");
+                        break;
+                    }
+                    case TYPE_BOOL: {
+                        switch (expr2->symbol_ptr->type) {
+                            case TYPE_BOOL: {
+                                if (expr2->symbol_ptr->value.bool_val == false && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = (expr2->symbol_ptr->value.bool_val) ? (expr1->symbol_ptr->value.bool_val / expr2->symbol_ptr->value.bool_val) : 0;
+                                // convert bool to int & prevent division by zero when expr2->symbol_ptr is false and expr2->symbol_ptr isn't static checkable
+                                generate("I_DIV %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression DIVISION expression (%lld -> %s / %s)\n", result->value.int_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.bool_val ? "true" : "false");
+                                break;
+                            }
+                            case TYPE_INT: {
+                                if (expr2->symbol_ptr->value.int_val == 0 && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                result = add_temp_symbol(TYPE_INT);
+                                result->value.int_val = (expr2->symbol_ptr->value.int_val)? expr1->symbol_ptr->value.bool_val / expr2->symbol_ptr->value.int_val : 0;
+                                // prevent division by zero when expr2->symbol_ptr is zero and expr2->symbol_ptr isn't static checkable
+                                generate("I_DIV %s %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression DIVISION expression (%lld -> %s / %lld)\n", result->value.int_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.int_val);
+                                break;
+                            }
+                            case TYPE_DOUBLE: {
+                                if (expr2->symbol_ptr->value.double_val == 0.0 && expr2->symbol_ptr->is_static_checkable) {
+                                    yyerror_name("Division by zero is not allowed.", "Division");
+                                }
+                                symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                                temp_symbol->value.double_val = expr1->symbol_ptr->value.bool_val ? 1.0 : 0.0; // convert bool to double
+                                generate("I_TO_F %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
+                                logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, expr1->symbol_ptr->value.bool_val ? "true" : "false");
+
+                                result = add_temp_symbol(TYPE_DOUBLE);
+                                result->value.double_val = (expr2->symbol_ptr->value.double_val) ? (temp_symbol->value.double_val / expr2->symbol_ptr->value.double_val) : 0.0;
+                                // prevent division by zero when expr2->symbol_ptr is zero and expr2->symbol_ptr isn't static checkable
+                                generate("F_DIV %s %s %s\n", temp_symbol->name, expr2->symbol_ptr->name, result->name);
+                                logging("> expression -> expression DIVISION expression (%g -> %s / %g)\n", result->value.double_val, expr1->symbol_ptr->value.bool_val ? "true" : "false", expr2->symbol_ptr->value.double_val);
+                                break;
+                            }
+                            case TYPE_STRING: {
+                                yyerror("Cannot divide bool with string type.");
+                                break;
+                            }
+                            case TYPE_PROGRAM_NAME: {
+                                yyerror_name("Cannot divide bool with program name type.", "Type");
+                                break;
+                            }
+                            default: {
+                                yyerror("Cannot divide bool with non-numeric type.");
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        yyerror_name("Unknown data type in expression.", "Parsing");
+                        break;
+                    }
+                }
+                break;
+            }
+            default: {
+                yyerror_name("Unknow operator.", "Parsing");
+                break;
+            }
+        }
+
+        result->is_static_checkable = expr1->symbol_ptr->is_static_checkable && expr2->symbol_ptr->is_static_checkable; // propagate static checkability
+
+        node result_node = {
+            .symbol_ptr = result,
+            .next = NULL,
+            .array_pointer = empty_array_info()
+        };
+
+        return result_node;
     }
 
     /**
@@ -1509,13 +2218,7 @@
                 free(type_str);
                 free(array_dimensions);
                 copy_array_info(&(current->symbol_ptr->array_info), &(current->array_pointer));
-                array_type tmp = {
-                    .dimensions = 0,
-                    .dimension_sizes = NULL,
-                    .dimension_sizes_symbol = NULL,
-                    .is_static_checkable = true
-                };
-                current->symbol_ptr->array_pointer = tmp;
+                current->symbol_ptr->array_pointer = empty_array_info();
 
                 size_t array_size = array_range(current->symbol_ptr->array_info);
                 switch (current->symbol_ptr->type) {
@@ -1584,15 +2287,15 @@
      * Process function statement for return statement.
      * This function generates the necessary assembly code.
     */
-    void function_statement_process(symbol *expr_ptr) {
-        if(expr_ptr->array_info.dimensions > 0 && expr_ptr->array_pointer.dimensions == 0) {
+    void function_statement_process(node *node_ptr) {
+        if(node_ptr->symbol_ptr->array_info.dimensions > 0 && node_ptr->array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
-        expr_ptr = extract_array_symbol(expr_ptr);
+        node_ptr->symbol_ptr = extract_array_symbol(node_ptr->symbol_ptr);
 
         data_type return_type = current_function_info->return_arg->type;
         char *type_str = data_type_to_string(return_type);
-        switch (expr_ptr->type) {
+        switch (node_ptr->symbol_ptr->type) {
             case TYPE_INT: {
                 if (return_type != TYPE_INT && return_type != TYPE_BOOL && return_type != TYPE_DOUBLE) {
                     char *tmp = (char *)malloc(sizeof(char) * (49 + strlen(type_str)));
@@ -1605,16 +2308,16 @@
                 }
 
                 if (return_type == TYPE_INT) {
-                    current_function_info->return_arg->value.int_val = expr_ptr->value.int_val;
-                    generate("I_STORE %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                    current_function_info->return_arg->value.int_val = node_ptr->symbol_ptr->value.int_val;
+                    generate("I_STORE %s %s\n", node_ptr->symbol_ptr->name, current_function_info->return_arg->name);
                 }
                 else if (return_type == TYPE_BOOL) {
-                    current_function_info->return_arg->value.bool_val = (expr_ptr->value.int_val) ? 1 : 0;
-                    int_to_bool(expr_ptr, current_function_info->return_arg);
+                    current_function_info->return_arg->value.bool_val = (node_ptr->symbol_ptr->value.int_val) ? 1 : 0;
+                    int_to_bool(node_ptr->symbol_ptr, current_function_info->return_arg);
                 }
                 else {
-                    current_function_info->return_arg->value.double_val = (double)expr_ptr->value.int_val;
-                    generate("I_TO_F %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                    current_function_info->return_arg->value.double_val = (double)node_ptr->symbol_ptr->value.int_val;
+                    generate("I_TO_F %s %s\n", node_ptr->symbol_ptr->name, current_function_info->return_arg->name);
                 }
 
                 break;
@@ -1631,16 +2334,16 @@
                 }
 
                 if (return_type == TYPE_INT) {
-                    current_function_info->return_arg->value.int_val = expr_ptr->value.bool_val;
-                    generate("I_STORE %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                    current_function_info->return_arg->value.int_val = node_ptr->symbol_ptr->value.bool_val;
+                    generate("I_STORE %s %s\n", node_ptr->symbol_ptr->name, current_function_info->return_arg->name);
                 }
                 else if (return_type == TYPE_BOOL) {
-                    current_function_info->return_arg->value.bool_val = expr_ptr->value.bool_val;
-                    generate("I_STORE %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                    current_function_info->return_arg->value.bool_val = node_ptr->symbol_ptr->value.bool_val;
+                    generate("I_STORE %s %s\n", node_ptr->symbol_ptr->name, current_function_info->return_arg->name);
                 }
                 else {
-                    current_function_info->return_arg->value.double_val = (double)expr_ptr->value.bool_val;
-                    generate("I_TO_F %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                    current_function_info->return_arg->value.double_val = (double)node_ptr->symbol_ptr->value.bool_val;
+                    generate("I_TO_F %s %s\n", node_ptr->symbol_ptr->name, current_function_info->return_arg->name);
                 }
 
                 break;
@@ -1657,16 +2360,16 @@
                 }
 
                 if (return_type == TYPE_INT) {
-                    current_function_info->return_arg->value.int_val = expr_ptr->value.double_val;
-                    generate("F_TO_I %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                    current_function_info->return_arg->value.int_val = node_ptr->symbol_ptr->value.double_val;
+                    generate("F_TO_I %s %s\n", node_ptr->symbol_ptr->name, current_function_info->return_arg->name);
                 }
                 else if (return_type == TYPE_BOOL) {
-                    current_function_info->return_arg->value.bool_val = expr_ptr->value.double_val;
-                    double_to_bool(expr_ptr, current_function_info->return_arg);
+                    current_function_info->return_arg->value.bool_val = node_ptr->symbol_ptr->value.double_val;
+                    double_to_bool(node_ptr->symbol_ptr, current_function_info->return_arg);
                 }
                 else {
-                    current_function_info->return_arg->value.double_val = expr_ptr->value.double_val;
-                    generate("F_STORE %s %s\n", expr_ptr->name, current_function_info->return_arg->name);
+                    current_function_info->return_arg->value.double_val = node_ptr->symbol_ptr->value.double_val;
+                    generate("F_STORE %s %s\n", node_ptr->symbol_ptr->name, current_function_info->return_arg->name);
                 }
 
                 break;
@@ -1681,7 +2384,7 @@
                     sprintf(tmp, "Return variable type should be String, but is %s", type_str);
                     yyerror_name(tmp, "Type");
                 }
-                current_function_info->return_arg->value.str_val = strdup(expr_ptr->value.str_val);
+                current_function_info->return_arg->value.str_val = strdup(node_ptr->symbol_ptr->value.str_val);
                 if (current_function_info->return_arg->value.str_val == NULL) {
                     yyerror_name("Out of memory when calloc.", "Parsing");
                 } 
@@ -1712,7 +2415,7 @@
     double double_val;
     bool bool_val;
     symbol *symbol_ptr;
-    node *node_ptr;
+    node node;
     data_type type;
     array_type array_info;
     direction direction;
@@ -1781,8 +2484,8 @@
 %type <symbol_ptr> id
 %type <array_info> array_dimension
 %type <array_info> array_dimension_list
-%type <symbol_ptr> expression
-%type <symbol_ptr> expression_list
+%type <node> expression
+%type <node> expression_list
 %type <direction> direction
 %type <if_info> if_prefix
 %type <if_info> if_else_prefix
@@ -1876,14 +2579,14 @@ statement:
 // function declare statement
 function_statement:
     function_statement_prefix statement_list RETURN_MICROEX expression SEMICOLON_MICROEX ENDFN_MICROEX {
-        function_statement_process($4);
+        function_statement_process(&$4);
 
         logging("> function_statement -> function_statement_prefix statement_list RETURN expression SEMICOLON FNEND\n");
         
         generate("\n");
     }
-    | function_statement_prefix RETURN_MICROEX expression  SEMICOLON_MICROEX ENDFN_MICROEX {
-        function_statement_process($3);
+    | function_statement_prefix RETURN_MICROEX expression SEMICOLON_MICROEX ENDFN_MICROEX {
+        function_statement_process(&$3);
 
         logging("> function_statement -> function_statement_prefix RETURN expression SEMICOLON FNEND\n");
         
@@ -1977,6 +2680,8 @@ arg_list:
     arg {
         $$ = $1;
         add_arg_node($1);
+        $1->array_pointer = empty_array_info();
+
         char *type_str = data_type_to_string($1->type);
         logging("> arg_list -> arg (arg_list -> %s %s)\n", type_str, $1->name);
         free(type_str);
@@ -1984,6 +2689,7 @@ arg_list:
     | arg_list COMMA_MICROEX arg {
         $$ = $1;
         add_arg_node($3);
+        $3->array_pointer = empty_array_info();
 
         size_t args_name_len = 1; // start with 1 for null terminator
         node *current = arg_list.head;
@@ -2086,13 +2792,7 @@ declare_statement:
                 free(type_str);
                 free(array_dimensions);
                 copy_array_info(&(current->symbol_ptr->array_info), &(current->array_pointer));
-                array_type tmp = {
-                    .dimensions = 0,
-                    .dimension_sizes = NULL,
-                    .dimension_sizes_symbol = NULL,
-                    .is_static_checkable = true
-                };
-                current->symbol_ptr->array_pointer = tmp;
+                current->symbol_ptr->array_pointer = empty_array_info();
 
                 size_t array_size = array_range(current->symbol_ptr->array_info);
                 switch ($4) {
@@ -2250,10 +2950,13 @@ id_list:
         else {
             logging("> id_list -> id (id_list -> %s)\n", $1->name);
         }
+
+        $1->array_pointer = empty_array_info();
     }
     | id_list COMMA_MICROEX id {
         $$ = $1;
         add_id_node($3);
+        $3->array_pointer = empty_array_info();
 
         size_t ids_name_len = 1; // start with 1 for null terminator
         node *current = id_list.head;
@@ -2297,6 +3000,8 @@ id_list:
 id:
     ID_MICROEX {
         $$ = $1;
+        $1->array_pointer = empty_array_info();
+
         logging("> id -> ID (id -> %s)\n", $1->name);
     }
     | ID_MICROEX array_dimension_list {
@@ -2311,22 +3016,22 @@ id:
     ;
 array_dimension:
     LEFT_BRACKET_MICROEX expression RIGHT_BRACKET_MICROEX {
-        if($2->array_info.dimensions > 0 && $2->array_pointer.dimensions == 0) {
+        if($2.symbol_ptr->array_info.dimensions > 0 && $2.array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
 
-        $2 = extract_array_symbol($2);
+        $2.symbol_ptr = extract_array_symbol($2.symbol_ptr);
         
-        if ($2->type != TYPE_INT && $2->type != TYPE_BOOL) {
+        if ($2.symbol_ptr->type != TYPE_INT && $2.symbol_ptr->type != TYPE_BOOL) {
             yyerror_name("Array dimension must be integer greater euqal than 0.", "Index");
         }
-        symbol *temp_symbol = $2;
-        if ($2->type == TYPE_BOOL) {
+        symbol *temp_symbol = $2.symbol_ptr;
+        if ($2.symbol_ptr->type == TYPE_BOOL) {
             // add temporary symbol to make sure array index semantic record always has type int
             temp_symbol = add_temp_symbol(TYPE_INT);
-            temp_symbol->value.int_val = $2->value.bool_val ? 1 : 0; // convert bool to int
-            temp_symbol->is_static_checkable = $2->is_static_checkable; // propagate static checkability
-            generate("I_STORE %s %s\n", $2->name, temp_symbol->name);
+            temp_symbol->value.int_val = $2.symbol_ptr->value.bool_val ? 1 : 0; // convert bool to int
+            temp_symbol->is_static_checkable = $2.symbol_ptr->is_static_checkable; // propagate static checkability
+            generate("I_STORE %s %s\n", $2.symbol_ptr->name, temp_symbol->name);
         }
         $$.dimensions = 1;
         $$.dimension_sizes = (size_t *)malloc(sizeof(size_t) * $$.dimensions);
@@ -2341,14 +3046,14 @@ array_dimension:
         if (temp_symbol->is_static_checkable && temp_symbol->value.int_val < 0) {
             yyerror_name("Array dimension must be greater equal than 0.", "Index");
         }
+
+        $$.dimension_sizes[$$.dimensions - 1] = 0; // non-static checkable dimension, set to 0
+        $$.dimension_sizes_symbol[$$.dimensions - 1] = temp_symbol; // store the symbol for non-static checkable dimension
         if (temp_symbol->is_static_checkable) {
             $$.dimension_sizes[$$.dimensions - 1] = temp_symbol->value.int_val;
-            $$.dimension_sizes_symbol[$$.dimensions - 1] = NULL; // static checkable dimension, no symbol needed
             logging("> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [%lld])\n", temp_symbol->value.int_val);
         }
         else {
-            $$.dimension_sizes[$$.dimensions - 1] = 0; // non-static checkable dimension, set to 0
-            $$.dimension_sizes_symbol[$$.dimensions - 1] = temp_symbol; // store the symbol for non-static checkable dimension
             logging("> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [%s])\n", temp_symbol->name);
         }
 
@@ -2420,57 +3125,57 @@ assignment_statement:
         if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+        if($3.symbol_ptr->array_info.dimensions > 0 && $3.array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
-        $3 = extract_array_symbol($3);
+        $3.symbol_ptr = extract_array_symbol($3.symbol_ptr);
 
         if ($1->array_pointer.dimensions > 0) { // Handle array assignment
             symbol *offset = get_array_offset($1->array_info, $1->array_pointer);
             switch ($1->type) {
                 case TYPE_INT: {
-                    if ($3->type != TYPE_INT && $3->type != TYPE_DOUBLE && $3->type != TYPE_BOOL) {
+                    if ($3.symbol_ptr->type != TYPE_INT && $3.symbol_ptr->type != TYPE_DOUBLE && $3.symbol_ptr->type != TYPE_BOOL) {
                         yyerror_name("Cannot assign non-numeric value to integer array.", "Type");
                     }
-                    switch ($3->type) {
+                    switch ($3.symbol_ptr->type) {
                         case TYPE_INT: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.int_array[offset->value.int_val] = $3->value.int_val;
+                                $1->value.int_array[offset->value.int_val] = $3.symbol_ptr->value.int_val;
                             }
                             // we won't do any semantic propogation here, since we are not sure about the real array offset
-                            generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            generate("I_STORE %s %s[%s]\n", $3.symbol_ptr->name, $1->name, offset->name);
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3.symbol_ptr->value.int_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.int_val);
                             }
                             free(dimensions);
                             break;
                         }
                         case TYPE_DOUBLE: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.int_array[offset->value.int_val] = $3->value.double_val;
+                                $1->value.int_array[offset->value.int_val] = $3.symbol_ptr->value.double_val;
                             }
                             // we won't do any semantic propogation here, since we are not sure about the real array offset
-                            generate("F_TO_I %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            generate("F_TO_I %s %s[%s]\n", $3.symbol_ptr->name, $1->name, offset->name);
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3.symbol_ptr->value.double_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.double_val);
                             }
                             free(dimensions);
                             break;
                         }
                         case TYPE_BOOL: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.int_array[offset->value.int_val] = $3->value.bool_val;
+                                $1->value.int_array[offset->value.int_val] = $3.symbol_ptr->value.bool_val;
                             }
                             // we won't do any semantic propogation here, since we are not sure about the real array offset
-                            generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            generate("I_STORE %s %s[%s]\n", $3.symbol_ptr->name, $1->name, offset->name);
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3.symbol_ptr->value.bool_val ? "true" : "false");
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
                             }
                             free(dimensions);
                             break;
@@ -2491,48 +3196,48 @@ assignment_statement:
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    if ($3->type != TYPE_DOUBLE && $3->type != TYPE_INT && $3->type != TYPE_BOOL) {
+                    if ($3.symbol_ptr->type != TYPE_DOUBLE && $3.symbol_ptr->type != TYPE_INT && $3.symbol_ptr->type != TYPE_BOOL) {
                         yyerror_name("Cannot assign non-numeric value to double array.", "Type");
                     }
-                    switch ($3->type) {
+                    switch ($3.symbol_ptr->type) {
                         case TYPE_DOUBLE: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.double_array[offset->value.int_val] = $3->value.double_val;
+                                $1->value.double_array[offset->value.int_val] = $3.symbol_ptr->value.double_val;
                             }
                             // we won't do any semantic propogation here, since we are not sure about the real array offset
-                            generate("F_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            generate("F_STORE %s %s[%s]\n", $3.symbol_ptr->name, $1->name, offset->name);
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3.symbol_ptr->value.double_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.double_val);
                             }
                             free(dimensions);
                             break;
                         }
                         case TYPE_INT: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.double_array[offset->value.int_val] = $3->value.int_val;
+                                $1->value.double_array[offset->value.int_val] = $3.symbol_ptr->value.int_val;
                             }
                             // we won't do any semantic propogation here, since we are not sure about the real array offset
-                            generate("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            generate("I_TO_F %s %s[%s]\n", $3.symbol_ptr->name, $1->name, offset->name);
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3.symbol_ptr->value.int_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.int_val);
                             }
                             free(dimensions);
                             break;
                         }
                         case TYPE_BOOL: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.double_array[offset->value.int_val] = $3->value.bool_val;
+                                $1->value.double_array[offset->value.int_val] = $3.symbol_ptr->value.bool_val;
                             }
                             // we won't do any semantic propogation here, since we are not sure about the real array offset
-                            generate("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            generate("I_TO_F %s %s[%s]\n", $3.symbol_ptr->name, $1->name, offset->name);
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3.symbol_ptr->value.bool_val ? "true" : "false");
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
                             }
                             free(dimensions);
                             break;
@@ -2553,63 +3258,63 @@ assignment_statement:
                     break;
                 }
                 case TYPE_STRING: {
-                    if ($3->type != TYPE_STRING) {
+                    if ($3.symbol_ptr->type != TYPE_STRING) {
                         yyerror_name("Cannot assign non-string value to string array.", "Type");
                     }
                     // we won't do any semantic propogation here, since we are not sure about the real array offset
                     yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                     
                     dimensions = array_dimensions_to_string($1->array_pointer);
-                    logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3->value.str_val);
-                    if (!$3->is_static_checkable) {
-                        logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
+                    logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3.symbol_ptr->value.str_val);
+                    if (!$3.symbol_ptr->is_static_checkable) {
+                        logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.str_val);
                     }
                     free(dimensions);
                     break;
                 }
                 case TYPE_BOOL: {
-                    if ($3->type != TYPE_BOOL && $3->type != TYPE_INT && $3->type != TYPE_DOUBLE) {
+                    if ($3.symbol_ptr->type != TYPE_BOOL && $3.symbol_ptr->type != TYPE_INT && $3.symbol_ptr->type != TYPE_DOUBLE) {
                         yyerror_name("Cannot assign non-boolean value to boolean array.", "Type");
                     }
-                    switch ($3->type) {
+                    switch ($3.symbol_ptr->type) {
                         case TYPE_BOOL: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.bool_array[offset->value.int_val] = $3->value.bool_val;
+                                $1->value.bool_array[offset->value.int_val] = $3.symbol_ptr->value.bool_val;
                             }
                             // we won't do any semantic propogation here, since we are not sure about the real array offset
-                            generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            generate("I_STORE %s %s[%s]\n", $3.symbol_ptr->name, $1->name, offset->name);
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3.symbol_ptr->value.bool_val ? "true" : "false");
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
                             }
                             free(dimensions);
                             break;
                         }
                         case TYPE_INT: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.bool_array[offset->value.int_val] = $3->value.int_val;
+                                $1->value.bool_array[offset->value.int_val] = $3.symbol_ptr->value.int_val;
                             }
-                            itob_array($3, $1, offset);
+                            itob_array($3.symbol_ptr, $1, offset);
 
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3.symbol_ptr->value.int_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.int_val);
                             }
                             free(dimensions);
                             break;
                         }
                         case TYPE_DOUBLE: {
                             if ($1->array_pointer.is_static_checkable) {
-                                $1->value.bool_array[offset->value.int_val] = $3->value.double_val;
+                                $1->value.bool_array[offset->value.int_val] = $3.symbol_ptr->value.double_val;
                             }
-                            ftob_array($3, $1, offset);
+                            ftob_array($3.symbol_ptr, $1, offset);
                             
                             dimensions = array_dimensions_to_string($1->array_pointer);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3.symbol_ptr->value.double_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.double_val);
                             }
                             free(dimensions);
                             break;
@@ -2642,36 +3347,36 @@ assignment_statement:
         else { // Handle normal variable assignment
             switch ($1->type) {
                 case TYPE_INT: {
-                    if ($3->type != TYPE_INT && $3->type != TYPE_DOUBLE && $3->type != TYPE_BOOL) {
+                    if ($3.symbol_ptr->type != TYPE_INT && $3.symbol_ptr->type != TYPE_DOUBLE && $3.symbol_ptr->type != TYPE_BOOL) {
                         yyerror_name("Cannot assign non-numeric value to integer variable.", "Type");
                     }
-                    switch ($3->type) {
+                    switch ($3.symbol_ptr->type) {
                         case TYPE_INT: {
-                            $1->value.int_val = $3->value.int_val;
-                            generate("I_STORE %s %s\n", $3->name, $1->name);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                            $1->value.int_val = $3.symbol_ptr->value.int_val;
+                            generate("I_STORE %s %s\n", $3.symbol_ptr->name, $1->name);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3.symbol_ptr->value.int_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.int_val);
                             }
                             break;
                         }
                         case TYPE_DOUBLE: {
-                            $1->value.int_val = (long long) $3->value.double_val;
-                            generate("F_TO_I %s %s\n", $3->name, $1->name);
+                            $1->value.int_val = (long long) $3.symbol_ptr->value.double_val;
+                            generate("F_TO_I %s %s\n", $3.symbol_ptr->name, $1->name);
                             
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3.symbol_ptr->value.double_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.double_val);
                             }
                             break;
                         }
                         case TYPE_BOOL: {
-                            $1->value.int_val = $3->value.bool_val ? 1 : 0; // convert bool to int
-                            generate("I_STORE %s %s\n", $3->name, $1->name);
+                            $1->value.int_val = $3.symbol_ptr->value.bool_val ? 1 : 0; // convert bool to int
+                            generate("I_STORE %s %s\n", $3.symbol_ptr->name, $1->name);
 
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
                             }
                             break;
                         }
@@ -2691,36 +3396,36 @@ assignment_statement:
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    if ($3->type != TYPE_DOUBLE && $3->type != TYPE_INT && $3->type != TYPE_BOOL) {
+                    if ($3.symbol_ptr->type != TYPE_DOUBLE && $3.symbol_ptr->type != TYPE_INT && $3.symbol_ptr->type != TYPE_BOOL) {
                         yyerror_name("Cannot assign non-numeric value to double variable.", "Type");
                     }
-                    switch ($3->type) {
+                    switch ($3.symbol_ptr->type) {
                         case TYPE_DOUBLE: {
-                            $1->value.double_val = $3->value.double_val;
-                            generate("F_STORE %s %s\n", $3->name, $1->name);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                            $1->value.double_val = $3.symbol_ptr->value.double_val;
+                            generate("F_STORE %s %s\n", $3.symbol_ptr->name, $1->name);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3.symbol_ptr->value.double_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.double_val);
                             }
                             break;
                         }
                         case TYPE_INT: {
-                            $1->value.double_val = (double) $3->value.int_val;
-                            generate("I_TO_F %s %s\n", $3->name, $1->name);
+                            $1->value.double_val = (double) $3.symbol_ptr->value.int_val;
+                            generate("I_TO_F %s %s\n", $3.symbol_ptr->name, $1->name);
                             
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3.symbol_ptr->value.int_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.int_val);
                             }
                             break;
                         }
                         case TYPE_BOOL: {
-                            $1->value.double_val = $3->value.bool_val ? 1.0 : 0.0;
-                            generate("I_TO_F %s %s\n", $3->name, $1->name);
+                            $1->value.double_val = $3.symbol_ptr->value.bool_val ? 1.0 : 0.0;
+                            generate("I_TO_F %s %s\n", $3.symbol_ptr->name, $1->name);
                             
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
                             }
                             break;
                         }
@@ -2740,51 +3445,51 @@ assignment_statement:
                     break;
                 }
                 case TYPE_STRING: {
-                    if ($3->type != TYPE_STRING) {
+                    if ($3.symbol_ptr->type != TYPE_STRING) {
                         yyerror_name("Cannot assign non-string value to string variable.", "Type");
                     }
-                    $1->value.str_val = (char *)realloc($1->value.str_val, strlen($3->value.str_val) + 1);
+                    $1->value.str_val = (char *)realloc($1->value.str_val, strlen($3.symbol_ptr->value.str_val) + 1);
                     if ($1->value.str_val == NULL) {
                         yyerror_name("Out of memory when realloc.", "Parsing");
                     }
-                    strcpy($1->value.str_val, $3->value.str_val);
+                    strcpy($1->value.str_val, $3.symbol_ptr->value.str_val);
                     yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
                     
-                    logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := \"%s\";)\n", $1->name, $3->value.str_val);
-                    if (!$3->is_static_checkable) {
-                        logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
+                    logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := \"%s\";)\n", $1->name, $3.symbol_ptr->value.str_val);
+                    if (!$3.symbol_ptr->is_static_checkable) {
+                        logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.str_val);
                     }
                     break;
                 }
                 case TYPE_BOOL: {
-                    if ($3->type != TYPE_BOOL && $3->type != TYPE_INT && $3->type != TYPE_DOUBLE) {
+                    if ($3.symbol_ptr->type != TYPE_BOOL && $3.symbol_ptr->type != TYPE_INT && $3.symbol_ptr->type != TYPE_DOUBLE) {
                         yyerror_name("Cannot assign non-boolean value to boolean variable.", "Type");
                     }
-                    switch ($3->type) {
+                    switch ($3.symbol_ptr->type) {
                         case TYPE_BOOL: {
-                            $1->value.bool_val = $3->value.bool_val;
-                            generate("I_STORE %s %s\n", $3->name, $1->name);
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3->value.bool_val ? "true" : "false");
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            $1->value.bool_val = $3.symbol_ptr->value.bool_val;
+                            generate("I_STORE %s %s\n", $3.symbol_ptr->name, $1->name);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %s;)\n", $1->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
                             }
                             break;
                         }
                         case TYPE_INT: {
-                            int_to_bool($3, $1);
+                            int_to_bool($3.symbol_ptr, $1);
                             
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3->value.int_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %lld;)\n", $1->name, $3.symbol_ptr->value.int_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.int_val);
                             }
                             break;
                         }
                         case TYPE_DOUBLE: {
-                            double_to_bool($3, $1);
+                            double_to_bool($3.symbol_ptr, $1);
                             
-                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3->value.double_val);
-                            if (!$3->is_static_checkable) {
-                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s := %g;)\n", $1->name, $3.symbol_ptr->value.double_val);
+                            if (!$3.symbol_ptr->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.double_val);
                             }
                             break;
                         }
@@ -2810,7 +3515,7 @@ assignment_statement:
             }
         }
 
-        $1->is_static_checkable = $3->is_static_checkable && $1->array_pointer.is_static_checkable; 
+        $1->is_static_checkable = $3.symbol_ptr->is_static_checkable && $1->array_pointer.is_static_checkable; 
         // propagate static checkability
         // if array_pointer is not static checkable, then the whole assignment is not static checkable
         
@@ -2819,720 +3524,41 @@ assignment_statement:
     ;
 expression:
     expression PLUS_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        switch ($1->type) {
-            case TYPE_INT: {
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.int_val + $3->value.int_val;
-                        generate("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression PLUS expression (%lld -> %lld + %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = (double) $1->value.int_val;
-                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
-                        
-                        $$->value.double_val = temp_symbol->value.double_val + $3->value.double_val;
-                        generate("F_ADD %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        
-                        logging("> expression -> expression PLUS expression (%g -> %lld + %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.int_val + ($3->value.bool_val ? 1 : 0); // convert bool to int
-                        generate("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        
-                        logging("> expression -> expression PLUS expression (%lld -> %lld + %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot add int with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot add int with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot add int with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_DOUBLE: {
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = (double) $3->value.int_val;
-                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
-
-                        $$->value.double_val = $1->value.double_val + temp_symbol->value.double_val;
-                        generate("F_ADD %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-
-                        logging("> expression -> expression PLUS expression (%g -> %g + %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = $1->value.double_val + $3->value.double_val;
-                        generate("F_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression PLUS expression (%g -> %g + %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = $3->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
-
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = $1->value.double_val + temp_symbol->value.double_val;
-                        generate("F_ADD %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        
-                        logging("> expression -> expression PLUS expression (%g -> %g + %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot add double with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot add double with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot add double with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_STRING: {
-                if ($3->type == TYPE_STRING) {
-                    $$ = add_temp_symbol(TYPE_STRING);
-                    $$->value.str_val = (char *)malloc(strlen($1->value.str_val) + strlen($3->value.str_val) + 1);
-                    if ($$->value.str_val == NULL) {
-                        yyerror_name("Out of memory when malloc.", "Parsing");
-                    }
-                    $$->value.str_val[0] = '\0'; // Initialize to empty string
-                    sprintf($$->value.str_val, "%s%s", $1->value.str_val, $3->value.str_val);
-                    yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                    logging("> expression -> expression PLUS expression (%s -> %s + %s)\n", $$->value.str_val, $1->value.str_val, $3->value.str_val);
-                } else {
-                    yyerror("Cannot add string with non-string type.");
-                }
-                break;
-            }
-            case TYPE_PROGRAM_NAME: {
-                yyerror_name("Cannot add program name with another type.", "Type");
-                break;
-            }
-            case TYPE_BOOL: {
-                switch ($3->type) {
-                    case TYPE_BOOL: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.bool_val + $3->value.bool_val; // c99 bool is int
-                        generate("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression PLUS expression (%lld -> %s + %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.bool_val + $3->value.int_val;
-                        generate("I_ADD %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression PLUS expression (%lld -> %s + %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = $1->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = temp_symbol->value.double_val + $3->value.double_val;
-                        generate("F_ADD %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        logging("> expression -> expression PLUS expression (%g -> %s + %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot add bool with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot add bool with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot add bool with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            default: {
-                yyerror_name("Unknown data type in expression.", "Parsing");
-                break;
-            }
-        }
-
-        $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
+        $$ = operator_process(&$1, PLUS_MICROEX, &$3);
     }
     | expression MINUS_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        switch ($1->type) {
-            case TYPE_INT: {
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.int_val - $3->value.int_val;
-                        generate("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%lld -> %lld - %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = (double) $1->value.int_val;
-                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
-
-                        $$->value.double_val = temp_symbol->value.double_val - $3->value.double_val;
-                        generate("F_SUB %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%g -> %lld - %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.int_val - ($3->value.bool_val ? 1 : 0); // convert bool to int
-                        generate("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%lld -> %lld - %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot subtract int with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot subtract int with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot subtract int with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_DOUBLE: {
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = (double) $3->value.int_val;
-                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
-
-                        $$->value.double_val = $1->value.double_val - temp_symbol->value.double_val;
-                        generate("F_SUB %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%g -> %g - %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = $1->value.double_val - $3->value.double_val;
-                        generate("F_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%g -> %g - %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = $3->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
-
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = $1->value.double_val - temp_symbol->value.double_val;
-                        generate("F_SUB %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%g -> %g - %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot subtract double with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot subtract double with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot subtract double with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_STRING: {
-                yyerror("Cannot subtract string type.");
-                break;
-            }
-            case TYPE_PROGRAM_NAME: {
-                yyerror_name("Cannot subtract program name with another type.", "Type");
-                break;
-            }
-            case TYPE_BOOL: {
-                switch ($3->type) {
-                    case TYPE_BOOL: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.bool_val - $3->value.bool_val; // c99 bool is int
-                        generate("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%lld -> %s - %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.bool_val - $3->value.int_val;
-                        generate("I_SUB %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%lld -> %s - %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = $1->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = temp_symbol->value.double_val - $3->value.double_val;
-                        generate("F_SUB %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        logging("> expression -> expression MINUS expression (%g -> %s - %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot subtract bool with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot subtract bool with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot subtract bool with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            default: {
-                yyerror_name("Unknown data type in expression.", "Parsing");
-                break;
-            }
-        }
-
-        $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
+        $$ = operator_process(&$1, MINUS_MICROEX, &$3);
     }
     | expression MULTIPLY_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        switch ($1->type) {
-            case TYPE_INT: {
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.int_val * $3->value.int_val;
-                        generate("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%lld -> %lld * %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = (double) $1->value.int_val;
-                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
-
-                        $$->value.double_val = temp_symbol->value.double_val * $3->value.double_val;
-                        generate("F_MUL %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%g -> %lld * %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.int_val * ($3->value.bool_val ? 1 : 0);
-                        generate("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%lld -> %lld * %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot multiply int with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot multiply int with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot multiply int with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_DOUBLE: {
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = (double) $3->value.int_val;
-                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
-
-                        $$->value.double_val = $1->value.double_val * temp_symbol->value.double_val;
-                        generate("F_MUL %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%g -> %g * %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = $1->value.double_val * $3->value.double_val;
-                        generate("F_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%g -> %g * %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = $3->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
-
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = $1->value.double_val * temp_symbol->value.double_val;
-                        generate("F_MUL %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%g -> %g * %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot multiply double with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot multiply double with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot multiply double with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_BOOL: {
-                switch ($3->type) {
-                    case TYPE_BOOL: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.bool_val * $3->value.bool_val; // c99 bool is int
-                        generate("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%lld -> %s * %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.bool_val * $3->value.int_val;
-                        generate("I_MUL %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%lld -> %s * %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = $1->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = temp_symbol->value.double_val * $3->value.double_val;
-                        generate("F_MUL %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        logging("> expression -> expression MULTIPLY expression (%g -> %s * %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot multiply bool with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot multiply bool with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot multiply bool with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_STRING: {
-                yyerror("Cannot multiply string type.");
-                break;
-            }
-            case TYPE_PROGRAM_NAME: {
-                yyerror_name("Cannot multiply program name with another type.", "Type");
-                break;
-            }
-            default: {
-                yyerror_name("Unknown data type in expression.", "Parsing");
-                break;
-            }
-        }
-
-        $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
+        $$ = operator_process(&$1, MULTIPLY_MICROEX, &$3);
     }
     | expression DIVISION_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        switch ($1->type) {
-            case TYPE_INT: {
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        if ($3->value.int_val == 0 && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = ($3->value.int_val)? $1->value.int_val / $3->value.int_val : 0;
-                        generate("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression DIVISION expression (%lld -> %lld / %lld)\n", $$->value.int_val, $1->value.int_val, $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        if ($3->value.double_val == 0.0 && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = (double) $1->value.int_val;
-                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $1->value.int_val);
-
-                        $$->value.double_val = ($3->value.double_val)? temp_symbol->value.double_val / $3->value.double_val : 0.0;
-                        logging("> expression -> expression DIVISION expression (%g -> %lld / %g)\n", $$->value.double_val, $1->value.int_val, $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        if ($3->value.bool_val == false && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = ($3->value.bool_val)? ($1->value.int_val / ($3->value.bool_val ? 1 : 0)) : 0;
-                        // convert bool to int & prevent division by zero when $3 is false and $3 isn't static checkable
-                        generate("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression DIVISION expression (%lld -> %lld / %s)\n", $$->value.int_val, $1->value.int_val, $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot divide int with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot divide int with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot divide int with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_DOUBLE: {
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        if ($3->value.int_val == 0 && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = (double) $3->value.int_val;
-                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        logging("\t> auto casting int to double (%s -> %lld)\n", temp_symbol->name, $3->value.int_val);
-
-                        $$->value.double_val = $1->value.double_val / temp_symbol->value.double_val;
-                        logging("> expression -> expression DIVISION expression (%g -> %g / %lld)\n", $$->value.double_val, $1->value.double_val, $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        if ($3->value.double_val == 0.0 && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = $1->value.double_val / $3->value.double_val;
-                        generate("F_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression DIVISION expression (%g -> %g / %g)\n", $$->value.double_val, $1->value.double_val, $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        if ($3->value.bool_val == false && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = $3->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        generate("I_TO_F %s %s\n", $3->name, temp_symbol->name);
-                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $3->value.bool_val ? "true" : "false");
-
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = ($3->value.bool_val)? ($1->value.double_val / temp_symbol->value.double_val) : 0.0;
-                        // prevent division by zero when $3 is false and $3 isn't static checkable
-                        generate("F_DIV %s %s %s\n", $1->name, temp_symbol->name, $$->name);
-                        logging("> expression -> expression DIVISION expression (%g -> %g / %s)\n", $$->value.double_val, $1->value.double_val, $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot divide double with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot divide double with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot divide double with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            case TYPE_STRING: {
-                yyerror("Cannot divide string type.");
-                break;
-            }
-            case TYPE_PROGRAM_NAME: {
-                yyerror_name("Cannot divide program name with another type.", "Type");
-                break;
-            }
-            case TYPE_BOOL: {
-                switch ($3->type) {
-                    case TYPE_BOOL: {
-                        if ($3->value.bool_val == false && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = ($3->value.bool_val) ? ($1->value.bool_val / $3->value.bool_val) : 0;
-                        // convert bool to int & prevent division by zero when $3 is false and $3 isn't static checkable
-                        generate("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression DIVISION expression (%lld -> %s / %s)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.bool_val ? "true" : "false");
-                        break;
-                    }
-                    case TYPE_INT: {
-                        if ($3->value.int_val == 0 && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = ($3->value.int_val)? $1->value.bool_val / $3->value.int_val : 0;
-                        // prevent division by zero when $3 is zero and $3 isn't static checkable
-                        generate("I_DIV %s %s %s\n", $1->name, $3->name, $$->name);
-                        logging("> expression -> expression DIVISION expression (%lld -> %s / %lld)\n", $$->value.int_val, $1->value.bool_val ? "true" : "false", $3->value.int_val);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        if ($3->value.double_val == 0.0 && $3->is_static_checkable) {
-                            yyerror_name("Division by zero is not allowed.", "Division");
-                        }
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        temp_symbol->value.double_val = $1->value.bool_val ? 1.0 : 0.0; // convert bool to double
-                        generate("I_TO_F %s %s\n", $1->name, temp_symbol->name);
-                        logging("\t> auto casting bool to double (%s -> %s)\n", temp_symbol->name, $1->value.bool_val ? "true" : "false");
-
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = ($3->value.double_val) ? (temp_symbol->value.double_val / $3->value.double_val) : 0.0;
-                        // prevent division by zero when $3 is zero and $3 isn't static checkable
-                        generate("F_DIV %s %s %s\n", temp_symbol->name, $3->name, $$->name);
-                        logging("> expression -> expression DIVISION expression (%g -> %s / %g)\n", $$->value.double_val, $1->value.bool_val ? "true" : "false", $3->value.double_val);
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        yyerror("Cannot divide bool with string type.");
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot divide bool with program name type.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror("Cannot divide bool with non-numeric type.");
-                        break;
-                    }
-                }
-                break;
-            }
-            default: {
-                yyerror_name("Unknown data type in expression.", "Parsing");
-                break;
-            }
-        }
-
-        $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
+        $$ = operator_process(&$1, DIVISION_MICROEX, &$3);
     }
     | MINUS_MICROEX expression %prec UMINUS_MICROEX {
-        if($2->array_info.dimensions > 0 && $2->array_pointer.dimensions == 0) {
+        if($2.symbol_ptr->array_info.dimensions > 0 && $2.array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
         
-        $2 = extract_array_symbol($2);
+        $2.symbol_ptr = extract_array_symbol($2.symbol_ptr);
 
-        switch ($2->type) {
+        switch ($2.symbol_ptr->type) {
             case TYPE_INT: {
-                $$ = add_temp_symbol(TYPE_INT);
-                $$->value.int_val = -$2->value.int_val;
-                generate("I_UMINUS %s %s\n", $2->name, $$->name);
-                logging("> expression -> MINUS expression (expression -> %lld)\n", $$->value.int_val);
+                $$.symbol_ptr = add_temp_symbol(TYPE_INT);
+                $$.symbol_ptr->value.int_val = -$2.symbol_ptr->value.int_val;
+                generate("I_UMINUS %s %s\n", $2.symbol_ptr->name, $$.symbol_ptr->name);
+                logging("> expression -> MINUS expression (expression -> %lld)\n", $$.symbol_ptr->value.int_val);
 
-                $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
+                $$.symbol_ptr->is_static_checkable = $2.symbol_ptr->is_static_checkable; // propagate static checkability
                 break;
             }
             case TYPE_DOUBLE: {
-                $$ = add_temp_symbol(TYPE_DOUBLE);
-                $$->value.double_val = -$2->value.double_val;
-                generate("F_UMINUS %s %s\n", $2->name, $$->name);
-                logging("> expression -> MINUS expression (expression -> %g)\n", $$->value.double_val);
+                $$.symbol_ptr = add_temp_symbol(TYPE_DOUBLE);
+                $$.symbol_ptr->value.double_val = -$2.symbol_ptr->value.double_val;
+                generate("F_UMINUS %s %s\n", $2.symbol_ptr->name, $$.symbol_ptr->name);
+                logging("> expression -> MINUS expression (expression -> %g)\n", $$.symbol_ptr->value.double_val);
 
-                $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
+                $$.symbol_ptr->is_static_checkable = $2.symbol_ptr->is_static_checkable; // propagate static checkability
                 break;
             }
             case TYPE_STRING: {
@@ -3544,12 +3570,12 @@ expression:
                 break;
             }
             case TYPE_BOOL: {
-                $$ = add_temp_symbol(TYPE_INT);
-                $$->value.int_val = -$2->value.bool_val;
-                generate("I_UMINUS %s %s\n", $2->name, $$->name);
-                logging("> expression -> MINUS expression (expression -> -%s)\n", $2->value.bool_val ? "true" : "false");
+                $$.symbol_ptr = add_temp_symbol(TYPE_INT);
+                $$.symbol_ptr->value.int_val = -$2.symbol_ptr->value.bool_val;
+                generate("I_UMINUS %s %s\n", $2.symbol_ptr->name, $$.symbol_ptr->name);
+                logging("> expression -> MINUS expression (expression -> -%s)\n", $2.symbol_ptr->value.bool_val ? "true" : "false");
 
-                $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
+                $$.symbol_ptr->is_static_checkable = $2.symbol_ptr->is_static_checkable; // propagate static checkability
                 break;
             }
             default: {
@@ -3558,35 +3584,33 @@ expression:
             }
         }
 
-        $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
+        $$.array_pointer = empty_array_info();
+        $$.next = NULL;
+
+        $$.symbol_ptr->is_static_checkable = $2.symbol_ptr->is_static_checkable; // propagate static checkability
     }
     | LEFT_PARENT_MICROEX expression RIGHT_PARENT_MICROEX {
-        if($2->array_info.dimensions > 0 && $2->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        
-        $2 = extract_array_symbol($2);
-
         $$ = $2;
-        switch ($2->type) {
+
+        switch ($2.symbol_ptr->type) {
             case TYPE_INT: {
-                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%lld))\n", $2->value.int_val);
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%lld))\n", $2.symbol_ptr->value.int_val);
                 break;
             }
             case TYPE_DOUBLE: {
-                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%g))\n", $2->value.double_val);
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%g))\n", $2.symbol_ptr->value.double_val);
                 break;
             }
             case TYPE_STRING: {
-                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->value.str_val);
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2.symbol_ptr->value.str_val);
                 break;
             }
             case TYPE_BOOL: {
-                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->value.bool_val ? "true" : "false");
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2.symbol_ptr->value.bool_val ? "true" : "false");
                 break;
             }
             case TYPE_PROGRAM_NAME: {
-                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2->name);
+                logging("> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (%s))\n", $2.symbol_ptr->name);
                 break;
             }
             default: {
@@ -3595,141 +3619,63 @@ expression:
             }
         }
 
+        $$.array_pointer = empty_array_info();
+        $$.next = NULL;
         // since propagate static checkability inherited from $2, so we don't need to set it again
     }
     | expression GREAT_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        $$ = condition_process($1, GREAT_MICROEX, $3).result_ptr;
+        $$ = condition_process(&$1, GREAT_MICROEX, &$3).result_node;
     }
     | expression LESS_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        $$ = condition_process($1, LESS_MICROEX, $3).result_ptr;
+        $$ = condition_process(&$1, LESS_MICROEX, &$3).result_node;
     }
     | expression GREAT_EQUAL_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        $$ = condition_process($1, GREAT_EQUAL_MICROEX, $3).result_ptr;
+        $$ = condition_process(&$1, GREAT_EQUAL_MICROEX, &$3).result_node;
     }
     | expression LESS_EQUAL_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        $$ = condition_process($1, LESS_EQUAL_MICROEX, $3).result_ptr;
+        $$ = condition_process(&$1, LESS_EQUAL_MICROEX, &$3).result_node;
     }
     | expression EQUAL_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        $$ = condition_process($1, EQUAL_MICROEX, $3).result_ptr;
+        $$ = condition_process(&$1, EQUAL_MICROEX, &$3).result_node;
     }
     | expression NOT_EQUAL_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        $$ = condition_process($1, NOT_EQUAL_MICROEX, $3).result_ptr;
+        $$ = condition_process(&$1, NOT_EQUAL_MICROEX, &$3).result_node;
     }
     | expression AND_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-        
-        $$ = condition_process($1, AND_MICROEX, $3).result_ptr;
+        $$ = condition_process(&$1, AND_MICROEX, &$3).result_node;
     }
     | expression OR_MICROEX expression {
-        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
-            yyerror_name("Access non-array symbol with array symbol.", "Type");
-        }
-
-        $1 = extract_array_symbol($1);
-        $3 = extract_array_symbol($3);
-
-        $$ = condition_process($1, OR_MICROEX, $3).result_ptr;
+        $$ = condition_process(&$1, OR_MICROEX, &$3).result_node;
     }
     | NOT_MICROEX expression {
-        if($2->array_info.dimensions > 0 && $2->array_pointer.dimensions == 0) {
+        if($2.symbol_ptr->array_info.dimensions > 0 && $2.array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
         
-        $$ = add_temp_symbol(TYPE_BOOL);
-        $2 = extract_array_symbol($2);
+        $$.symbol_ptr = add_temp_symbol(TYPE_BOOL);
+        $2.symbol_ptr = extract_array_symbol($2.symbol_ptr);
 
-        switch ($2->type) {
+        switch ($2.symbol_ptr->type) {
             case TYPE_BOOL: {
-                $$->value.bool_val = !$2->value.bool_val;
-                generate("NOT %s %s\n", $2->name, $$->name);
-                logging("> expression -> NOT expression (expression -> !%s)\n", $2->value.bool_val ? "true" : "false");
+                $$.symbol_ptr->value.bool_val = !$2.symbol_ptr->value.bool_val;
+                generate("NOT %s %s\n", $2.symbol_ptr->name, $$.symbol_ptr->name);
+                logging("> expression -> NOT expression (expression -> !%s)\n", $2.symbol_ptr->value.bool_val ? "true" : "false");
                 break;
             }
             case TYPE_INT: {
                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                int_to_bool($2, temp_symbol);
-                $$->value.bool_val = !temp_symbol->value.bool_val;
-                generate("NOT %s %s\n", temp_symbol->name, $$->name);
-                logging("> expression -> NOT expression (expression -> !%lld)\n", $2->value.int_val);
+                int_to_bool($2.symbol_ptr, temp_symbol);
+                $$.symbol_ptr->value.bool_val = !temp_symbol->value.bool_val;
+                generate("NOT %s %s\n", temp_symbol->name, $$.symbol_ptr->name);
+                logging("> expression -> NOT expression (expression -> !%lld)\n", $2.symbol_ptr->value.int_val);
                 break;
             }
             case TYPE_DOUBLE: {
                 symbol *temp_symbol = add_temp_symbol(TYPE_BOOL);
-                double_to_bool($2, temp_symbol);
-                $$->value.bool_val = !temp_symbol->value.bool_val;
-                generate("NOT %s %s\n", temp_symbol->name, $$->name);
-                logging("> expression -> NOT expression (expression -> !%g)\n", $2->value.double_val);
+                double_to_bool($2.symbol_ptr, temp_symbol);
+                $$.symbol_ptr->value.bool_val = !temp_symbol->value.bool_val;
+                generate("NOT %s %s\n", temp_symbol->name, $$.symbol_ptr->name);
+                logging("> expression -> NOT expression (expression -> !%g)\n", $2.symbol_ptr->value.double_val);
                 break;
             }
             case TYPE_STRING: {
@@ -3746,17 +3692,30 @@ expression:
             }
         }
 
-        $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
+        $$.next = NULL;
+        $$.array_pointer = empty_array_info();
+
+        $$.symbol_ptr->is_static_checkable = $2.symbol_ptr->is_static_checkable; // propagate static checkability
     }
     | id {
         if ($1->type == TYPE_UNKNOWN) {
             yyerror_name("Variable not declared.", "Undeclared");
         }
 
-        $$ = $1;
-        logging("> expression -> id (expression -> %s)\n", $1->name);
+        $$.next = NULL;
+        $$.array_pointer = $1->array_pointer;
+        $1->array_pointer = empty_array_info();
 
-        $$->is_static_checkable = $1->is_static_checkable; // propagate static checkability
+        $$.symbol_ptr = $1;
+
+        if ($$.array_pointer.dimensions > 0) {
+            dimensions = array_dimensions_to_string($$.array_pointer);
+            logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
+            free(dimensions);
+        }
+        else {
+            logging("> expression -> id (expression -> %s)\n", $1->name);
+        }
     }
     // function call
     | ID_MICROEX LEFT_PARENT_MICROEX expression_list RIGHT_PARENT_MICROEX {
@@ -3783,7 +3742,7 @@ expression:
             yyerror_name(tmp, "ArgsNumbers");
         }
 
-        $$ = add_temp_symbol($1->function_info->return_arg->type);
+        $$.symbol_ptr = add_temp_symbol($1->function_info->return_arg->type);
         size_t i = 0;
         size_t exprs_name_len = 1; // start with 1 for null terminator
         node *current = expression_list.head;
@@ -3959,13 +3918,16 @@ expression:
             current = current->next;
         }
 
-        generate("CALL %s %s\n", $1->name, $$->name);
+        generate("CALL %s %s\n", $1->name, $$.symbol_ptr->name);
         logging("> expression -> ID LEFT_PARENT expression_list RIGHT_PARENT (expression -> %s(%s))\n", $1->name, exprs_name.str);
         free(exprs_name.str);
 
         free_expression_list();
 
-        $$->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
+        $$.next = NULL;
+        $$.array_pointer = empty_array_info();
+
+        $$.symbol_ptr->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
     }
     | ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX {
         if ($1->type == TYPE_UNKNOWN) {
@@ -3991,62 +3953,65 @@ expression:
             yyerror_name(tmp, "ArgsNumbers");
         }
 
-        $$ = add_temp_symbol($1->function_info->return_arg->type);
-        generate("CALL %s %s\n", $1->name, $$->name);
+        $$.next = NULL;
+        $$.array_pointer = empty_array_info();
+
+        $$.symbol_ptr = add_temp_symbol($1->function_info->return_arg->type);
+        generate("CALL %s %s\n", $1->name, $$.symbol_ptr->name);
         logging("> expression -> ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX (expression -> %s())\n", $1->name);
 
-        $$->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
+        $$.symbol_ptr->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
     }
     | INTEGER_LITERAL_MICROEX {
-        $$ = add_temp_symbol(TYPE_INT);
-        $$->value.int_val = $1;
-        generate("I_STORE %lld %s\n", $1, $$->name);
+        $$.symbol_ptr = add_temp_symbol(TYPE_INT);
+        $$.symbol_ptr->value.int_val = $1;
+        generate("I_STORE %lld %s\n", $1, $$.symbol_ptr->name);
         logging("> expression -> INTEGER_LITERAL (expression -> %lld)\n", $1);
 
-        $$->is_static_checkable = true; // integer literals are always static checkable
+        $$.symbol_ptr->is_static_checkable = true; // integer literals are always static checkable
     }
     | FLOAT_LITERAL_MICROEX {
-        $$ = add_temp_symbol(TYPE_DOUBLE);
-        $$->value.double_val = $1;
-        generate("F_STORE %g %s\n", $1, $$->name);
+        $$.symbol_ptr = add_temp_symbol(TYPE_DOUBLE);
+        $$.symbol_ptr->value.double_val = $1;
+        generate("F_STORE %g %s\n", $1, $$.symbol_ptr->name);
         logging("> expression -> FLOAT_LITERAL (expression -> %g)\n", $1);
 
-        $$->is_static_checkable = true; // float literals are always static checkable
+        $$.symbol_ptr->is_static_checkable = true; // float literals are always static checkable
     }
     | EXP_FLOAT_LITERAL_MICROEX {
-        $$ = add_temp_symbol(TYPE_DOUBLE);
-        $$->value.double_val = $1;
-        generate("F_STORE %g %s\n", $1, $$->name);
+        $$.symbol_ptr = add_temp_symbol(TYPE_DOUBLE);
+        $$.symbol_ptr->value.double_val = $1;
+        generate("F_STORE %g %s\n", $1, $$.symbol_ptr->name);
         logging("> expression -> EXP_FLOAT_LITERAL (expression -> %g)\n", $1);
 
-        $$->is_static_checkable = true; // exp float literals are always static checkable
+        $$.symbol_ptr->is_static_checkable = true; // exp float literals are always static checkable
     }
     // This bad body is too difficult to implement,
     // so we currently do not support string and won't generate code for it.
     | STRING_LITERAL_MICROEX {
         // TODO: implement STRING_LITERAL if have time
-        $$ = add_temp_symbol(TYPE_STRING);
-        $$->value.str_val = $1; // $1 is a valid string by yytext
+        $$.symbol_ptr = add_temp_symbol(TYPE_STRING);
+        $$.symbol_ptr->value.str_val = $1; // $1 is a valid string by yytext
         yyerror_warning_test_mode("STRING_LITERAL is not supported yet and won't generate code for it.", "Feature", true, true);
         logging("> expression -> STRING_LITERAL (expression -> %s)\n", $1);
 
-        $$->is_static_checkable = true; // string literals are always static checkable
+        $$.symbol_ptr->is_static_checkable = true; // string literals are always static checkable
     }
     | TRUE_LITERAL_MICROEX {
-        $$ = add_temp_symbol(TYPE_BOOL);
-        $$->value.bool_val = true;
-        generate("I_STORE 1 %s\n", $$->name);
+        $$.symbol_ptr = add_temp_symbol(TYPE_BOOL);
+        $$.symbol_ptr->value.bool_val = true;
+        generate("I_STORE 1 %s\n", $$.symbol_ptr->name);
         logging("> expression -> TRUE_LITERAL (expression -> true)\n");
 
-        $$->is_static_checkable = true; // boolean literals are always static checkable
+        $$.symbol_ptr->is_static_checkable = true; // boolean literals are always static checkable
     }
     | FALSE_LITERAL_MICROEX {
-        $$ = add_temp_symbol(TYPE_BOOL);
-        $$->value.bool_val = false;
-        generate("I_STORE 0 %s\n", $$->name);
+        $$.symbol_ptr = add_temp_symbol(TYPE_BOOL);
+        $$.symbol_ptr->value.bool_val = false;
+        generate("I_STORE 0 %s\n", $$.symbol_ptr->name);
         logging("> expression -> FALSE_LITERAL (expression -> false)\n");
 
-        $$->is_static_checkable = true; // boolean literals are always static checkable
+        $$.symbol_ptr->is_static_checkable = true; // boolean literals are always static checkable
     }
     ;
 // read statement
@@ -4258,19 +4223,25 @@ write_statement:
 expression_list:
     expression {
         $$ = $1;
-        add_expression_node($1);
-        if ($1->array_pointer.dimensions > 0) {
-            dimensions = array_dimensions_to_string($1->array_pointer);
-            logging("> expression_list -> expression (expression_list -> %s%s)\n", $1->name, dimensions);
+        $1.symbol_ptr->array_pointer = $1.array_pointer;
+        add_expression_node($1.symbol_ptr);
+        $1.symbol_ptr->array_pointer = empty_array_info();
+
+        if ($1.symbol_ptr->array_pointer.dimensions > 0) {
+            dimensions = array_dimensions_to_string($1.symbol_ptr->array_pointer);
+            logging("> expression_list -> expression (expression_list -> %s%s)\n", $1.symbol_ptr->name, dimensions);
             free(dimensions);
         }
         else {
-            logging("> expression_list -> expression (expression_list -> %s)\n", $1->name);
+            logging("> expression_list -> expression (expression_list -> %s)\n", $1.symbol_ptr->name);
         }
     }
     | expression_list COMMA_MICROEX expression {
         $$ = $1;
-        add_expression_node($3);
+
+        $3.symbol_ptr->array_pointer = $3.array_pointer;
+        add_expression_node($3.symbol_ptr);
+        $3.symbol_ptr->array_pointer = empty_array_info();
 
         size_t expressions_name_len = 1; // 1 for null terminator
         node *current = expression_list.head;
@@ -4329,11 +4300,11 @@ if_statement:
     ;
 if_prefix:
     IF_MICROEX LEFT_PARENT_MICROEX expression RIGHT_PARENT_MICROEX THEN_MICROEX {
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+        if($3.symbol_ptr->array_info.dimensions > 0 && $3.array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
 
-        $3 = extract_array_symbol($3);
+        $3.symbol_ptr = extract_array_symbol($3.symbol_ptr);
 
         label *true_label = add_label();
         label *false_label = add_label();
@@ -4343,26 +4314,26 @@ if_prefix:
         $$.false_label = false_label;
         $$.end_label = end_label;
 
-        switch ($3->type) {
+        switch ($3.symbol_ptr->type) {
             case TYPE_INT:
             case TYPE_BOOL: {
-                generate("I_CMP 0 %s\n", $3->name);
+                generate("I_CMP 0 %s\n", $3.symbol_ptr->name);
                 generate("JNE %s\n", true_label->name);
                 generate("J %s\n", false_label->name);
                 generate("%s:\n", true_label->name);
-                if ($3->type == TYPE_INT) {
-                    logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%lld) then)\n", $3->value.int_val);
+                if ($3.symbol_ptr->type == TYPE_INT) {
+                    logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%lld) then)\n", $3.symbol_ptr->value.int_val);
                 } else {
-                    logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%s) then)\n", $3->value.bool_val ? "true" : "false");
+                    logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%s) then)\n", $3.symbol_ptr->value.bool_val ? "true" : "false");
                 }
                 break;
             }
             case TYPE_DOUBLE: {
-                generate("F_CMP 0.0 %s\n", $3->name);
+                generate("F_CMP 0.0 %s\n", $3.symbol_ptr->name);
                 generate("JNE %s\n", true_label->name);
                 generate("J %s\n", false_label->name);
                 generate("%s:\n", true_label->name);
-                logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%g) then)\n", $3->value.double_val);
+                logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%g) then)\n", $3.symbol_ptr->value.double_val);
                 break;
             }
             case TYPE_STRING: {
@@ -4399,38 +4370,38 @@ if_suffix:
 for_statement:
     for_prefix statement_list ENDFOR_MICROEX {
         // increment/decrement the for variable
-        if ($1.for_variable->array_pointer.dimensions > 0) {
-            symbol *offset = get_array_offset($1.for_variable->array_info, $1.for_variable->array_pointer);
-            switch ($1.for_variable->type) {
+        if ($1.for_node.array_pointer.dimensions > 0) {
+            symbol *offset = get_array_offset($1.for_node.symbol_ptr->array_info, $1.for_node.array_pointer);
+            switch ($1.for_node.symbol_ptr->type) {
                 case TYPE_INT: {
                     if ($1.for_direction == DIRECTION_TO) {
-                        if ($1.for_variable->array_pointer.is_static_checkable) {
-                            $1.for_variable->value.int_array[offset->value.int_val]++;
+                        if ($1.for_node.array_pointer.is_static_checkable) {
+                            $1.for_node.symbol_ptr->value.int_array[offset->value.int_val]++;
                         }
-                        generate("INC %s[%s]\n", $1.for_variable->name, offset->name);
+                        generate("INC %s[%s]\n", $1.for_node.symbol_ptr->name, offset->name);
                     }
                     else {
-                        if ($1.for_variable->array_pointer.is_static_checkable) {
-                            $1.for_variable->value.int_array[offset->value.int_val]--;
+                        if ($1.for_node.array_pointer.is_static_checkable) {
+                            $1.for_node.symbol_ptr->value.int_array[offset->value.int_val]--;
                         }
-                        generate("DEC %s[%s]\n", $1.for_variable->name, offset->name);
+                        generate("DEC %s[%s]\n", $1.for_node.symbol_ptr->name, offset->name);
                     }
                     break;
                 }
                 case TYPE_DOUBLE: {
                     symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                     if ($1.for_direction == DIRECTION_TO) {
-                        if ($1.for_variable->array_pointer.is_static_checkable) {
-                            $1.for_variable->value.double_array[offset->value.int_val]++;
+                        if ($1.for_node.array_pointer.is_static_checkable) {
+                            $1.for_node.symbol_ptr->value.double_array[offset->value.int_val]++;
                         }
-                        generate("F_ADD %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
+                        generate("F_ADD %s[%s] 1.0 %s\n", $1.for_node.symbol_ptr->name, offset->name, temp_symbol->name);
                     } else {
-                        if ($1.for_variable->array_pointer.is_static_checkable) {
-                            $1.for_variable->value.double_array[offset->value.int_val]--;
+                        if ($1.for_node.array_pointer.is_static_checkable) {
+                            $1.for_node.symbol_ptr->value.double_array[offset->value.int_val]--;
                         }
-                        generate("F_SUB %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
+                        generate("F_SUB %s[%s] 1.0 %s\n", $1.for_node.symbol_ptr->name, offset->name, temp_symbol->name);
                     }
-                    generate("F_STORE %s %s[%s]\n", temp_symbol->name, $1.for_variable->name, offset->name);
+                    generate("F_STORE %s %s[%s]\n", temp_symbol->name, $1.for_node.symbol_ptr->name, offset->name);
                     break;
                 }
                 case TYPE_BOOL:
@@ -4443,28 +4414,28 @@ for_statement:
             }
         }
         else {
-            switch ($1.for_variable->type) {
+            switch ($1.for_node.symbol_ptr->type) {
                 case TYPE_INT: {
                     if ($1.for_direction == DIRECTION_TO) {
-                        $1.for_variable->value.int_val++;
-                        generate("INC %s\n", $1.for_variable->name);
+                        $1.for_node.symbol_ptr->value.int_val++;
+                        generate("INC %s\n", $1.for_node.symbol_ptr->name);
                     }
                     else {
-                        $1.for_variable->value.int_val--;
-                        generate("DEC %s\n", $1.for_variable->name);
+                        $1.for_node.symbol_ptr->value.int_val--;
+                        generate("DEC %s\n", $1.for_node.symbol_ptr->name);
                     }
                     break;
                 }
                 case TYPE_DOUBLE: {
                     symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
                     if ($1.for_direction == DIRECTION_TO) {
-                        $1.for_variable->value.double_val++;
-                        generate("F_ADD %s 1.0 %s\n", $1.for_variable->name, temp_symbol->name);
+                        $1.for_node.symbol_ptr->value.double_val++;
+                        generate("F_ADD %s 1.0 %s\n", $1.for_node.symbol_ptr->name, temp_symbol->name);
                     } else {
-                        $1.for_variable->value.double_val--;
-                        generate("F_SUB %s 1.0 %s\n", $1.for_variable->name, temp_symbol->name);
+                        $1.for_node.symbol_ptr->value.double_val--;
+                        generate("F_SUB %s 1.0 %s\n", $1.for_node.symbol_ptr->name, temp_symbol->name);
                     }
-                    generate("F_STORE %s %s\n", temp_symbol->name, $1.for_variable->name);
+                    generate("F_STORE %s %s\n", temp_symbol->name, $1.for_node.symbol_ptr->name);
                     break;
                 }
                 case TYPE_BOOL:
@@ -4477,8 +4448,8 @@ for_statement:
             }
         }
 
-        condition_info info = condition_process($1.for_variable, (($1.for_direction == DIRECTION_TO) ? LESS_MICROEX : GREAT_MICROEX), $1.for_end_expression);
-        generate("I_CMP 0 %s\n", info.result_ptr->name);
+        condition_info info = condition_process(&$1.for_node, (($1.for_direction == DIRECTION_TO) ? LESS_MICROEX : GREAT_MICROEX), &$1.for_end_node);
+        generate("I_CMP 0 %s\n", info.result_node.symbol_ptr->name);
         generate("JNE %s\n", $1.for_start_label->name);
         generate("%s\n", $1.for_end_label->name); // end label for for loop
         logging("> for_statement -> for_prefix statement_list endfor\n");
@@ -4493,23 +4464,23 @@ for_prefix:
         if ($3->type != TYPE_INT && $3->type != TYPE_DOUBLE) {
             yyerror_name("Loop variable must be of type int or double.", "Type");
         }
-        if ($5->type != TYPE_INT && $5->type != TYPE_DOUBLE && $5->type != TYPE_BOOL) {
+        if ($5.symbol_ptr->type != TYPE_INT && $5.symbol_ptr->type != TYPE_DOUBLE && $5.symbol_ptr->type != TYPE_BOOL) {
             yyerror_name("Loop start expression must be of type int, double or bool.", "Type");
         }
-        if ($7->type != TYPE_INT && $7->type != TYPE_DOUBLE && $7->type != TYPE_BOOL) {
+        if ($7.symbol_ptr->type != TYPE_INT && $7.symbol_ptr->type != TYPE_DOUBLE && $7.symbol_ptr->type != TYPE_BOOL) {
             yyerror_name("Loop end expression must be of type int, double or bool.", "Type");
         }
         if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
-        if($5->array_info.dimensions > 0 && $5->array_pointer.dimensions == 0) {
+        if($5.symbol_ptr->array_info.dimensions > 0 && $5.array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
-        if($7->array_info.dimensions > 0 && $7->array_pointer.dimensions == 0) {
+        if($7.symbol_ptr->array_info.dimensions > 0 && $7.symbol_ptr->array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
-        $5 = extract_array_symbol($5);
-        $7 = extract_array_symbol($7);
+        $5.symbol_ptr = extract_array_symbol($5.symbol_ptr);
+        $7.symbol_ptr = extract_array_symbol($7.symbol_ptr);
 
         // loop variable initialization
         if ($3->array_pointer.dimensions > 0) {
@@ -4522,19 +4493,19 @@ for_prefix:
             symbol *offset = get_array_offset($3->array_info, $3->array_pointer);
             switch ($3->type) {
                 case TYPE_INT: {
-                    switch ($5->type) {
+                    switch ($5.symbol_ptr->type) {
                         case TYPE_BOOL: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4545,23 +4516,23 @@ for_prefix:
                                 }
                             }
                             if ($3->array_pointer.is_static_checkable) {
-                                $3->value.int_array[offset->value.int_val] = $5->value.bool_val;
+                                $3->value.int_array[offset->value.int_val] = $5.symbol_ptr->value.bool_val;
                             }
-                            generate("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            generate("I_STORE %s %s[%s]\n", $5.symbol_ptr->name, $3->name, offset->name);
                             break;
                         }
                         case TYPE_INT: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4572,23 +4543,23 @@ for_prefix:
                                 }
                             }
                             if ($3->array_pointer.is_static_checkable) {
-                                $3->value.int_array[offset->value.int_val] = $5->value.int_val;
+                                $3->value.int_array[offset->value.int_val] = $5.symbol_ptr->value.int_val;
                             }
-                            generate("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            generate("I_STORE %s %s[%s]\n", $5.symbol_ptr->name, $3->name, offset->name);
                             break;
                         }
                         case TYPE_DOUBLE: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4599,9 +4570,9 @@ for_prefix:
                                 }
                             }
                             if ($3->array_pointer.is_static_checkable) {
-                                $3->value.int_array[offset->value.int_val] = $5->value.double_val;
+                                $3->value.int_array[offset->value.int_val] = $5.symbol_ptr->value.double_val;
                             }
-                            generate("F_TO_I %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            generate("F_TO_I %s %s[%s]\n", $5.symbol_ptr->name, $3->name, offset->name);
                             break;
                         }
                         case TYPE_STRING:
@@ -4614,19 +4585,19 @@ for_prefix:
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    switch ($5->type) {
+                    switch ($5.symbol_ptr->type) {
                         case TYPE_BOOL: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4637,23 +4608,23 @@ for_prefix:
                                 }
                             }
                             if ($3->array_pointer.is_static_checkable) {
-                                $3->value.double_array[offset->value.int_val] = $5->value.bool_val;
+                                $3->value.double_array[offset->value.int_val] = $5.symbol_ptr->value.bool_val;
                             }
-                            generate("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            generate("I_TO_F %s %s[%s]\n", $5.symbol_ptr->name, $3->name, offset->name);
                             break;
                         }
                         case TYPE_INT: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4664,23 +4635,23 @@ for_prefix:
                                 }
                             }
                             if ($3->array_pointer.is_static_checkable) {
-                                $3->value.double_array[offset->value.int_val] = $5->value.int_val;
+                                $3->value.double_array[offset->value.int_val] = $5.symbol_ptr->value.int_val;
                             }
-                            generate("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            generate("I_TO_F %s %s[%s]\n", $5.symbol_ptr->name, $3->name, offset->name);
                             break;
                         }
                         case TYPE_DOUBLE: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4691,9 +4662,9 @@ for_prefix:
                                 }
                             }
                             if ($3->array_pointer.is_static_checkable) {
-                                $3->value.double_array[offset->value.int_val] = $5->value.double_val;
+                                $3->value.double_array[offset->value.int_val] = $5.symbol_ptr->value.double_val;
                             }
-                            generate("F_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            generate("F_STORE %s %s[%s]\n", $5.symbol_ptr->name, $3->name, offset->name);
                             break;
                         }
                         case TYPE_STRING:
@@ -4717,19 +4688,19 @@ for_prefix:
         else {
             switch ($3->type) {
                 case TYPE_INT: {
-                    switch ($5->type) {
+                    switch ($5.symbol_ptr->type) {
                         case TYPE_INT: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %s))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %s))\n", $3->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %lld))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %lld))\n", $3->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %g))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %g))\n", $3->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4739,21 +4710,21 @@ for_prefix:
                                     break;
                                 }
                             }
-                            generate("I_STORE %s %s\n", $5->name, $3->name);
+                            generate("I_STORE %s %s\n", $5.symbol_ptr->name, $3->name);
                             break;
                         }
                         case TYPE_BOOL: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %s))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %s))\n", $3->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %lld))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %lld))\n", $3->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %g))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %g))\n", $3->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4763,21 +4734,21 @@ for_prefix:
                                     break;
                                 }
                             }
-                            generate("I_STORE %s %s\n", $5->name, $3->name);
+                            generate("I_STORE %s %s\n", $5.symbol_ptr->name, $3->name);
                             break;
                         }
                         case TYPE_DOUBLE: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %s))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %s))\n", $3->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %lld))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %lld))\n", $3->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %g))\n", $3->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %g %s %g))\n", $3->name, $5.symbol_ptr->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4787,7 +4758,7 @@ for_prefix:
                                     break;
                                 }
                             }
-                            generate("F_TO_I %s %s\n", $5->name, $3->name);
+                            generate("F_TO_I %s %s\n", $5.symbol_ptr->name, $3->name);
                             break;
                         }
                         case TYPE_STRING:
@@ -4800,19 +4771,19 @@ for_prefix:
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    switch ($5->type) {
+                    switch ($5.symbol_ptr->type) {
                         case TYPE_INT: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %s))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %s))\n", $3->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %lld))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %lld))\n", $3->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %g))\n", $3->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %lld %s %g))\n", $3->name, $5.symbol_ptr->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4822,21 +4793,21 @@ for_prefix:
                                     break;
                                 }
                             }
-                            generate("I_TO_F %s %s\n", $5->name, $3->name);
+                            generate("I_TO_F %s %s\n", $5.symbol_ptr->name, $3->name);
                             break;
                         }
                         case TYPE_BOOL: {
-                            switch ($7->type) {
+                            switch ($7.symbol_ptr->type) {
                                 case TYPE_BOOL: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %s))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %s))\n", $3->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.bool_val ? "true" : "false");
                                     break;
                                 }
                                 case TYPE_INT: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %lld))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %lld))\n", $3->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.int_val);
                                     break;
                                 }
                                 case TYPE_DOUBLE: {
-                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %g))\n", $3->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s := %s %s %g))\n", $3->name, $5.symbol_ptr->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7.symbol_ptr->value.double_val);
                                     break;
                                 }
                                 case TYPE_STRING:
@@ -4846,7 +4817,7 @@ for_prefix:
                                     break;
                                 }
                             }
-                            generate("I_TO_F %s %s\n", $5->name, $3->name);
+                            generate("I_TO_F %s %s\n", $5.symbol_ptr->name, $3->name);
                             break;
                         }
                         case TYPE_STRING:
@@ -4867,18 +4838,18 @@ for_prefix:
                 }
             }
         }
-        if (!$5->is_static_checkable) {
-            switch ($5->type) {
+        if (!$5.symbol_ptr->is_static_checkable) {
+            switch ($5.symbol_ptr->type) {
                 case TYPE_INT: {
-                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.int_val);
+                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $5.symbol_ptr->name, $5.symbol_ptr->value.int_val);
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.double_val);
+                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $5.symbol_ptr->name, $5.symbol_ptr->value.double_val);
                     break;
                 }
                 case TYPE_BOOL: {
-                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $5->name, $5->value.bool_val ? "true" : "false");
+                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $5.symbol_ptr->name, $5.symbol_ptr->value.bool_val ? "true" : "false");
                     break;
                 }
                 case TYPE_STRING:
@@ -4889,18 +4860,18 @@ for_prefix:
                 }
             }
         }
-        if (!$7->is_static_checkable) {
-            switch ($7->type) {
+        if (!$7.symbol_ptr->is_static_checkable) {
+            switch ($7.symbol_ptr->type) {
                 case TYPE_INT: {
-                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.int_val);
+                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $7.symbol_ptr->name, $7.symbol_ptr->value.int_val);
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.double_val);
+                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $7.symbol_ptr->name, $7.symbol_ptr->value.double_val);
                     break;
                 }
                 case TYPE_BOOL: {
-                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $7->name, $7->value.bool_val ? "true" : "false");
+                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $7.symbol_ptr->name, $7.symbol_ptr->value.bool_val ? "true" : "false");
                     break;
                 }
                 case TYPE_STRING:
@@ -4914,19 +4885,24 @@ for_prefix:
 
         label *for_start_label = add_label();
         label *for_end_label = add_label();
-        condition_info info = condition_process($3, (($6 == DIRECTION_TO)? LESS_MICROEX : GREAT_MICROEX), $7);
-        generate("I_CMP 0 %s\n", info.result_ptr->name);
+        node id_node = {
+            .symbol_ptr = $3,
+            .next = NULL,
+            .array_pointer = $3->array_pointer
+        };
+        condition_info info = condition_process(&id_node, (($6 == DIRECTION_TO)? LESS_MICROEX : GREAT_MICROEX), &$7);
+        generate("I_CMP 0 %s\n", info.result_node.symbol_ptr->name);
         generate("JNE %s\n", for_start_label->name);
         generate("J %s\n", for_end_label->name);
         generate("%s:\n", for_start_label->name);
 
         $$.for_start_label = for_start_label;
         $$.for_end_label = for_end_label;
-        $$.for_variable = $3;
+        $$.for_node = id_node;
         $$.for_direction = $6;
-        $$.for_end_expression = $7;
+        $$.for_end_node = $7;
 
-        $3->is_static_checkable = $5->is_static_checkable && $7->is_static_checkable; // propagate static checkability
+        $3->is_static_checkable = $5.symbol_ptr->is_static_checkable && $7.symbol_ptr->is_static_checkable; // propagate static checkability
     }
     ;
 direction:
@@ -4943,25 +4919,25 @@ direction:
 // while statement
 while_statement:
     while_prefix statement_list ENDWHILE_MICROEX {
-        if ($1.while_condition->array_pointer.dimensions > 0) {
-            symbol *offset = get_array_offset($1.while_condition->array_info, $1.while_condition->array_pointer);
-            switch ($1.while_condition->type) {
+        if ($1.while_condition.array_pointer.dimensions > 0) {
+            symbol *offset = get_array_offset($1.while_condition.symbol_ptr->array_info, $1.while_condition.array_pointer);
+            switch ($1.while_condition.symbol_ptr->type) {
                 case TYPE_INT: {
-                    generate("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
+                    generate("I_CMP 0 %s[%s]\n", $1.while_condition.symbol_ptr->name, offset->name);
                     generate("JNE %s\n", $1.while_start_label->name);
 
                     logging("> while_statement -> while_prefix statement_list endwhile\n");
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    generate("F_CMP 0.0 %s[%s]\n", $1.while_condition->name, offset->name);
+                    generate("F_CMP 0.0 %s[%s]\n", $1.while_condition.symbol_ptr->name, offset->name);
                     generate("JNE %s\n", $1.while_start_label->name);
 
                     logging("> while_statement -> while_prefix statement_list endwhile\n");
                     break;
                 }
                 case TYPE_BOOL: {
-                    generate("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
+                    generate("I_CMP 0 %s[%s]\n", $1.while_condition.symbol_ptr->name, offset->name);
                     generate("JNE %s\n", $1.while_start_label->name);
 
                     logging("> while_statement -> while_prefix statement_list endwhile\n");
@@ -4976,23 +4952,23 @@ while_statement:
             }
         }
         else {
-            switch ($1.while_condition->type) {
+            switch ($1.while_condition.symbol_ptr->type) {
                 case TYPE_BOOL: {
-                    generate("I_CMP 0 %s\n", $1.while_condition->name);
+                    generate("I_CMP 0 %s\n", $1.while_condition.symbol_ptr->name);
                     generate("JNE %s\n", $1.while_start_label->name);
 
                     logging("> while_statement -> while_prefix statement_list endwhile\n");
                     break;
                 }
                 case TYPE_INT: {
-                    generate("I_CMP 0 %s\n", $1.while_condition->name);
+                    generate("I_CMP 0 %s\n", $1.while_condition.symbol_ptr->name);
                     generate("JNE %s\n", $1.while_start_label->name);
 
                     logging("> while_statement -> while_prefix statement_list endwhile\n");
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    generate("F_CMP 0.0 %s\n", $1.while_condition->name);
+                    generate("F_CMP 0.0 %s\n", $1.while_condition.symbol_ptr->name);
                     generate("JNE %s\n", $1.while_start_label->name);
 
                     logging("> while_statement -> while_prefix statement_list endwhile\n");
@@ -5014,39 +4990,39 @@ while_statement:
     ;
 while_prefix:
     WHILE_MICROEX LEFT_PARENT_MICROEX expression RIGHT_PARENT_MICROEX {
-        if ($3->type != TYPE_BOOL && $3->type != TYPE_INT && $3->type != TYPE_DOUBLE) {
+        if ($3.symbol_ptr->type != TYPE_BOOL && $3.symbol_ptr->type != TYPE_INT && $3.symbol_ptr->type != TYPE_DOUBLE) {
             yyerror("Condition in while statement must be of type bool, int or double.");
         }
-        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+        if($3.symbol_ptr->array_info.dimensions > 0 && $3.array_pointer.dimensions == 0) {
             yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
 
         label *while_start_label = add_label();
         label *while_end_label = add_label();
 
-        if ($3->array_pointer.dimensions > 0) {
-            symbol *offset = get_array_offset($3->array_info, $3->array_pointer);
-            dimensions = array_dimensions_to_string($3->array_pointer);
-            switch ($3->type) {
+        if ($3.symbol_ptr->array_pointer.dimensions > 0) {
+            symbol *offset = get_array_offset($3.symbol_ptr->array_info, $3.symbol_ptr->array_pointer);
+            dimensions = array_dimensions_to_string($3.symbol_ptr->array_pointer);
+            switch ($3.symbol_ptr->type) {
                 case TYPE_INT: {
-                    generate("I_CMP 0 %s[%s]\n", $3->name, offset->name);
+                    generate("I_CMP 0 %s[%s]\n", $3.symbol_ptr->name, offset->name);
                     generate("JNE %s\n", while_start_label->name);
 
-                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3.symbol_ptr->name, dimensions);
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    generate("F_CMP 0.0 %s[%s]\n", $3->name, offset->name);
+                    generate("F_CMP 0.0 %s[%s]\n", $3.symbol_ptr->name, offset->name);
                     generate("JNE %s\n", while_start_label->name);
 
-                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3.symbol_ptr->name, dimensions);
                     break;
                 }
                 case TYPE_BOOL: {
-                    generate("I_CMP 0 %s[%s]\n", $3->name, offset->name);
+                    generate("I_CMP 0 %s[%s]\n", $3.symbol_ptr->name, offset->name);
                     generate("JNE %s\n", while_start_label->name);
 
-                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3.symbol_ptr->name, dimensions);
                     break;
                 }
                 case TYPE_STRING:
@@ -5058,34 +5034,34 @@ while_prefix:
             }
         }
         else {
-            switch ($3->type) {
+            switch ($3.symbol_ptr->type) {
                 case TYPE_BOOL: {
-                    generate("I_CMP 0 %s\n", $3->name);
+                    generate("I_CMP 0 %s\n", $3.symbol_ptr->name);
                     generate("JNE %s\n", while_start_label->name);
 
-                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s))\n", $3->value.bool_val ? "true" : "false");
-                    if (!$3->is_static_checkable) {
-                        logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s))\n", $3.symbol_ptr->value.bool_val ? "true" : "false");
+                    if (!$3.symbol_ptr->is_static_checkable) {
+                        logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.bool_val ? "true" : "false");
                     }
                     break;
                 }
                 case TYPE_INT: {
-                    generate("I_CMP 0 %s\n", $3->name);
+                    generate("I_CMP 0 %s\n", $3.symbol_ptr->name);
                     generate("JNE %s\n", while_start_label->name);
 
-                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%lld))\n", $3->value.int_val);
-                    if (!$3->is_static_checkable) {
-                        logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%lld))\n", $3.symbol_ptr->value.int_val);
+                    if (!$3.symbol_ptr->is_static_checkable) {
+                        logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.int_val);
                     }
                     break;
                 }
                 case TYPE_DOUBLE: {
-                    generate("F_CMP 0.0 %s\n", $3->name);
+                    generate("F_CMP 0.0 %s\n", $3.symbol_ptr->name);
                     generate("JNE %s\n", while_start_label->name);
 
-                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%g))\n", $3->value.double_val);
-                    if (!$3->is_static_checkable) {
-                        logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%g))\n", $3.symbol_ptr->value.double_val);
+                    if (!$3.symbol_ptr->is_static_checkable) {
+                        logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3.symbol_ptr->name, $3.symbol_ptr->value.double_val);
                     }
                     break;
                 }

@@ -492,6 +492,16 @@ endfn [Ee][Nn][Dd][Ff][Nn]
 
 %%
 
+array_type empty_array_info() {
+    array_type info = {
+        .dimensions = 0,
+        .dimension_sizes = NULL,
+        .dimension_sizes_symbol = NULL,
+        .is_static_checkable = true
+    };
+    return info;
+}
+
 /**
  * Reallocable char structure to handle dynamic string allocation.
  * Returns true if realloc was successful, false otherwise.
@@ -553,7 +563,7 @@ char *array_dimensions_to_string(array_type array_info) {
     }
     rc.str[0] = '\0';
     for (size_t i = 0; i < array_info.dimensions; i++) {
-        size_t len = (array_info.dimension_sizes_symbol[i] != NULL)? strlen(array_info.dimension_sizes_symbol[i]->name) : SIZE_T_CHARLEN;
+        size_t len = (array_info.is_static_checkable)? SIZE_T_CHARLEN : strlen(array_info.dimension_sizes_symbol[i]->name);
         if (strlen(rc.str) + len + 4 > rc.capacity) {
             rc.capacity = (strlen(rc.str) + len + 4); // +4 for the brackets and null terminator
             rc.capacity *= 2; // double the capacity for efficient growth
@@ -561,7 +571,7 @@ char *array_dimensions_to_string(array_type array_info) {
                 yyerror_name("Out of memory when realloc.", "Parsing");
             }
         }
-        if (array_info.dimension_sizes_symbol[i] == NULL) {
+        if (array_info.is_static_checkable) {
             sprintf(rc.str, "%s[%zu]", rc.str, array_info.dimension_sizes[i]);
         }
         else {
@@ -961,15 +971,10 @@ symbol *get_array_offset(array_type array_info, array_type array_pointer) {
             stride->value.int_val *= array_info.dimension_sizes[i];
         }
 
-        if (array_pointer.dimension_sizes_symbol[i] == NULL) {
-            generate("I_MUL %s %zu %s\n", stride->name, array_pointer.dimension_sizes[i], temp_stride_symbol->name);
-            generate("I_ADD %s %s %s\n", offset->name, temp_stride_symbol->name, temp_offset_symbol->name);
-            generate("I_STORE %s %s\n", temp_offset_symbol->name, offset->name);
-        } else {
-            generate("I_MUL %s %s %s\n", stride->name, array_pointer.dimension_sizes_symbol[i]->name, temp_stride_symbol->name);
-            generate("I_ADD %s %s %s\n", offset->name, temp_stride_symbol->name, temp_offset_symbol->name);
-            generate("I_STORE %s %s\n", temp_offset_symbol->name, offset->name);
-        }
+        generate("I_MUL %s %s %s\n", stride->name, array_pointer.dimension_sizes_symbol[i]->name, temp_stride_symbol->name);
+        generate("I_ADD %s %s %s\n", offset->name, temp_stride_symbol->name, temp_offset_symbol->name);
+        generate("I_STORE %s %s\n", temp_offset_symbol->name, offset->name);
+        
         generate("I_MUL %s %zu %s\n", stride->name, array_info.dimension_sizes[i], temp_stride_symbol->name);
         generate("I_STORE %s %s\n", temp_stride_symbol->name, stride->name);
     }

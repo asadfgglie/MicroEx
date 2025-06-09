@@ -196,12 +196,12 @@ I_STORE 1 fn&temp&integer&26
 comment&Calculating_offset&8:
 I_STORE 0 fn&temp&integer&27
 I_STORE 1 fn&temp&integer&28
-I_MUL fn&temp&integer&28 1 fn&temp&integer&30
+I_MUL fn&temp&integer&28 fn&temp&integer&24 fn&temp&integer&30
 I_ADD fn&temp&integer&27 fn&temp&integer&30 fn&temp&integer&29
 I_STORE fn&temp&integer&29 fn&temp&integer&27
 I_MUL fn&temp&integer&28 3 fn&temp&integer&30
 I_STORE fn&temp&integer&30 fn&temp&integer&28
-I_MUL fn&temp&integer&28 0 fn&temp&integer&30
+I_MUL fn&temp&integer&28 fn&temp&integer&23 fn&temp&integer&30
 I_ADD fn&temp&integer&27 fn&temp&integer&30 fn&temp&integer&29
 I_STORE fn&temp&integer&29 fn&temp&integer&27
 I_MUL fn&temp&integer&28 2 fn&temp&integer&30
@@ -210,12 +210,12 @@ I_STORE fn&test_array&arr[fn&temp&integer&27] fn&temp&integer&31
 comment&Calculating_offset&9:
 I_STORE 0 fn&temp&integer&32
 I_STORE 1 fn&temp&integer&33
-I_MUL fn&temp&integer&33 1 fn&temp&integer&35
+I_MUL fn&temp&integer&33 fn&temp&integer&26 fn&temp&integer&35
 I_ADD fn&temp&integer&32 fn&temp&integer&35 fn&temp&integer&34
 I_STORE fn&temp&integer&34 fn&temp&integer&32
 I_MUL fn&temp&integer&33 3 fn&temp&integer&35
 I_STORE fn&temp&integer&35 fn&temp&integer&33
-I_MUL fn&temp&integer&33 0 fn&temp&integer&35
+I_MUL fn&temp&integer&33 fn&temp&integer&25 fn&temp&integer&35
 I_ADD fn&temp&integer&32 fn&temp&integer&35 fn&temp&integer&34
 I_STORE fn&temp&integer&34 fn&temp&integer&32
 I_MUL fn&temp&integer&33 2 fn&temp&integer&35
@@ -227,12 +227,12 @@ I_STORE 2 fn&temp&integer&39
 comment&Calculating_offset&10:
 I_STORE 0 fn&temp&integer&40
 I_STORE 1 fn&temp&integer&41
-I_MUL fn&temp&integer&41 2 fn&temp&integer&43
+I_MUL fn&temp&integer&41 fn&temp&integer&39 fn&temp&integer&43
 I_ADD fn&temp&integer&40 fn&temp&integer&43 fn&temp&integer&42
 I_STORE fn&temp&integer&42 fn&temp&integer&40
 I_MUL fn&temp&integer&41 3 fn&temp&integer&43
 I_STORE fn&temp&integer&43 fn&temp&integer&41
-I_MUL fn&temp&integer&41 0 fn&temp&integer&43
+I_MUL fn&temp&integer&41 fn&temp&integer&38 fn&temp&integer&43
 I_ADD fn&temp&integer&40 fn&temp&integer&43 fn&temp&integer&42
 I_STORE fn&temp&integer&42 fn&temp&integer&40
 I_MUL fn&temp&integer&41 2 fn&temp&integer&43
@@ -249,12 +249,12 @@ I_STORE 1 fn&temp&integer&49
 comment&Calculating_offset&11:
 I_STORE 0 fn&temp&integer&50
 I_STORE 1 fn&temp&integer&51
-I_MUL fn&temp&integer&51 1 fn&temp&integer&53
+I_MUL fn&temp&integer&51 fn&temp&integer&47 fn&temp&integer&53
 I_ADD fn&temp&integer&50 fn&temp&integer&53 fn&temp&integer&52
 I_STORE fn&temp&integer&52 fn&temp&integer&50
 I_MUL fn&temp&integer&51 3 fn&temp&integer&53
 I_STORE fn&temp&integer&53 fn&temp&integer&51
-I_MUL fn&temp&integer&51 1 fn&temp&integer&53
+I_MUL fn&temp&integer&51 fn&temp&integer&46 fn&temp&integer&53
 I_ADD fn&temp&integer&50 fn&temp&integer&53 fn&temp&integer&52
 I_STORE fn&temp&integer&52 fn&temp&integer&50
 I_MUL fn&temp&integer&51 2 fn&temp&integer&53
@@ -263,12 +263,12 @@ I_STORE fn&test_array&arr[fn&temp&integer&50] fn&temp&integer&54
 comment&Calculating_offset&12:
 I_STORE 0 fn&temp&integer&55
 I_STORE 1 fn&temp&integer&56
-I_MUL fn&temp&integer&56 1 fn&temp&integer&58
+I_MUL fn&temp&integer&56 fn&temp&integer&49 fn&temp&integer&58
 I_ADD fn&temp&integer&55 fn&temp&integer&58 fn&temp&integer&57
 I_STORE fn&temp&integer&57 fn&temp&integer&55
 I_MUL fn&temp&integer&56 3 fn&temp&integer&58
 I_STORE fn&temp&integer&58 fn&temp&integer&56
-I_MUL fn&temp&integer&56 1 fn&temp&integer&58
+I_MUL fn&temp&integer&56 fn&temp&integer&48 fn&temp&integer&58
 I_ADD fn&temp&integer&55 fn&temp&integer&58 fn&temp&integer&57
 I_STORE fn&temp&integer&57 fn&temp&integer&55
 I_MUL fn&temp&integer&56 2 fn&temp&integer&58
@@ -280,12 +280,12 @@ I_STORE 2 fn&temp&integer&62
 comment&Calculating_offset&13:
 I_STORE 0 fn&temp&integer&63
 I_STORE 1 fn&temp&integer&64
-I_MUL fn&temp&integer&64 2 fn&temp&integer&66
+I_MUL fn&temp&integer&64 fn&temp&integer&62 fn&temp&integer&66
 I_ADD fn&temp&integer&63 fn&temp&integer&66 fn&temp&integer&65
 I_STORE fn&temp&integer&65 fn&temp&integer&63
 I_MUL fn&temp&integer&64 3 fn&temp&integer&66
 I_STORE fn&temp&integer&66 fn&temp&integer&64
-I_MUL fn&temp&integer&64 1 fn&temp&integer&66
+I_MUL fn&temp&integer&64 fn&temp&integer&61 fn&temp&integer&66
 I_ADD fn&temp&integer&63 fn&temp&integer&66 fn&temp&integer&65
 I_STORE fn&temp&integer&65 fn&temp&integer&63
 I_MUL fn&temp&integer&64 2 fn&temp&integer&66

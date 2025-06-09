@@ -175,12 +175,12 @@ I_STORE 0 temp&integer&12
 comment&Calculating_offset&2:
 I_STORE 0 temp&integer&13
 I_STORE 1 temp&integer&14
-I_MUL temp&integer&14 0 temp&integer&16
+I_MUL temp&integer&14 temp&integer&12 temp&integer&16
 I_ADD temp&integer&13 temp&integer&16 temp&integer&15
 I_STORE temp&integer&15 temp&integer&13
 I_MUL temp&integer&14 3 temp&integer&16
 I_STORE temp&integer&16 temp&integer&14
-I_MUL temp&integer&14 0 temp&integer&16
+I_MUL temp&integer&14 temp&integer&11 temp&integer&16
 I_ADD temp&integer&13 temp&integer&16 temp&integer&15
 I_STORE temp&integer&15 temp&integer&13
 I_MUL temp&integer&14 1 temp&integer&16
@@ -216,12 +216,12 @@ I_STORE 1 temp&integer&18
 comment&Calculating_offset&3:
 I_STORE 0 temp&integer&19
 I_STORE 1 temp&integer&20
-I_MUL temp&integer&20 1 temp&integer&22
+I_MUL temp&integer&20 temp&integer&18 temp&integer&22
 I_ADD temp&integer&19 temp&integer&22 temp&integer&21
 I_STORE temp&integer&21 temp&integer&19
 I_MUL temp&integer&20 3 temp&integer&22
 I_STORE temp&integer&22 temp&integer&20
-I_MUL temp&integer&20 0 temp&integer&22
+I_MUL temp&integer&20 temp&integer&17 temp&integer&22
 I_ADD temp&integer&19 temp&integer&22 temp&integer&21
 I_STORE temp&integer&21 temp&integer&19
 I_MUL temp&integer&20 1 temp&integer&22
@@ -257,12 +257,12 @@ I_STORE 2 temp&integer&24
 comment&Calculating_offset&4:
 I_STORE 0 temp&integer&25
 I_STORE 1 temp&integer&26
-I_MUL temp&integer&26 2 temp&integer&28
+I_MUL temp&integer&26 temp&integer&24 temp&integer&28
 I_ADD temp&integer&25 temp&integer&28 temp&integer&27
 I_STORE temp&integer&27 temp&integer&25
 I_MUL temp&integer&26 3 temp&integer&28
 I_STORE temp&integer&28 temp&integer&26
-I_MUL temp&integer&26 0 temp&integer&28
+I_MUL temp&integer&26 temp&integer&23 temp&integer&28
 I_ADD temp&integer&25 temp&integer&28 temp&integer&27
 I_STORE temp&integer&27 temp&integer&25
 I_MUL temp&integer&26 1 temp&integer&28
@@ -322,7 +322,7 @@ I_STORE 0 temp&integer&32
 	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][0])
 	$ lexer got token: `PLUS`, scan: `+`
 	> id -> ID array_dimension_list (id -> d[0][0])
-	> expression -> id (expression -> d)
+	> expression -> id (expression -> d[0][0])
 	$ lexer got token: `ID`, scan: `d`
 	$ lexer got token: `LEFT_BRACKET`, scan: `[`
 	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
@@ -340,33 +340,33 @@ I_STORE 1 temp&integer&34
 	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][1])
 	$ lexer got token: `RIGHT_PARENT`, scan: `)`
 	> id -> ID array_dimension_list (id -> d[0][1])
-	> expression -> id (expression -> d)
+	> expression -> id (expression -> d[0][1])
 	> Calculating offset for array access.
 comment&Calculating_offset&5:
 I_STORE 0 temp&integer&35
 I_STORE 1 temp&integer&36
-I_MUL temp&integer&36 1 temp&integer&38
+I_MUL temp&integer&36 temp&integer&32 temp&integer&38
 I_ADD temp&integer&35 temp&integer&38 temp&integer&37
 I_STORE temp&integer&37 temp&integer&35
 I_MUL temp&integer&36 3 temp&integer&38
 I_STORE temp&integer&38 temp&integer&36
-I_MUL temp&integer&36 0 temp&integer&38
+I_MUL temp&integer&36 temp&integer&31 temp&integer&38
 I_ADD temp&integer&35 temp&integer&38 temp&integer&37
 I_STORE temp&integer&37 temp&integer&35
 I_MUL temp&integer&36 1 temp&integer&38
 I_STORE temp&integer&38 temp&integer&36
 F_STORE d[temp&integer&35] temp&real&39
-	> extract array access: expression -> d[0][1]
+	> extract array access: expression -> d[0][0]
 	> Calculating offset for array access.
 comment&Calculating_offset&6:
 I_STORE 0 temp&integer&40
 I_STORE 1 temp&integer&41
-I_MUL temp&integer&41 1 temp&integer&43
+I_MUL temp&integer&41 temp&integer&34 temp&integer&43
 I_ADD temp&integer&40 temp&integer&43 temp&integer&42
 I_STORE temp&integer&42 temp&integer&40
 I_MUL temp&integer&41 3 temp&integer&43
 I_STORE temp&integer&43 temp&integer&41
-I_MUL temp&integer&41 0 temp&integer&43
+I_MUL temp&integer&41 temp&integer&33 temp&integer&43
 I_ADD temp&integer&40 temp&integer&43 temp&integer&42
 I_STORE temp&integer&42 temp&integer&40
 I_MUL temp&integer&41 1 temp&integer&43
@@ -374,13 +374,13 @@ I_STORE temp&integer&43 temp&integer&41
 F_STORE d[temp&integer&40] temp&real&44
 	> extract array access: expression -> d[0][1]
 F_ADD temp&real&39 temp&real&44 temp&real&45
-	> expression -> expression PLUS expression (8448 -> 4224 + 4224)
-	> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (8448))
+	> expression -> expression PLUS expression (4289 -> 65 + 4224)
+	> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (4289))
 F_MUL temp&real&29 temp&real&45 temp&real&46
-	> expression -> expression MULTIPLY expression (130 -> 0.0153883 * 8448)
+	> expression -> expression MULTIPLY expression (66.0002 -> 0.0153883 * 4289)
 	$ lexer got token: `SEMICOLON`, scan: `;`
 F_STORE temp&real&46 e
-	> assignment_statement -> id ASSIGN expression semicolon (assignment -> e := 130;)
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> e := 66.0002;)
 
 	> statement -> assignment_statement
 	> statement_list -> statement_list statement
@@ -439,7 +439,7 @@ I_STORE 2 temp&integer&51
 	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][2])
 	$ lexer got token: `MULTIPLY`, scan: `*`
 	> id -> ID array_dimension_list (id -> d[0][2])
-	> expression -> id (expression -> d)
+	> expression -> id (expression -> d[0][2])
 	$ lexer got token: `ID`, scan: `d`
 	$ lexer got token: `LEFT_BRACKET`, scan: `[`
 	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
@@ -457,33 +457,33 @@ I_STORE 0 temp&integer&53
 	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][0])
 	$ lexer got token: `SEMICOLON`, scan: `;`
 	> id -> ID array_dimension_list (id -> d[0][0])
-	> expression -> id (expression -> d)
+	> expression -> id (expression -> d[0][0])
 	> Calculating offset for array access.
 comment&Calculating_offset&7:
 I_STORE 0 temp&integer&54
 I_STORE 1 temp&integer&55
-I_MUL temp&integer&55 0 temp&integer&57
+I_MUL temp&integer&55 temp&integer&51 temp&integer&57
 I_ADD temp&integer&54 temp&integer&57 temp&integer&56
 I_STORE temp&integer&56 temp&integer&54
 I_MUL temp&integer&55 3 temp&integer&57
 I_STORE temp&integer&57 temp&integer&55
-I_MUL temp&integer&55 0 temp&integer&57
+I_MUL temp&integer&55 temp&integer&50 temp&integer&57
 I_ADD temp&integer&54 temp&integer&57 temp&integer&56
 I_STORE temp&integer&56 temp&integer&54
 I_MUL temp&integer&55 1 temp&integer&57
 I_STORE temp&integer&57 temp&integer&55
 F_STORE d[temp&integer&54] temp&real&58
-	> extract array access: expression -> d[0][0]
+	> extract array access: expression -> d[0][2]
 	> Calculating offset for array access.
 comment&Calculating_offset&8:
 I_STORE 0 temp&integer&59
 I_STORE 1 temp&integer&60
-I_MUL temp&integer&60 0 temp&integer&62
+I_MUL temp&integer&60 temp&integer&53 temp&integer&62
 I_ADD temp&integer&59 temp&integer&62 temp&integer&61
 I_STORE temp&integer&61 temp&integer&59
 I_MUL temp&integer&60 3 temp&integer&62
 I_STORE temp&integer&62 temp&integer&60
-I_MUL temp&integer&60 0 temp&integer&62
+I_MUL temp&integer&60 temp&integer&52 temp&integer&62
 I_ADD temp&integer&59 temp&integer&62 temp&integer&61
 I_STORE temp&integer&61 temp&integer&59
 I_MUL temp&integer&60 1 temp&integer&62
@@ -491,23 +491,23 @@ I_STORE temp&integer&62 temp&integer&60
 F_STORE d[temp&integer&59] temp&real&63
 	> extract array access: expression -> d[0][0]
 F_MUL temp&real&58 temp&real&63 temp&real&64
-	> expression -> expression MULTIPLY expression (4225 -> 65 * 65)
+	> expression -> expression MULTIPLY expression (274560 -> 4224 * 65)
 	> Calculating offset for array access.
 comment&Calculating_offset&9:
 I_STORE 0 temp&integer&65
 I_STORE 1 temp&integer&66
-I_MUL temp&integer&66 0 temp&integer&68
+I_MUL temp&integer&66 temp&integer&53 temp&integer&68
 I_ADD temp&integer&65 temp&integer&68 temp&integer&67
 I_STORE temp&integer&67 temp&integer&65
 I_MUL temp&integer&66 3 temp&integer&68
 I_STORE temp&integer&68 temp&integer&66
-I_MUL temp&integer&66 0 temp&integer&68
+I_MUL temp&integer&66 temp&integer&52 temp&integer&68
 I_ADD temp&integer&65 temp&integer&68 temp&integer&67
 I_STORE temp&integer&67 temp&integer&65
 I_MUL temp&integer&66 1 temp&integer&68
 I_STORE temp&integer&68 temp&integer&66
 F_STORE temp&real&64 d[temp&integer&65]
-	> assignment_statement -> id ASSIGN expression semicolon (assignment -> d[0][0] := 4225;)
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> d[0][0] := 274560;)
 
 	> statement -> assignment_statement
 	> statement_list -> statement_list statement

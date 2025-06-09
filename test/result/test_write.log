@@ -114,8 +114,8 @@ I_STORE 1 temp&integer&3
 	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][1])
 	$ lexer got token: `COMMA`, scan: `,`
 	> id -> ID array_dimension_list (id -> b[0][1])
-	> expression -> id (expression -> b)
-	> expression_list -> expression (expression_list -> b[0][1])
+	> expression -> id (expression -> b[0][1])
+	> expression_list -> expression (expression_list -> b)
 	$ lexer got token: `ID`, scan: `b`
 	$ lexer got token: `LEFT_BRACKET`, scan: `[`
 	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
@@ -133,7 +133,7 @@ I_STORE 3 temp&integer&5
 	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [1][3])
 	$ lexer got token: `COMMA`, scan: `,`
 	> id -> ID array_dimension_list (id -> b[1][3])
-	> expression -> id (expression -> b)
+	> expression -> id (expression -> b[1][3])
 	> expression_list -> expression_list COMMA expression (expression_list -> b[0][1], b[1][3])
 	$ lexer got token: `ID`, scan: `c`
 	$ lexer got token: `COMMA`, scan: `,`
@@ -150,12 +150,12 @@ I_STORE 3 temp&integer&5
 comment&Calculating_offset&5:
 I_STORE 0 temp&integer&6
 I_STORE 1 temp&integer&7
-I_MUL temp&integer&7 1 temp&integer&9
+I_MUL temp&integer&7 temp&integer&3 temp&integer&9
 I_ADD temp&integer&6 temp&integer&9 temp&integer&8
 I_STORE temp&integer&8 temp&integer&6
 I_MUL temp&integer&7 4 temp&integer&9
 I_STORE temp&integer&9 temp&integer&7
-I_MUL temp&integer&7 0 temp&integer&9
+I_MUL temp&integer&7 temp&integer&2 temp&integer&9
 I_ADD temp&integer&6 temp&integer&9 temp&integer&8
 I_STORE temp&integer&8 temp&integer&6
 I_MUL temp&integer&7 2 temp&integer&9
@@ -165,12 +165,12 @@ CALL write_i b[temp&integer&6]
 comment&Calculating_offset&6:
 I_STORE 0 temp&integer&10
 I_STORE 1 temp&integer&11
-I_MUL temp&integer&11 3 temp&integer&13
+I_MUL temp&integer&11 temp&integer&5 temp&integer&13
 I_ADD temp&integer&10 temp&integer&13 temp&integer&12
 I_STORE temp&integer&12 temp&integer&10
 I_MUL temp&integer&11 4 temp&integer&13
 I_STORE temp&integer&13 temp&integer&11
-I_MUL temp&integer&11 1 temp&integer&13
+I_MUL temp&integer&11 temp&integer&4 temp&integer&13
 I_ADD temp&integer&10 temp&integer&13 temp&integer&12
 I_STORE temp&integer&12 temp&integer&10
 I_MUL temp&integer&11 2 temp&integer&13

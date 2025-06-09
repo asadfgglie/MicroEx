@@ -16,16 +16,7 @@ DECLARE fn&test&ret&integer integer
 line&5:
 I_STORE 0 fn&temp&integer&1
 line&6:
-comment&Calculating_offset&1:
-I_STORE 0 fn&temp&integer&2
-I_STORE 1 fn&temp&integer&3
-I_MUL fn&temp&integer&3 0 fn&temp&integer&5
-I_ADD fn&temp&integer&2 fn&temp&integer&5 fn&temp&integer&4
-I_STORE fn&temp&integer&4 fn&temp&integer&2
-I_MUL fn&temp&integer&3 10 fn&temp&integer&5
-I_STORE fn&temp&integer&5 fn&temp&integer&3
-I_STORE fn&test&a[fn&temp&integer&2] fn&temp&integer&6
-I_STORE fn&temp&integer&6 fn&test&ret&integer
+I_STORE fn&test&a fn&test&ret&integer
 RETURN fn&test&ret&integer
 
 line&7:

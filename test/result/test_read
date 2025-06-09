@@ -63,7 +63,7 @@ I_STORE 4 temp&integer&5
 comment&Calculating_offset&8:
 I_STORE 0 temp&integer&6
 I_STORE 1 temp&integer&7
-I_MUL temp&integer&7 0 temp&integer&9
+I_MUL temp&integer&7 temp&integer&1 temp&integer&9
 I_ADD temp&integer&6 temp&integer&9 temp&integer&8
 I_STORE temp&integer&8 temp&integer&6
 I_MUL temp&integer&7 5 temp&integer&9
@@ -72,7 +72,7 @@ CALL read_i arr[temp&integer&6]
 comment&Calculating_offset&9:
 I_STORE 0 temp&integer&10
 I_STORE 1 temp&integer&11
-I_MUL temp&integer&11 1 temp&integer&13
+I_MUL temp&integer&11 temp&integer&2 temp&integer&13
 I_ADD temp&integer&10 temp&integer&13 temp&integer&12
 I_STORE temp&integer&12 temp&integer&10
 I_MUL temp&integer&11 5 temp&integer&13
@@ -81,7 +81,7 @@ CALL read_i arr[temp&integer&10]
 comment&Calculating_offset&10:
 I_STORE 0 temp&integer&14
 I_STORE 1 temp&integer&15
-I_MUL temp&integer&15 2 temp&integer&17
+I_MUL temp&integer&15 temp&integer&3 temp&integer&17
 I_ADD temp&integer&14 temp&integer&17 temp&integer&16
 I_STORE temp&integer&16 temp&integer&14
 I_MUL temp&integer&15 5 temp&integer&17
@@ -90,7 +90,7 @@ CALL read_i arr[temp&integer&14]
 comment&Calculating_offset&11:
 I_STORE 0 temp&integer&18
 I_STORE 1 temp&integer&19
-I_MUL temp&integer&19 3 temp&integer&21
+I_MUL temp&integer&19 temp&integer&4 temp&integer&21
 I_ADD temp&integer&18 temp&integer&21 temp&integer&20
 I_STORE temp&integer&20 temp&integer&18
 I_MUL temp&integer&19 5 temp&integer&21
@@ -99,7 +99,7 @@ CALL read_i arr[temp&integer&18]
 comment&Calculating_offset&12:
 I_STORE 0 temp&integer&22
 I_STORE 1 temp&integer&23
-I_MUL temp&integer&23 4 temp&integer&25
+I_MUL temp&integer&23 temp&integer&5 temp&integer&25
 I_ADD temp&integer&22 temp&integer&25 temp&integer&24
 I_STORE temp&integer&24 temp&integer&22
 I_MUL temp&integer&23 5 temp&integer&25

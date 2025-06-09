@@ -54,7 +54,7 @@ line&15:
 comment&Calculating_offset&6:
 I_STORE 0 temp&integer&4
 I_STORE 1 temp&integer&5
-I_MUL temp&integer&5 0 temp&integer&7
+I_MUL temp&integer&5 i temp&integer&7
 I_ADD temp&integer&4 temp&integer&7 temp&integer&6
 I_STORE temp&integer&6 temp&integer&4
 I_MUL temp&integer&5 10 temp&integer&7
@@ -102,7 +102,7 @@ I_SUB temp&integer&13 i temp&integer&14
 comment&Calculating_offset&8:
 I_STORE 0 temp&integer&15
 I_STORE 1 temp&integer&16
-I_MUL temp&integer&16 1 temp&integer&18
+I_MUL temp&integer&16 temp&integer&14 temp&integer&18
 I_ADD temp&integer&15 temp&integer&18 temp&integer&17
 I_STORE temp&integer&17 temp&integer&15
 I_MUL temp&integer&16 10 temp&integer&18
@@ -111,7 +111,7 @@ I_STORE b[temp&integer&15] temp&integer&19
 comment&Calculating_offset&9:
 I_STORE 0 temp&integer&20
 I_STORE 1 temp&integer&21
-I_MUL temp&integer&21 1 temp&integer&23
+I_MUL temp&integer&21 i temp&integer&23
 I_ADD temp&integer&20 temp&integer&23 temp&integer&22
 I_STORE temp&integer&22 temp&integer&20
 I_MUL temp&integer&21 10 temp&integer&23
@@ -121,7 +121,7 @@ I_MUL temp&integer&19 temp&integer&24 temp&integer&25
 comment&Calculating_offset&10:
 I_STORE 0 temp&integer&26
 I_STORE 1 temp&integer&27
-I_MUL temp&integer&27 1 temp&integer&29
+I_MUL temp&integer&27 i temp&integer&29
 I_ADD temp&integer&26 temp&integer&29 temp&integer&28
 I_STORE temp&integer&28 temp&integer&26
 I_MUL temp&integer&27 10 temp&integer&29
@@ -150,7 +150,7 @@ line&24:
 comment&Calculating_offset&12:
 I_STORE 0 temp&integer&32
 I_STORE 1 temp&integer&33
-I_MUL temp&integer&33 1 temp&integer&35
+I_MUL temp&integer&33 i temp&integer&35
 I_ADD temp&integer&32 temp&integer&35 temp&integer&34
 I_STORE temp&integer&34 temp&integer&32
 I_MUL temp&integer&33 10 temp&integer&35

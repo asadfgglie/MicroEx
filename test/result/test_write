@@ -44,12 +44,12 @@ I_STORE 3 temp&integer&5
 comment&Calculating_offset&5:
 I_STORE 0 temp&integer&6
 I_STORE 1 temp&integer&7
-I_MUL temp&integer&7 1 temp&integer&9
+I_MUL temp&integer&7 temp&integer&3 temp&integer&9
 I_ADD temp&integer&6 temp&integer&9 temp&integer&8
 I_STORE temp&integer&8 temp&integer&6
 I_MUL temp&integer&7 4 temp&integer&9
 I_STORE temp&integer&9 temp&integer&7
-I_MUL temp&integer&7 0 temp&integer&9
+I_MUL temp&integer&7 temp&integer&2 temp&integer&9
 I_ADD temp&integer&6 temp&integer&9 temp&integer&8
 I_STORE temp&integer&8 temp&integer&6
 I_MUL temp&integer&7 2 temp&integer&9
@@ -58,12 +58,12 @@ CALL write_i b[temp&integer&6]
 comment&Calculating_offset&6:
 I_STORE 0 temp&integer&10
 I_STORE 1 temp&integer&11
-I_MUL temp&integer&11 3 temp&integer&13
+I_MUL temp&integer&11 temp&integer&5 temp&integer&13
 I_ADD temp&integer&10 temp&integer&13 temp&integer&12
 I_STORE temp&integer&12 temp&integer&10
 I_MUL temp&integer&11 4 temp&integer&13
 I_STORE temp&integer&13 temp&integer&11
-I_MUL temp&integer&11 1 temp&integer&13
+I_MUL temp&integer&11 temp&integer&4 temp&integer&13
 I_ADD temp&integer&10 temp&integer&13 temp&integer&12
 I_STORE temp&integer&12 temp&integer&10
 I_MUL temp&integer&11 2 temp&integer&13

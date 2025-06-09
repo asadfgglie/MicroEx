@@ -50,21 +50,10 @@ I_STORE 0 fn&temp&integer&1
 	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
 	$ lexer got token: `SEMICOLON`, scan: `;`
 	> id -> ID array_dimension_list (id -> fn&test&a[0])
-	> expression -> id (expression -> fn&test&a)
+	> expression -> id (expression -> fn&test&a[0])
 line&6:
 	$ lexer got token: `ENDFN`, scan: `endfn`
-	> Calculating offset for array access.
-comment&Calculating_offset&1:
-I_STORE 0 fn&temp&integer&2
-I_STORE 1 fn&temp&integer&3
-I_MUL fn&temp&integer&3 0 fn&temp&integer&5
-I_ADD fn&temp&integer&2 fn&temp&integer&5 fn&temp&integer&4
-I_STORE fn&temp&integer&4 fn&temp&integer&2
-I_MUL fn&temp&integer&3 10 fn&temp&integer&5
-I_STORE fn&temp&integer&5 fn&temp&integer&3
-I_STORE fn&test&a[fn&temp&integer&2] fn&temp&integer&6
-	> extract array access: expression -> fn&test&a[0]
-I_STORE fn&temp&integer&6 fn&test&ret&integer
+I_STORE fn&test&a fn&test&ret&integer
 RETURN fn&test&ret&integer
 	> function_statement -> function_statement_prefix RETURN expression SEMICOLON FNEND
 

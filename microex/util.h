@@ -127,27 +127,6 @@ typedef struct {
     label *end_label; // use for exsit else part and if condition is true
 } if_info;
 
-typedef struct {
-    label *for_start_label;
-    label *for_end_label;
-    symbol *for_variable;
-    direction for_direction;
-    symbol *for_end_expression;
-} for_info;
-
-typedef struct {
-    label *while_start_label;
-    label *while_end_label;
-    symbol *while_condition; // condition symbol for while loop
-} while_info;
-
-typedef struct {
-    symbol *result_ptr; // result symbol for condition
-    label *true_label_ptr; // label for true condition
-    label *false_label_ptr; // label for false condition
-    label *end_label_ptr; // label for end of condition
-} condition_info;
-
 typedef struct node {
     struct node* next;
     symbol* symbol_ptr;
@@ -156,6 +135,27 @@ typedef struct node {
     // use for access array when parsing `id_list` since if parsing `arr[0], arr[1]`
     // in id_list, all node->symbol_ptr->array_pointer will be same as last node
 } node;
+
+typedef struct {
+    label *for_start_label;
+    label *for_end_label;
+    node for_node;
+    direction for_direction;
+    node for_end_node;
+} for_info;
+
+typedef struct {
+    label *while_start_label;
+    label *while_end_label;
+    node while_condition; // condition node for while loop
+} while_info;
+
+typedef struct {
+    node result_node; // result node for condition
+    label *true_label_ptr; // label for true condition
+    label *false_label_ptr; // label for false condition
+    label *end_label_ptr; // label for end of condition
+} condition_info;
 
 typedef struct {
     node* head;
@@ -216,3 +216,4 @@ symbol *get_array_offset(array_type array_info, array_type array_pointer);
 symbol *extract_array_symbol(symbol *symbol_ptr);
 size_t array_range(array_type array_info);
 void copy_array_info(array_type *decs, array_type *src);
+array_type empty_array_info();
