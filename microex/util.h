@@ -36,7 +36,6 @@
                                                     \
     s->function_info = NULL;                        \
     s->is_static_checkable = true;                  \
-    s->is_literal = false;                          \
 } while (false)
 
 

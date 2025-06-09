@@ -1,0 +1,16 @@
+line&1:
+START test_assignment_error
+comment&declare_all_usaged_temp_variable&0:
+J temp_var_declare&test_assignment_error
+start&test_assignment_error:
+
+line&2:
+line&3:
+I_STORE 3 temp&integer&0
+DECLARE a integer_array 3
+I_STORE 0 a[0]
+I_STORE 0 a[1]
+I_STORE 0 a[2]
+
+line&4:
+I_STORE 666 temp&integer&1

@@ -1,0 +1,22 @@
+line&1:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_assignment_error`
+START test_assignment_error
+comment&declare_all_usaged_temp_variable&0:
+J temp_var_declare&test_assignment_error
+start&test_assignment_error:
+	> program_title -> program id (program_title -> program test_assignment_error)
+		> Program start with name: `test_assignment_error`
+
+line&2:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&3:
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> a)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&0
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+Undeclared Error: Variable not declared.
+	at line (3:11)

@@ -1,0 +1,591 @@
+line&1:
+line&2:
+comment&This_is_test_file_for_assignment_statements&0:
+line&4:
+line&5:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_assignment`
+START test_assignment
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&test_assignment
+start&test_assignment:
+	> program_title -> program id (program_title -> program test_assignment)
+		> Program start with name: `test_assignment`
+
+line&6:
+line&7:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&8:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> a)
+	> id_list -> id (id_list -> a)
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE a integer
+I_STORE 0 a
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare a as integer;)
+
+	> statement -> declare_statement
+	> statement_list -> statement
+line&9:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID (id -> b)
+	> id_list -> id (id_list -> b)
+	$ lexer got token: `ID`, scan: `c`
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID (id -> c)
+	> id_list -> id_list comma id (id_list -> b, c)
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&0
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [1])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [1])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `3`
+I_STORE 3 temp&integer&1
+	> expression -> INTEGER_LITERAL (expression -> 3)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [3])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [1][3])
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID array_dimension_list (id -> d[1][3])
+	> id_list -> id_list comma id (id_list -> b, c, d[1][3])
+	$ lexer got token: `REAL`, scan: `real`
+	> type -> REAL
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE b real
+F_STORE 0.0 b
+DECLARE c real
+F_STORE 0.0 c
+DECLARE d real_array 3
+F_STORE 0.0 d[0]
+F_STORE 0.0 d[1]
+F_STORE 0.0 d[2]
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare b, c, d[1][3] as real;)
+
+	> statement -> declare_statement
+	> statement_list -> statement_list statement
+line&10:
+line&11:
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> a)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `65`
+I_STORE 65 temp&integer&2
+	> expression -> INTEGER_LITERAL (expression -> 65)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_STORE temp&integer&2 a
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> a := 65;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&12:
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> b)
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `MINUS`, scan: `-`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&3
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+I_SUB a temp&integer&3 temp&integer&4
+	> expression -> expression MINUS expression (64 -> 65 - 1)
+	> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (64))
+	$ lexer got token: `MULTIPLY`, scan: `*`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `PLUS`, scan: `+`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&5
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+I_ADD a temp&integer&5 temp&integer&6
+	> expression -> expression PLUS expression (66 -> 65 + 1)
+	> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (66))
+I_MUL temp&integer&4 temp&integer&6 temp&integer&7
+	> expression -> expression MULTIPLY expression (4224 -> 64 * 66)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_TO_F temp&integer&7 b
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> b := 4224;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&13:
+	$ lexer got token: `ID`, scan: `c`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> c)
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `MULTIPLY`, scan: `*`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `MINUS`, scan: `-`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+I_MUL a a temp&integer&8
+	> expression -> expression MULTIPLY expression (4225 -> 65 * 65)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&9
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_SUB temp&integer&8 temp&integer&9 temp&integer&10
+	> expression -> expression MINUS expression (4224 -> 4225 - 1)
+I_TO_F temp&integer&10 c
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> c := 4224;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&14:
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&11
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&12
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][0])
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID array_dimension_list (id -> d[0][0])
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `SEMICOLON`, scan: `;`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	> Calculating offset for array access.
+comment&Calculating_offset&2:
+I_STORE 0 temp&integer&13
+I_STORE 1 temp&integer&14
+I_MUL temp&integer&14 0 temp&integer&16
+I_ADD temp&integer&13 temp&integer&16 temp&integer&15
+I_STORE temp&integer&15 temp&integer&13
+I_MUL temp&integer&14 3 temp&integer&16
+I_STORE temp&integer&16 temp&integer&14
+I_MUL temp&integer&14 0 temp&integer&16
+I_ADD temp&integer&13 temp&integer&16 temp&integer&15
+I_STORE temp&integer&15 temp&integer&13
+I_MUL temp&integer&14 1 temp&integer&16
+I_STORE temp&integer&16 temp&integer&14
+I_TO_F a d[temp&integer&13]
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> d[0][0] := 65;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&15:
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&17
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&18
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [1])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][1])
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID array_dimension_list (id -> d[0][1])
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `SEMICOLON`, scan: `;`
+	> id -> ID (id -> b)
+	> expression -> id (expression -> b)
+	> Calculating offset for array access.
+comment&Calculating_offset&3:
+I_STORE 0 temp&integer&19
+I_STORE 1 temp&integer&20
+I_MUL temp&integer&20 1 temp&integer&22
+I_ADD temp&integer&19 temp&integer&22 temp&integer&21
+I_STORE temp&integer&21 temp&integer&19
+I_MUL temp&integer&20 3 temp&integer&22
+I_STORE temp&integer&22 temp&integer&20
+I_MUL temp&integer&20 0 temp&integer&22
+I_ADD temp&integer&19 temp&integer&22 temp&integer&21
+I_STORE temp&integer&21 temp&integer&19
+I_MUL temp&integer&20 1 temp&integer&22
+I_STORE temp&integer&22 temp&integer&20
+F_STORE b d[temp&integer&19]
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> d[0][1] := 4224;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&16:
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&23
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `2`
+I_STORE 2 temp&integer&24
+	> expression -> INTEGER_LITERAL (expression -> 2)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [2])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][2])
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID array_dimension_list (id -> d[0][2])
+	$ lexer got token: `ID`, scan: `c`
+	$ lexer got token: `SEMICOLON`, scan: `;`
+	> id -> ID (id -> c)
+	> expression -> id (expression -> c)
+	> Calculating offset for array access.
+comment&Calculating_offset&4:
+I_STORE 0 temp&integer&25
+I_STORE 1 temp&integer&26
+I_MUL temp&integer&26 2 temp&integer&28
+I_ADD temp&integer&25 temp&integer&28 temp&integer&27
+I_STORE temp&integer&27 temp&integer&25
+I_MUL temp&integer&26 3 temp&integer&28
+I_STORE temp&integer&28 temp&integer&26
+I_MUL temp&integer&26 0 temp&integer&28
+I_ADD temp&integer&25 temp&integer&28 temp&integer&27
+I_STORE temp&integer&27 temp&integer&25
+I_MUL temp&integer&26 1 temp&integer&28
+I_STORE temp&integer&28 temp&integer&26
+F_STORE c d[temp&integer&25]
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> d[0][2] := 4224;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&17:
+line&18:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `e`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> e)
+	> id_list -> id (id_list -> e)
+	$ lexer got token: `REAL`, scan: `real`
+	> type -> REAL
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE e real
+F_STORE 0.0 e
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare e as real;)
+
+	> statement -> declare_statement
+	> statement_list -> statement_list statement
+line&19:
+line&20:
+	$ lexer got token: `ID`, scan: `e`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> e)
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `DIVISION`, scan: `/`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `MULTIPLY`, scan: `*`
+	> id -> ID (id -> b)
+	> expression -> id (expression -> b)
+I_TO_F a temp&real&30
+		> auto casting int to double (temp&real&30 -> 65)
+	> expression -> expression DIVISION expression (0.0153883 -> 65 / 4224)
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&31
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&32
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][0])
+	$ lexer got token: `PLUS`, scan: `+`
+	> id -> ID array_dimension_list (id -> d[0][0])
+	> expression -> id (expression -> d)
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&33
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&34
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [1])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][1])
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+	> id -> ID array_dimension_list (id -> d[0][1])
+	> expression -> id (expression -> d)
+	> Calculating offset for array access.
+comment&Calculating_offset&5:
+I_STORE 0 temp&integer&35
+I_STORE 1 temp&integer&36
+I_MUL temp&integer&36 1 temp&integer&38
+I_ADD temp&integer&35 temp&integer&38 temp&integer&37
+I_STORE temp&integer&37 temp&integer&35
+I_MUL temp&integer&36 3 temp&integer&38
+I_STORE temp&integer&38 temp&integer&36
+I_MUL temp&integer&36 0 temp&integer&38
+I_ADD temp&integer&35 temp&integer&38 temp&integer&37
+I_STORE temp&integer&37 temp&integer&35
+I_MUL temp&integer&36 1 temp&integer&38
+I_STORE temp&integer&38 temp&integer&36
+F_STORE d[temp&integer&35] temp&real&39
+	> extract array access: expression -> d[0][1]
+	> Calculating offset for array access.
+comment&Calculating_offset&6:
+I_STORE 0 temp&integer&40
+I_STORE 1 temp&integer&41
+I_MUL temp&integer&41 1 temp&integer&43
+I_ADD temp&integer&40 temp&integer&43 temp&integer&42
+I_STORE temp&integer&42 temp&integer&40
+I_MUL temp&integer&41 3 temp&integer&43
+I_STORE temp&integer&43 temp&integer&41
+I_MUL temp&integer&41 0 temp&integer&43
+I_ADD temp&integer&40 temp&integer&43 temp&integer&42
+I_STORE temp&integer&42 temp&integer&40
+I_MUL temp&integer&41 1 temp&integer&43
+I_STORE temp&integer&43 temp&integer&41
+F_STORE d[temp&integer&40] temp&real&44
+	> extract array access: expression -> d[0][1]
+F_ADD temp&real&39 temp&real&44 temp&real&45
+	> expression -> expression PLUS expression (8448 -> 4224 + 4224)
+	> expression -> LEFT_PARENT expression RIGHT_PARENT (expression -> (8448))
+F_MUL temp&real&29 temp&real&45 temp&real&46
+	> expression -> expression MULTIPLY expression (130 -> 0.0153883 * 8448)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+F_STORE temp&real&46 e
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> e := 130;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&21:
+line&22:
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> a)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&47
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_STORE temp&integer&47 a
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> a := 0;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&23:
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `PLUS`, scan: `+`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&48
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+I_ADD a temp&integer&48 temp&integer&49
+	> expression -> expression PLUS expression (1 -> 0 + 1)
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [1])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][1])
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID array_dimension_list (id -> d[0][1])
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&50
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `2`
+I_STORE 2 temp&integer&51
+	> expression -> INTEGER_LITERAL (expression -> 2)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [2])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][2])
+	$ lexer got token: `MULTIPLY`, scan: `*`
+	> id -> ID array_dimension_list (id -> d[0][2])
+	> expression -> id (expression -> d)
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&52
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&53
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][0])
+	$ lexer got token: `SEMICOLON`, scan: `;`
+	> id -> ID array_dimension_list (id -> d[0][0])
+	> expression -> id (expression -> d)
+	> Calculating offset for array access.
+comment&Calculating_offset&7:
+I_STORE 0 temp&integer&54
+I_STORE 1 temp&integer&55
+I_MUL temp&integer&55 0 temp&integer&57
+I_ADD temp&integer&54 temp&integer&57 temp&integer&56
+I_STORE temp&integer&56 temp&integer&54
+I_MUL temp&integer&55 3 temp&integer&57
+I_STORE temp&integer&57 temp&integer&55
+I_MUL temp&integer&55 0 temp&integer&57
+I_ADD temp&integer&54 temp&integer&57 temp&integer&56
+I_STORE temp&integer&56 temp&integer&54
+I_MUL temp&integer&55 1 temp&integer&57
+I_STORE temp&integer&57 temp&integer&55
+F_STORE d[temp&integer&54] temp&real&58
+	> extract array access: expression -> d[0][0]
+	> Calculating offset for array access.
+comment&Calculating_offset&8:
+I_STORE 0 temp&integer&59
+I_STORE 1 temp&integer&60
+I_MUL temp&integer&60 0 temp&integer&62
+I_ADD temp&integer&59 temp&integer&62 temp&integer&61
+I_STORE temp&integer&61 temp&integer&59
+I_MUL temp&integer&60 3 temp&integer&62
+I_STORE temp&integer&62 temp&integer&60
+I_MUL temp&integer&60 0 temp&integer&62
+I_ADD temp&integer&59 temp&integer&62 temp&integer&61
+I_STORE temp&integer&61 temp&integer&59
+I_MUL temp&integer&60 1 temp&integer&62
+I_STORE temp&integer&62 temp&integer&60
+F_STORE d[temp&integer&59] temp&real&63
+	> extract array access: expression -> d[0][0]
+F_MUL temp&real&58 temp&real&63 temp&real&64
+	> expression -> expression MULTIPLY expression (4225 -> 65 * 65)
+	> Calculating offset for array access.
+comment&Calculating_offset&9:
+I_STORE 0 temp&integer&65
+I_STORE 1 temp&integer&66
+I_MUL temp&integer&66 0 temp&integer&68
+I_ADD temp&integer&65 temp&integer&68 temp&integer&67
+I_STORE temp&integer&67 temp&integer&65
+I_MUL temp&integer&66 3 temp&integer&68
+I_STORE temp&integer&68 temp&integer&66
+I_MUL temp&integer&66 0 temp&integer&68
+I_ADD temp&integer&65 temp&integer&68 temp&integer&67
+I_STORE temp&integer&67 temp&integer&65
+I_MUL temp&integer&66 1 temp&integer&68
+I_STORE temp&integer&68 temp&integer&66
+F_STORE temp&real&64 d[temp&integer&65]
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> d[0][0] := 4225;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+comment&Dynamic_access_&_assignment&10:
+	$ lexer got token: `END`, scan: `end`
+	> program_body -> begin statement_list end
+temp_var_declare&test_assignment:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+DECLARE temp&integer&5 integer
+DECLARE temp&integer&6 integer
+DECLARE temp&integer&7 integer
+DECLARE temp&integer&8 integer
+DECLARE temp&integer&9 integer
+DECLARE temp&integer&10 integer
+DECLARE temp&integer&11 integer
+DECLARE temp&integer&12 integer
+DECLARE temp&integer&13 integer
+DECLARE temp&integer&14 integer
+DECLARE temp&integer&15 integer
+DECLARE temp&integer&16 integer
+DECLARE temp&integer&17 integer
+DECLARE temp&integer&18 integer
+DECLARE temp&integer&19 integer
+DECLARE temp&integer&20 integer
+DECLARE temp&integer&21 integer
+DECLARE temp&integer&22 integer
+DECLARE temp&integer&23 integer
+DECLARE temp&integer&24 integer
+DECLARE temp&integer&25 integer
+DECLARE temp&integer&26 integer
+DECLARE temp&integer&27 integer
+DECLARE temp&integer&28 integer
+DECLARE temp&real&29 real
+DECLARE temp&real&30 real
+DECLARE temp&integer&31 integer
+DECLARE temp&integer&32 integer
+DECLARE temp&integer&33 integer
+DECLARE temp&integer&34 integer
+DECLARE temp&integer&35 integer
+DECLARE temp&integer&36 integer
+DECLARE temp&integer&37 integer
+DECLARE temp&integer&38 integer
+DECLARE temp&real&39 real
+DECLARE temp&integer&40 integer
+DECLARE temp&integer&41 integer
+DECLARE temp&integer&42 integer
+DECLARE temp&integer&43 integer
+DECLARE temp&real&44 real
+DECLARE temp&real&45 real
+DECLARE temp&real&46 real
+DECLARE temp&integer&47 integer
+DECLARE temp&integer&48 integer
+DECLARE temp&integer&49 integer
+DECLARE temp&integer&50 integer
+DECLARE temp&integer&51 integer
+DECLARE temp&integer&52 integer
+DECLARE temp&integer&53 integer
+DECLARE temp&integer&54 integer
+DECLARE temp&integer&55 integer
+DECLARE temp&integer&56 integer
+DECLARE temp&integer&57 integer
+DECLARE temp&real&58 real
+DECLARE temp&integer&59 integer
+DECLARE temp&integer&60 integer
+DECLARE temp&integer&61 integer
+DECLARE temp&integer&62 integer
+DECLARE temp&real&63 real
+DECLARE temp&real&64 real
+DECLARE temp&integer&65 integer
+DECLARE temp&integer&66 integer
+DECLARE temp&integer&67 integer
+DECLARE temp&integer&68 integer
+J start&test_assignment
+
+HALT test_assignment
+	> program -> program_title program_body
+		> Program done with name: `test_assignment`

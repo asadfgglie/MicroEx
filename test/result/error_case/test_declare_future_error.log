@@ -1,0 +1,26 @@
+line&1:
+line&2:
+comment&This_is_test_file_for_declare_statements&0:
+line&4:
+line&5:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_declare_future_error`
+START test_declare_future_error
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&test_declare_future_error
+start&test_declare_future_error:
+	> program_title -> program id (program_title -> program test_declare_future_error)
+		> Program start with name: `test_declare_future_error`
+
+line&6:
+line&7:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&8:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> a)
+	> id_list -> id (id_list -> a)
+	$ lexer got token: `STRING`, scan: `string`
+Feature Error: STRING type is not supported yet and won't generate code for it.
+	at line (8:23)

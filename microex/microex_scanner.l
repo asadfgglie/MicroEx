@@ -81,7 +81,7 @@ downto [Dd][Oo][Ww][Nn][Tt][Oo]
 
 fn [Ff][Nn]
 return [Rr][Ee][Tt][Uu][Rr][Nn]
-fnend [Ff][Nn][Ee][Nn][Dd]
+endfn [Ee][Nn][Dd][Ff][Nn]
 
 %%
 
@@ -464,11 +464,11 @@ fnend [Ff][Nn][Ee][Nn][Dd]
         return RETURN_MICROEX;
     }
 }
-{fnend} {
+{endfn} {
     line_word_count += yyleng;
     if (!is_multi_line_comment)  {
-        logging("$ lexer got token: `%s`, scan: `%s`\n", "FNEND", yytext);
-        return FNEND_MICROEX;
+        logging("$ lexer got token: `%s`, scan: `%s`\n", "ENDFN", yytext);
+        return ENDFN_MICROEX;
     }
 }
 
@@ -693,17 +693,17 @@ symbol *add_function_symbol(const char *name_ptr) {
         yyerror_name("Function symbol should be added when parsing function statement.", "Parsing");
     }
 
+    symbol *s = (symbol *)malloc(sizeof(symbol));
+    if (s == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+
     char *name = (char *)malloc(sizeof(char) * (strlen(FN_LOCAL_SYMBOL_PREFIX) + strlen(current_function_info->name) + strlen(name_ptr) + 2));
     if (name == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
     name[0] = '\0';
     sprintf(name, "%s%s&%s", FN_LOCAL_SYMBOL_PREFIX, current_function_info->name, name_ptr);
-
-    symbol *s = (symbol *)malloc(sizeof(symbol));
-    if (s == NULL) {
-        yyerror_name("Out of memory when malloc.", "Parsing");
-    }
 
     SYMBOL_INIT(s, name);
 
@@ -797,10 +797,11 @@ symbol *add_temp_symbol(data_type type) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
     
-    SYMBOL_INIT(s, strdup(name));
-    if (s->name == NULL) {
+    name = strdup(name);
+    if (name == NULL) {
         yyerror_name("Out of memory when malloc.", "Parsing");
     }
+    SYMBOL_INIT(s, name);
     s->type = type;
 
     HASH_ADD_STR(symbol_table, name, s);
@@ -826,108 +827,6 @@ label *add_label() {
     HASH_ADD_STR(label_table, name, l);
 
     return l;
-}
-
-void free_symbol_table() {
-    symbol *current_symbol, *symbol_tmp;
-    HASH_ITER(hh, symbol_table, current_symbol, symbol_tmp) {
-        HASH_DEL(symbol_table, current_symbol);
-        free(current_symbol->name);
-        if (current_symbol->array_info.dimensions > 0) {
-            if (current_symbol->array_info.dimension_sizes != NULL) {
-                free(current_symbol->array_info.dimension_sizes);
-            }
-            if (current_symbol->array_info.dimension_sizes_symbol != NULL) {
-                free(current_symbol->array_info.dimension_sizes_symbol);
-            }
-            switch (current_symbol->type) {
-                case TYPE_INT: {
-                    free(current_symbol->value.int_array);
-                    break;
-                }
-                case TYPE_DOUBLE: {
-                    free(current_symbol->value.double_array);
-                    break;
-                }
-                case TYPE_STRING: {
-                    for (size_t i = 0; i < current_symbol->array_info.dimensions; i++) {
-                        free(current_symbol->value.str_array[i]);
-                    }
-                    free(current_symbol->value.str_array);
-                    break;
-                }
-                case TYPE_BOOL: {
-                    free(current_symbol->value.bool_array);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
-        if (current_symbol->array_pointer.dimensions > 0) {
-            if (current_symbol->array_pointer.dimension_sizes != NULL) {
-                free(current_symbol->array_pointer.dimension_sizes);
-            }
-            if (current_symbol->array_pointer.dimension_sizes_symbol != NULL) {
-                free(current_symbol->array_pointer.dimension_sizes_symbol);
-            }
-        }
-        if (current_symbol->type == TYPE_STRING) {
-            free(current_symbol->value.str_val);
-        }
-        free(current_symbol);
-    }
-
-    HASH_ITER(hh, temp_symbol_table, current_symbol, symbol_tmp) {
-        HASH_DEL(temp_symbol_table, current_symbol);
-        free(current_symbol->name);
-        if (current_symbol->array_info.dimensions > 0) {
-            switch (current_symbol->type) {
-                case TYPE_INT: {
-                    free(current_symbol->value.int_array);
-                    break;
-                }
-                case TYPE_DOUBLE: {
-                    free(current_symbol->value.double_array);
-                    break;
-                }
-                case TYPE_STRING: {
-                    for (size_t i = 0; i < current_symbol->array_info.dimensions; i++) {
-                        free(current_symbol->value.str_array[i]);
-                    }
-                    free(current_symbol->value.str_array);
-                    break;
-                }
-                case TYPE_BOOL: {
-                    free(current_symbol->value.bool_array);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
-        if (current_symbol->array_pointer.dimension_sizes != NULL) {
-            free(current_symbol->array_pointer.dimension_sizes);
-        }
-        if (current_symbol->array_pointer.dimension_sizes_symbol != NULL) {
-            free(current_symbol->array_pointer.dimension_sizes_symbol);
-        }
-        if (current_symbol->type == TYPE_STRING) {
-            free(current_symbol->value.str_val);
-        }
-        free(current_symbol);
-    }
-}
-
-void free_label_table() {
-    label *current_label, *label_tmp;
-    HASH_ITER(hh, label_table, current_label, label_tmp) {
-        HASH_DEL(label_table, current_label);
-        free(current_label->name);
-        free(current_label);
-    }
 }
 
 /**
@@ -1099,7 +998,7 @@ void yyerror_warning(const char *msg, const char *error_name, bool is_warning) {
 
 void yyerror_warning_test_mode(const char *msg, const char *error_name, bool is_warning, bool need_test_mode) {
     if (need_test_mode && !is_test_mode) {
-        fprintf(stderr, "%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
+        printf("%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
         fprintf(stderr, "This function only works in test mode.\n");
         fprintf(stderr, "Since it may not be fully implemented yet, output target code may be incorrect.\n");
         fprintf(stderr, "If you want to enable test mode, please use the -t option.\n");
@@ -1111,7 +1010,7 @@ void yyerror_warning_test_mode(const char *msg, const char *error_name, bool is_
         return;
     }
     
-    fprintf(stderr, "%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
+    printf("%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
     exit(EXIT_FAILURE);
 }
 
@@ -1295,9 +1194,6 @@ int main(int argc, char **argv) {
     if (is_multi_line_comment) {
         yyerror_name("Unbalance multi-line comment\n", "Lexcial");
     }
-
-    free_symbol_table();
-    free_label_table();
 
     fclose(yyin);
 

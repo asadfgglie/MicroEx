@@ -1,0 +1,275 @@
+line&1:
+line&2:
+comment&This_is_test_file_for_assignment_statements&0:
+line&4:
+line&5:
+START test_assignment
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&test_assignment
+start&test_assignment:
+
+line&6:
+line&7:
+line&8:
+DECLARE a integer
+I_STORE 0 a
+
+line&9:
+I_STORE 1 temp&integer&0
+I_STORE 3 temp&integer&1
+DECLARE b real
+F_STORE 0.0 b
+DECLARE c real
+F_STORE 0.0 c
+DECLARE d real_array 3
+F_STORE 0.0 d[0]
+F_STORE 0.0 d[1]
+F_STORE 0.0 d[2]
+
+line&10:
+line&11:
+I_STORE 65 temp&integer&2
+I_STORE temp&integer&2 a
+
+line&12:
+I_STORE 1 temp&integer&3
+I_SUB a temp&integer&3 temp&integer&4
+I_STORE 1 temp&integer&5
+I_ADD a temp&integer&5 temp&integer&6
+I_MUL temp&integer&4 temp&integer&6 temp&integer&7
+I_TO_F temp&integer&7 b
+
+line&13:
+I_MUL a a temp&integer&8
+I_STORE 1 temp&integer&9
+I_SUB temp&integer&8 temp&integer&9 temp&integer&10
+I_TO_F temp&integer&10 c
+
+line&14:
+I_STORE 0 temp&integer&11
+I_STORE 0 temp&integer&12
+comment&Calculating_offset&2:
+I_STORE 0 temp&integer&13
+I_STORE 1 temp&integer&14
+I_MUL temp&integer&14 0 temp&integer&16
+I_ADD temp&integer&13 temp&integer&16 temp&integer&15
+I_STORE temp&integer&15 temp&integer&13
+I_MUL temp&integer&14 3 temp&integer&16
+I_STORE temp&integer&16 temp&integer&14
+I_MUL temp&integer&14 0 temp&integer&16
+I_ADD temp&integer&13 temp&integer&16 temp&integer&15
+I_STORE temp&integer&15 temp&integer&13
+I_MUL temp&integer&14 1 temp&integer&16
+I_STORE temp&integer&16 temp&integer&14
+I_TO_F a d[temp&integer&13]
+
+line&15:
+I_STORE 0 temp&integer&17
+I_STORE 1 temp&integer&18
+comment&Calculating_offset&3:
+I_STORE 0 temp&integer&19
+I_STORE 1 temp&integer&20
+I_MUL temp&integer&20 1 temp&integer&22
+I_ADD temp&integer&19 temp&integer&22 temp&integer&21
+I_STORE temp&integer&21 temp&integer&19
+I_MUL temp&integer&20 3 temp&integer&22
+I_STORE temp&integer&22 temp&integer&20
+I_MUL temp&integer&20 0 temp&integer&22
+I_ADD temp&integer&19 temp&integer&22 temp&integer&21
+I_STORE temp&integer&21 temp&integer&19
+I_MUL temp&integer&20 1 temp&integer&22
+I_STORE temp&integer&22 temp&integer&20
+F_STORE b d[temp&integer&19]
+
+line&16:
+I_STORE 0 temp&integer&23
+I_STORE 2 temp&integer&24
+comment&Calculating_offset&4:
+I_STORE 0 temp&integer&25
+I_STORE 1 temp&integer&26
+I_MUL temp&integer&26 2 temp&integer&28
+I_ADD temp&integer&25 temp&integer&28 temp&integer&27
+I_STORE temp&integer&27 temp&integer&25
+I_MUL temp&integer&26 3 temp&integer&28
+I_STORE temp&integer&28 temp&integer&26
+I_MUL temp&integer&26 0 temp&integer&28
+I_ADD temp&integer&25 temp&integer&28 temp&integer&27
+I_STORE temp&integer&27 temp&integer&25
+I_MUL temp&integer&26 1 temp&integer&28
+I_STORE temp&integer&28 temp&integer&26
+F_STORE c d[temp&integer&25]
+
+line&17:
+line&18:
+DECLARE e real
+F_STORE 0.0 e
+
+line&19:
+line&20:
+I_TO_F a temp&real&30
+I_STORE 0 temp&integer&31
+I_STORE 0 temp&integer&32
+I_STORE 0 temp&integer&33
+I_STORE 1 temp&integer&34
+comment&Calculating_offset&5:
+I_STORE 0 temp&integer&35
+I_STORE 1 temp&integer&36
+I_MUL temp&integer&36 1 temp&integer&38
+I_ADD temp&integer&35 temp&integer&38 temp&integer&37
+I_STORE temp&integer&37 temp&integer&35
+I_MUL temp&integer&36 3 temp&integer&38
+I_STORE temp&integer&38 temp&integer&36
+I_MUL temp&integer&36 0 temp&integer&38
+I_ADD temp&integer&35 temp&integer&38 temp&integer&37
+I_STORE temp&integer&37 temp&integer&35
+I_MUL temp&integer&36 1 temp&integer&38
+I_STORE temp&integer&38 temp&integer&36
+F_STORE d[temp&integer&35] temp&real&39
+comment&Calculating_offset&6:
+I_STORE 0 temp&integer&40
+I_STORE 1 temp&integer&41
+I_MUL temp&integer&41 1 temp&integer&43
+I_ADD temp&integer&40 temp&integer&43 temp&integer&42
+I_STORE temp&integer&42 temp&integer&40
+I_MUL temp&integer&41 3 temp&integer&43
+I_STORE temp&integer&43 temp&integer&41
+I_MUL temp&integer&41 0 temp&integer&43
+I_ADD temp&integer&40 temp&integer&43 temp&integer&42
+I_STORE temp&integer&42 temp&integer&40
+I_MUL temp&integer&41 1 temp&integer&43
+I_STORE temp&integer&43 temp&integer&41
+F_STORE d[temp&integer&40] temp&real&44
+F_ADD temp&real&39 temp&real&44 temp&real&45
+F_MUL temp&real&29 temp&real&45 temp&real&46
+F_STORE temp&real&46 e
+
+line&21:
+line&22:
+I_STORE 0 temp&integer&47
+I_STORE temp&integer&47 a
+
+line&23:
+I_STORE 1 temp&integer&48
+I_ADD a temp&integer&48 temp&integer&49
+I_STORE 0 temp&integer&50
+I_STORE 2 temp&integer&51
+I_STORE 0 temp&integer&52
+I_STORE 0 temp&integer&53
+comment&Calculating_offset&7:
+I_STORE 0 temp&integer&54
+I_STORE 1 temp&integer&55
+I_MUL temp&integer&55 0 temp&integer&57
+I_ADD temp&integer&54 temp&integer&57 temp&integer&56
+I_STORE temp&integer&56 temp&integer&54
+I_MUL temp&integer&55 3 temp&integer&57
+I_STORE temp&integer&57 temp&integer&55
+I_MUL temp&integer&55 0 temp&integer&57
+I_ADD temp&integer&54 temp&integer&57 temp&integer&56
+I_STORE temp&integer&56 temp&integer&54
+I_MUL temp&integer&55 1 temp&integer&57
+I_STORE temp&integer&57 temp&integer&55
+F_STORE d[temp&integer&54] temp&real&58
+comment&Calculating_offset&8:
+I_STORE 0 temp&integer&59
+I_STORE 1 temp&integer&60
+I_MUL temp&integer&60 0 temp&integer&62
+I_ADD temp&integer&59 temp&integer&62 temp&integer&61
+I_STORE temp&integer&61 temp&integer&59
+I_MUL temp&integer&60 3 temp&integer&62
+I_STORE temp&integer&62 temp&integer&60
+I_MUL temp&integer&60 0 temp&integer&62
+I_ADD temp&integer&59 temp&integer&62 temp&integer&61
+I_STORE temp&integer&61 temp&integer&59
+I_MUL temp&integer&60 1 temp&integer&62
+I_STORE temp&integer&62 temp&integer&60
+F_STORE d[temp&integer&59] temp&real&63
+F_MUL temp&real&58 temp&real&63 temp&real&64
+comment&Calculating_offset&9:
+I_STORE 0 temp&integer&65
+I_STORE 1 temp&integer&66
+I_MUL temp&integer&66 0 temp&integer&68
+I_ADD temp&integer&65 temp&integer&68 temp&integer&67
+I_STORE temp&integer&67 temp&integer&65
+I_MUL temp&integer&66 3 temp&integer&68
+I_STORE temp&integer&68 temp&integer&66
+I_MUL temp&integer&66 0 temp&integer&68
+I_ADD temp&integer&65 temp&integer&68 temp&integer&67
+I_STORE temp&integer&67 temp&integer&65
+I_MUL temp&integer&66 1 temp&integer&68
+I_STORE temp&integer&68 temp&integer&66
+F_STORE temp&real&64 d[temp&integer&65]
+
+comment&Dynamic_access_&_assignment&10:
+temp_var_declare&test_assignment:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+DECLARE temp&integer&5 integer
+DECLARE temp&integer&6 integer
+DECLARE temp&integer&7 integer
+DECLARE temp&integer&8 integer
+DECLARE temp&integer&9 integer
+DECLARE temp&integer&10 integer
+DECLARE temp&integer&11 integer
+DECLARE temp&integer&12 integer
+DECLARE temp&integer&13 integer
+DECLARE temp&integer&14 integer
+DECLARE temp&integer&15 integer
+DECLARE temp&integer&16 integer
+DECLARE temp&integer&17 integer
+DECLARE temp&integer&18 integer
+DECLARE temp&integer&19 integer
+DECLARE temp&integer&20 integer
+DECLARE temp&integer&21 integer
+DECLARE temp&integer&22 integer
+DECLARE temp&integer&23 integer
+DECLARE temp&integer&24 integer
+DECLARE temp&integer&25 integer
+DECLARE temp&integer&26 integer
+DECLARE temp&integer&27 integer
+DECLARE temp&integer&28 integer
+DECLARE temp&real&29 real
+DECLARE temp&real&30 real
+DECLARE temp&integer&31 integer
+DECLARE temp&integer&32 integer
+DECLARE temp&integer&33 integer
+DECLARE temp&integer&34 integer
+DECLARE temp&integer&35 integer
+DECLARE temp&integer&36 integer
+DECLARE temp&integer&37 integer
+DECLARE temp&integer&38 integer
+DECLARE temp&real&39 real
+DECLARE temp&integer&40 integer
+DECLARE temp&integer&41 integer
+DECLARE temp&integer&42 integer
+DECLARE temp&integer&43 integer
+DECLARE temp&real&44 real
+DECLARE temp&real&45 real
+DECLARE temp&real&46 real
+DECLARE temp&integer&47 integer
+DECLARE temp&integer&48 integer
+DECLARE temp&integer&49 integer
+DECLARE temp&integer&50 integer
+DECLARE temp&integer&51 integer
+DECLARE temp&integer&52 integer
+DECLARE temp&integer&53 integer
+DECLARE temp&integer&54 integer
+DECLARE temp&integer&55 integer
+DECLARE temp&integer&56 integer
+DECLARE temp&integer&57 integer
+DECLARE temp&real&58 real
+DECLARE temp&integer&59 integer
+DECLARE temp&integer&60 integer
+DECLARE temp&integer&61 integer
+DECLARE temp&integer&62 integer
+DECLARE temp&real&63 real
+DECLARE temp&real&64 real
+DECLARE temp&integer&65 integer
+DECLARE temp&integer&66 integer
+DECLARE temp&integer&67 integer
+DECLARE temp&integer&68 integer
+J start&test_assignment
+
+HALT test_assignment

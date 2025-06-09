@@ -1,0 +1,389 @@
+line&1:
+line&2:
+comment&Example_of_function_call&0:
+line&4:
+START function_test
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&function_test
+start&function_test:
+
+line&5:
+line&6:
+line&7:
+fn_name&add:
+fn_arg&fn&add&a:
+fn_arg&fn&add&b:
+DECLARE fn&add&a integer
+DECLARE fn&add&b integer
+DECLARE add function
+DECLARE fn&add&ret&integer integer
+line&8:
+I_ADD fn&add&a fn&add&b fn&temp&integer&0
+line&9:
+I_STORE fn&temp&integer&0 fn&add&ret&integer
+RETURN fn&add&ret&integer
+
+line&10:
+line&11:
+fn_name&f:
+fn_arg&fn&f&c1:
+fn_arg&fn&f&x:
+fn_arg&fn&f&c2:
+DECLARE fn&f&c1 integer
+DECLARE fn&f&x integer
+DECLARE fn&f&c2 integer
+DECLARE f function
+DECLARE fn&f&ret&real real
+line&12:
+DECLARE fn&f&tmp real
+F_STORE 0.0 fn&f&tmp
+
+comment&declare_local_variable,_only_can_be_used_in_`f`&2:
+comment&local_variable_name_can_same_as_global_variable,_but_it_will_shadow_global_variable&3:
+I_MUL fn&f&c1 fn&f&x fn&temp&integer&1
+I_TO_F fn&temp&integer&1 fn&f&tmp
+
+line&15:
+I_TO_F fn&f&c2 fn&temp&real&3
+F_ADD fn&f&tmp fn&temp&real&3 fn&temp&real&2
+F_STORE fn&temp&real&2 fn&f&tmp
+
+line&16:
+line&17:
+F_STORE fn&f&tmp fn&f&ret&real
+RETURN fn&f&ret&real
+
+line&18:
+line&19:
+DECLARE c integer
+I_STORE 0 c
+DECLARE d integer
+I_STORE 0 d
+DECLARE e integer
+I_STORE 0 e
+
+comment&all_variables_not_declare_in_function_are_global_variable&4:
+I_STORE 10 temp&integer&4
+I_STORE temp&integer&4 c
+
+line&21:
+I_STORE 20 temp&integer&5
+I_STORE temp&integer&5 d
+
+line&22:
+I_STORE c fn&add&a
+I_STORE d fn&add&b
+CALL add temp&integer&6
+I_STORE temp&integer&6 e
+
+line&23:
+DECLARE y real
+F_STORE 0.0 y
+
+line&24:
+I_STORE c fn&f&c1
+I_STORE d fn&f&x
+I_STORE e fn&f&c2
+CALL f temp&real&7
+F_STORE temp&real&7 y
+
+line&25:
+line&26:
+fn_name&test_global:
+DECLARE test_global function
+DECLARE fn&test_global&ret&real real
+line&27:
+comment&function_can_access_global_variable,_but_variable_should_declare_before_function_declaration&5:
+comment&function_only_can_access_global_variable_st_declare_before_function_declaration&6:
+line&30:
+F_STORE y fn&test_global&ret&real
+RETURN fn&test_global&ret&real
+
+line&31:
+line&32:
+DECLARE a integer
+I_STORE 0 a
+DECLARE b integer
+I_STORE 0 b
+
+line&33:
+I_STORE 1 temp&integer&8
+I_STORE temp&integer&8 a
+
+line&34:
+I_STORE 2 temp&integer&9
+I_STORE temp&integer&9 b
+
+line&35:
+I_ADD a b temp&integer&10
+I_MUL a b temp&integer&11
+I_STORE temp&integer&10 fn&add&a
+I_STORE temp&integer&11 fn&add&b
+CALL add temp&integer&12
+I_ADD a b temp&integer&13
+I_MUL temp&integer&12 temp&integer&13 temp&integer&14
+I_STORE temp&integer&14 c
+
+line&36:
+line&37:
+fn_name&test_local:
+DECLARE test_local function
+DECLARE fn&test_local&ret&integer integer
+line&38:
+DECLARE fn&test_local&c integer
+I_STORE 0 fn&test_local&c
+
+comment&shadow_global_variable&7:
+I_STORE 1 fn&temp&integer&15
+I_UMINUS fn&temp&integer&15 fn&temp&integer&16
+I_STORE fn&temp&integer&16 fn&test_local&c
+
+line&40:
+line&41:
+I_STORE fn&test_local&c fn&test_local&ret&integer
+RETURN fn&test_local&ret&integer
+
+line&42:
+line&43:
+DECLARE boolean_var integer
+I_STORE 0 boolean_var
+
+line&44:
+CALL test_local temp&integer&17
+I_CMP c temp&integer&17
+JEQ label&0
+J label&1
+label&0:
+I_STORE 1 temp&integer&18
+J label&2
+label&1:
+I_STORE 0 temp&integer&18
+label&2:
+I_STORE temp&integer&18 boolean_var
+
+line&45:
+line&46:
+I_STORE 2 temp&integer&19
+I_STORE 3 temp&integer&20
+DECLARE arr1 integer_array 6
+I_STORE 0 arr1[0]
+I_STORE 0 arr1[1]
+I_STORE 0 arr1[2]
+I_STORE 0 arr1[3]
+I_STORE 0 arr1[4]
+I_STORE 0 arr1[5]
+
+line&47:
+line&48:
+I_STORE 2 fn&temp&integer&21
+I_STORE 3 fn&temp&integer&22
+fn_name&test_array:
+fn_arg&fn&test_array&arr:
+DECLARE fn&test_array&arr integer_array 6
+DECLARE test_array function
+DECLARE fn&test_array&ret&integer integer
+line&49:
+DECLARE fn&test_array&a1 integer
+I_STORE 0 fn&test_array&a1
+DECLARE fn&test_array&a2 integer
+I_STORE 0 fn&test_array&a2
+
+line&50:
+I_STORE 0 fn&temp&integer&23
+I_STORE 0 fn&temp&integer&24
+I_STORE 0 fn&temp&integer&25
+I_STORE 1 fn&temp&integer&26
+comment&Calculating_offset&8:
+I_STORE 0 fn&temp&integer&27
+I_STORE 1 fn&temp&integer&28
+I_MUL fn&temp&integer&28 1 fn&temp&integer&30
+I_ADD fn&temp&integer&27 fn&temp&integer&30 fn&temp&integer&29
+I_STORE fn&temp&integer&29 fn&temp&integer&27
+I_MUL fn&temp&integer&28 3 fn&temp&integer&30
+I_STORE fn&temp&integer&30 fn&temp&integer&28
+I_MUL fn&temp&integer&28 0 fn&temp&integer&30
+I_ADD fn&temp&integer&27 fn&temp&integer&30 fn&temp&integer&29
+I_STORE fn&temp&integer&29 fn&temp&integer&27
+I_MUL fn&temp&integer&28 2 fn&temp&integer&30
+I_STORE fn&temp&integer&30 fn&temp&integer&28
+I_STORE fn&test_array&arr[fn&temp&integer&27] fn&temp&integer&31
+comment&Calculating_offset&9:
+I_STORE 0 fn&temp&integer&32
+I_STORE 1 fn&temp&integer&33
+I_MUL fn&temp&integer&33 1 fn&temp&integer&35
+I_ADD fn&temp&integer&32 fn&temp&integer&35 fn&temp&integer&34
+I_STORE fn&temp&integer&34 fn&temp&integer&32
+I_MUL fn&temp&integer&33 3 fn&temp&integer&35
+I_STORE fn&temp&integer&35 fn&temp&integer&33
+I_MUL fn&temp&integer&33 0 fn&temp&integer&35
+I_ADD fn&temp&integer&32 fn&temp&integer&35 fn&temp&integer&34
+I_STORE fn&temp&integer&34 fn&temp&integer&32
+I_MUL fn&temp&integer&33 2 fn&temp&integer&35
+I_STORE fn&temp&integer&35 fn&temp&integer&33
+I_STORE fn&test_array&arr[fn&temp&integer&32] fn&temp&integer&36
+I_ADD fn&temp&integer&31 fn&temp&integer&36 fn&temp&integer&37
+I_STORE 0 fn&temp&integer&38
+I_STORE 2 fn&temp&integer&39
+comment&Calculating_offset&10:
+I_STORE 0 fn&temp&integer&40
+I_STORE 1 fn&temp&integer&41
+I_MUL fn&temp&integer&41 2 fn&temp&integer&43
+I_ADD fn&temp&integer&40 fn&temp&integer&43 fn&temp&integer&42
+I_STORE fn&temp&integer&42 fn&temp&integer&40
+I_MUL fn&temp&integer&41 3 fn&temp&integer&43
+I_STORE fn&temp&integer&43 fn&temp&integer&41
+I_MUL fn&temp&integer&41 0 fn&temp&integer&43
+I_ADD fn&temp&integer&40 fn&temp&integer&43 fn&temp&integer&42
+I_STORE fn&temp&integer&42 fn&temp&integer&40
+I_MUL fn&temp&integer&41 2 fn&temp&integer&43
+I_STORE fn&temp&integer&43 fn&temp&integer&41
+I_STORE fn&test_array&arr[fn&temp&integer&40] fn&temp&integer&44
+I_ADD fn&temp&integer&37 fn&temp&integer&44 fn&temp&integer&45
+I_STORE fn&temp&integer&45 fn&test_array&a1
+
+line&51:
+I_STORE 1 fn&temp&integer&46
+I_STORE 0 fn&temp&integer&47
+I_STORE 1 fn&temp&integer&48
+I_STORE 1 fn&temp&integer&49
+comment&Calculating_offset&11:
+I_STORE 0 fn&temp&integer&50
+I_STORE 1 fn&temp&integer&51
+I_MUL fn&temp&integer&51 1 fn&temp&integer&53
+I_ADD fn&temp&integer&50 fn&temp&integer&53 fn&temp&integer&52
+I_STORE fn&temp&integer&52 fn&temp&integer&50
+I_MUL fn&temp&integer&51 3 fn&temp&integer&53
+I_STORE fn&temp&integer&53 fn&temp&integer&51
+I_MUL fn&temp&integer&51 1 fn&temp&integer&53
+I_ADD fn&temp&integer&50 fn&temp&integer&53 fn&temp&integer&52
+I_STORE fn&temp&integer&52 fn&temp&integer&50
+I_MUL fn&temp&integer&51 2 fn&temp&integer&53
+I_STORE fn&temp&integer&53 fn&temp&integer&51
+I_STORE fn&test_array&arr[fn&temp&integer&50] fn&temp&integer&54
+comment&Calculating_offset&12:
+I_STORE 0 fn&temp&integer&55
+I_STORE 1 fn&temp&integer&56
+I_MUL fn&temp&integer&56 1 fn&temp&integer&58
+I_ADD fn&temp&integer&55 fn&temp&integer&58 fn&temp&integer&57
+I_STORE fn&temp&integer&57 fn&temp&integer&55
+I_MUL fn&temp&integer&56 3 fn&temp&integer&58
+I_STORE fn&temp&integer&58 fn&temp&integer&56
+I_MUL fn&temp&integer&56 1 fn&temp&integer&58
+I_ADD fn&temp&integer&55 fn&temp&integer&58 fn&temp&integer&57
+I_STORE fn&temp&integer&57 fn&temp&integer&55
+I_MUL fn&temp&integer&56 2 fn&temp&integer&58
+I_STORE fn&temp&integer&58 fn&temp&integer&56
+I_STORE fn&test_array&arr[fn&temp&integer&55] fn&temp&integer&59
+I_ADD fn&temp&integer&54 fn&temp&integer&59 fn&temp&integer&60
+I_STORE 1 fn&temp&integer&61
+I_STORE 2 fn&temp&integer&62
+comment&Calculating_offset&13:
+I_STORE 0 fn&temp&integer&63
+I_STORE 1 fn&temp&integer&64
+I_MUL fn&temp&integer&64 2 fn&temp&integer&66
+I_ADD fn&temp&integer&63 fn&temp&integer&66 fn&temp&integer&65
+I_STORE fn&temp&integer&65 fn&temp&integer&63
+I_MUL fn&temp&integer&64 3 fn&temp&integer&66
+I_STORE fn&temp&integer&66 fn&temp&integer&64
+I_MUL fn&temp&integer&64 1 fn&temp&integer&66
+I_ADD fn&temp&integer&63 fn&temp&integer&66 fn&temp&integer&65
+I_STORE fn&temp&integer&65 fn&temp&integer&63
+I_MUL fn&temp&integer&64 2 fn&temp&integer&66
+I_STORE fn&temp&integer&66 fn&temp&integer&64
+I_STORE fn&test_array&arr[fn&temp&integer&63] fn&temp&integer&67
+I_ADD fn&temp&integer&60 fn&temp&integer&67 fn&temp&integer&68
+I_STORE fn&temp&integer&68 fn&test_array&a2
+
+line&52:
+I_MUL fn&test_array&a1 fn&test_array&a2 fn&temp&integer&69
+line&53:
+I_STORE fn&temp&integer&69 fn&test_array&ret&integer
+RETURN fn&test_array&ret&integer
+
+line&54:
+line&55:
+I_STORE arr1[0] fn&test_array&arr[0]
+I_STORE arr1[1] fn&test_array&arr[1]
+I_STORE arr1[2] fn&test_array&arr[2]
+I_STORE arr1[3] fn&test_array&arr[3]
+I_STORE arr1[4] fn&test_array&arr[4]
+I_STORE arr1[5] fn&test_array&arr[5]
+CALL test_array temp&integer&70
+I_TO_F temp&integer&70 y
+
+line&56:
+temp_var_declare&function_test:
+DECLARE fn&temp&integer&0 integer
+DECLARE fn&temp&integer&1 integer
+DECLARE fn&temp&real&2 real
+DECLARE fn&temp&real&3 real
+DECLARE temp&integer&4 integer
+DECLARE temp&integer&5 integer
+DECLARE temp&integer&6 integer
+DECLARE temp&real&7 real
+DECLARE temp&integer&8 integer
+DECLARE temp&integer&9 integer
+DECLARE temp&integer&10 integer
+DECLARE temp&integer&11 integer
+DECLARE temp&integer&12 integer
+DECLARE temp&integer&13 integer
+DECLARE temp&integer&14 integer
+DECLARE fn&temp&integer&15 integer
+DECLARE fn&temp&integer&16 integer
+DECLARE temp&integer&17 integer
+DECLARE temp&integer&18 integer
+DECLARE temp&integer&19 integer
+DECLARE temp&integer&20 integer
+DECLARE fn&temp&integer&21 integer
+DECLARE fn&temp&integer&22 integer
+DECLARE fn&temp&integer&23 integer
+DECLARE fn&temp&integer&24 integer
+DECLARE fn&temp&integer&25 integer
+DECLARE fn&temp&integer&26 integer
+DECLARE fn&temp&integer&27 integer
+DECLARE fn&temp&integer&28 integer
+DECLARE fn&temp&integer&29 integer
+DECLARE fn&temp&integer&30 integer
+DECLARE fn&temp&integer&31 integer
+DECLARE fn&temp&integer&32 integer
+DECLARE fn&temp&integer&33 integer
+DECLARE fn&temp&integer&34 integer
+DECLARE fn&temp&integer&35 integer
+DECLARE fn&temp&integer&36 integer
+DECLARE fn&temp&integer&37 integer
+DECLARE fn&temp&integer&38 integer
+DECLARE fn&temp&integer&39 integer
+DECLARE fn&temp&integer&40 integer
+DECLARE fn&temp&integer&41 integer
+DECLARE fn&temp&integer&42 integer
+DECLARE fn&temp&integer&43 integer
+DECLARE fn&temp&integer&44 integer
+DECLARE fn&temp&integer&45 integer
+DECLARE fn&temp&integer&46 integer
+DECLARE fn&temp&integer&47 integer
+DECLARE fn&temp&integer&48 integer
+DECLARE fn&temp&integer&49 integer
+DECLARE fn&temp&integer&50 integer
+DECLARE fn&temp&integer&51 integer
+DECLARE fn&temp&integer&52 integer
+DECLARE fn&temp&integer&53 integer
+DECLARE fn&temp&integer&54 integer
+DECLARE fn&temp&integer&55 integer
+DECLARE fn&temp&integer&56 integer
+DECLARE fn&temp&integer&57 integer
+DECLARE fn&temp&integer&58 integer
+DECLARE fn&temp&integer&59 integer
+DECLARE fn&temp&integer&60 integer
+DECLARE fn&temp&integer&61 integer
+DECLARE fn&temp&integer&62 integer
+DECLARE fn&temp&integer&63 integer
+DECLARE fn&temp&integer&64 integer
+DECLARE fn&temp&integer&65 integer
+DECLARE fn&temp&integer&66 integer
+DECLARE fn&temp&integer&67 integer
+DECLARE fn&temp&integer&68 integer
+DECLARE fn&temp&integer&69 integer
+DECLARE temp&integer&70 integer
+J start&function_test
+
+HALT function_test

@@ -1,0 +1,171 @@
+line&1:
+line&2:
+comment&This_is_test_file_for_declare_statements&0:
+comment&In_my_implementation,_all_variable_will_be_initialized_to_`0`&1:
+comment&So_every_variable_are_static_checkable_when_initialized&2:
+line&6:
+line&7:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_declare`
+START test_declare
+comment&declare_all_usaged_temp_variable&3:
+J temp_var_declare&test_declare
+start&test_declare:
+	> program_title -> program id (program_title -> program test_declare)
+		> Program start with name: `test_declare`
+
+line&8:
+line&9:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&10:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> a)
+	> id_list -> id (id_list -> a)
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE a integer
+I_STORE 0 a
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare a as integer;)
+
+	> statement -> declare_statement
+	> statement_list -> statement
+comment&singal_declare&4:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID (id -> b)
+	> id_list -> id (id_list -> b)
+	$ lexer got token: `ID`, scan: `c`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> c)
+	> id_list -> id_list comma id (id_list -> b, c)
+	$ lexer got token: `REAL`, scan: `real`
+	> type -> REAL
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE b real
+F_STORE 0.0 b
+DECLARE c real
+F_STORE 0.0 c
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare b, c as real;)
+
+	> statement -> declare_statement
+	> statement_list -> statement_list statement
+comment&multiple_declare&5:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `10`
+I_STORE 10 temp&integer&0
+	> expression -> INTEGER_LITERAL (expression -> 10)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [10])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [10])
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID array_dimension_list (id -> d[10])
+	> id_list -> id (id_list -> d[10])
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE d integer_array 10
+I_STORE 0 d[0]
+I_STORE 0 d[1]
+I_STORE 0 d[2]
+I_STORE 0 d[3]
+I_STORE 0 d[4]
+I_STORE 0 d[5]
+I_STORE 0 d[6]
+I_STORE 0 d[7]
+I_STORE 0 d[8]
+I_STORE 0 d[9]
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare d[10] as integer;)
+
+	> statement -> declare_statement
+	> statement_list -> statement_list statement
+comment&declare_array&6:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `e`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `2`
+I_STORE 2 temp&integer&1
+	> expression -> INTEGER_LITERAL (expression -> 2)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [2])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [2])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `3`
+I_STORE 3 temp&integer&2
+	> expression -> INTEGER_LITERAL (expression -> 3)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [3])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [2][3])
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID array_dimension_list (id -> e[2][3])
+	> id_list -> id (id_list -> e[2][3])
+	$ lexer got token: `ID`, scan: `f`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> f)
+	> id_list -> id_list comma id (id_list -> e[2][3], f)
+	$ lexer got token: `REAL`, scan: `real`
+	> type -> REAL
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE e real_array 6
+F_STORE 0.0 e[0]
+F_STORE 0.0 e[1]
+F_STORE 0.0 e[2]
+F_STORE 0.0 e[3]
+F_STORE 0.0 e[4]
+F_STORE 0.0 e[5]
+DECLARE f real
+F_STORE 0.0 f
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare e[2][3], f as real;)
+
+	> statement -> declare_statement
+	> statement_list -> statement_list statement
+comment&multiple_declare_with_matrix_(row_major)&7:
+line&15:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `g`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `PLUS`, scan: `+`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&3
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+I_ADD a temp&integer&3 temp&integer&4
+	> expression -> expression PLUS expression (1 -> 0 + 1)
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [1])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [1])
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID array_dimension_list (id -> g[1])
+	> id_list -> id (id_list -> g[1])
+	$ lexer got token: `REAL`, scan: `real`
+	> type -> REAL
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE g real_array 1
+F_STORE 0.0 g[0]
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare g[1] as real;)
+
+	> statement -> declare_statement
+	> statement_list -> statement_list statement
+line&16:
+comment&Dynamic_declare,_but_since_`a_+_1`_is_static_checkable_(a_+_1_=_0_+_1_=_1),&8:
+comment&so_this_declaration_is_valid&9:
+	$ lexer got token: `END`, scan: `end`
+	> program_body -> begin statement_list end
+temp_var_declare&test_declare:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+J start&test_declare
+
+HALT test_declare
+	> program -> program_title program_body
+		> Program done with name: `test_declare`

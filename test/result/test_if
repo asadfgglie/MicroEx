@@ -1,0 +1,252 @@
+line&1:
+line&2:
+comment&Test_if_statement&0:
+line&4:
+line&5:
+START test_if
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&test_if
+start&test_if:
+
+line&6:
+line&7:
+I_STORE 3 temp&integer&0
+DECLARE a integer
+I_STORE 0 a
+DECLARE b integer_array 3
+I_STORE 0 b[0]
+I_STORE 0 b[1]
+I_STORE 0 b[2]
+
+line&8:
+line&9:
+I_STORE 66 temp&integer&1
+I_STORE temp&integer&1 a
+
+line&10:
+line&11:
+I_STORE 66 temp&integer&2
+I_CMP a temp&integer&2
+JGE label&0
+J label&1
+label&0:
+I_STORE 1 temp&integer&3
+J label&2
+label&1:
+I_STORE 0 temp&integer&3
+label&2:
+I_STORE 100 temp&integer&4
+I_CMP a temp&integer&4
+JLT label&3
+J label&4
+label&3:
+I_STORE 1 temp&integer&5
+J label&5
+label&4:
+I_STORE 0 temp&integer&5
+label&5:
+AND temp&integer&3 temp&integer&5 temp&integer&6
+I_CMP 0 temp&integer&6
+JNE label&6
+J label&7
+label&6:
+line&12:
+I_STORE 8 temp&integer&7
+I_STORE temp&integer&7 a
+
+comment&if_statement&2:
+label&7:
+label&8:
+
+line&14:
+line&15:
+comment&if_else_statement&3:
+I_STORE 8 temp&integer&8
+I_CMP a temp&integer&8
+JNE label&9
+J label&10
+label&9:
+I_STORE 1 temp&integer&9
+J label&11
+label&10:
+I_STORE 0 temp&integer&9
+label&11:
+I_STORE 0 temp&integer&10
+I_CMP a temp&integer&10
+JEQ label&12
+J label&13
+label&12:
+I_STORE 1 temp&integer&11
+J label&14
+label&13:
+I_STORE 0 temp&integer&11
+label&14:
+I_STORE 1 temp&integer&12
+I_STORE 2 temp&integer&13
+comment&Calculating_offset&4:
+I_STORE 0 temp&integer&14
+I_STORE 1 temp&integer&15
+I_MUL temp&integer&15 2 temp&integer&17
+I_ADD temp&integer&14 temp&integer&17 temp&integer&16
+I_STORE temp&integer&16 temp&integer&14
+I_MUL temp&integer&15 3 temp&integer&17
+I_STORE temp&integer&17 temp&integer&15
+I_STORE b[temp&integer&14] temp&integer&18
+comment&Calculating_offset&5:
+I_STORE 0 temp&integer&19
+I_STORE 1 temp&integer&20
+I_MUL temp&integer&20 2 temp&integer&22
+I_ADD temp&integer&19 temp&integer&22 temp&integer&21
+I_STORE temp&integer&21 temp&integer&19
+I_MUL temp&integer&20 3 temp&integer&22
+I_STORE temp&integer&22 temp&integer&20
+I_STORE b[temp&integer&19] temp&integer&23
+I_CMP temp&integer&18 temp&integer&23
+JGT label&15
+J label&16
+label&15:
+I_STORE 1 temp&integer&24
+J label&17
+label&16:
+I_STORE 0 temp&integer&24
+label&17:
+AND temp&integer&11 temp&integer&24 temp&integer&25
+OR temp&integer&9 temp&integer&25 temp&integer&26
+I_CMP 0 temp&integer&26
+JNE label&18
+J label&19
+label&18:
+line&17:
+I_STORE 11 temp&integer&27
+I_UMINUS temp&integer&27 temp&integer&28
+I_STORE temp&integer&28 a
+
+line&18:
+J label&20
+label&19:
+line&19:
+I_STORE 66 temp&integer&29
+I_STORE temp&integer&29 a
+
+line&20:
+label&20:
+
+line&21:
+line&22:
+comment&nested_if&6:
+I_STORE 0 temp&integer&30
+I_STORE 1 temp&integer&31
+comment&Calculating_offset&7:
+I_STORE 0 temp&integer&32
+I_STORE 1 temp&integer&33
+I_MUL temp&integer&33 1 temp&integer&35
+I_ADD temp&integer&32 temp&integer&35 temp&integer&34
+I_STORE temp&integer&34 temp&integer&32
+I_MUL temp&integer&33 3 temp&integer&35
+I_STORE temp&integer&35 temp&integer&33
+I_STORE b[temp&integer&32] temp&integer&36
+comment&Calculating_offset&8:
+I_STORE 0 temp&integer&37
+I_STORE 1 temp&integer&38
+I_MUL temp&integer&38 1 temp&integer&40
+I_ADD temp&integer&37 temp&integer&40 temp&integer&39
+I_STORE temp&integer&39 temp&integer&37
+I_MUL temp&integer&38 3 temp&integer&40
+I_STORE temp&integer&40 temp&integer&38
+I_STORE b[temp&integer&37] temp&integer&41
+I_CMP temp&integer&36 temp&integer&41
+JGT label&21
+J label&22
+label&21:
+I_STORE 1 temp&integer&42
+J label&23
+label&22:
+I_STORE 0 temp&integer&42
+label&23:
+I_CMP 0 temp&integer&42
+JNE label&24
+J label&25
+label&24:
+line&24:
+I_STORE 0 temp&integer&43
+I_CMP a temp&integer&43
+JLT label&27
+J label&28
+label&27:
+I_STORE 1 temp&integer&44
+J label&29
+label&28:
+I_STORE 0 temp&integer&44
+label&29:
+I_CMP 0 temp&integer&44
+JNE label&30
+J label&31
+label&30:
+line&25:
+CALL write_i a
+
+line&26:
+label&31:
+label&32:
+
+line&27:
+J label&26
+label&25:
+line&28:
+I_UMINUS a temp&integer&45
+I_STORE temp&integer&45 a
+
+line&29:
+label&26:
+
+line&30:
+temp_var_declare&test_if:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+DECLARE temp&integer&5 integer
+DECLARE temp&integer&6 integer
+DECLARE temp&integer&7 integer
+DECLARE temp&integer&8 integer
+DECLARE temp&integer&9 integer
+DECLARE temp&integer&10 integer
+DECLARE temp&integer&11 integer
+DECLARE temp&integer&12 integer
+DECLARE temp&integer&13 integer
+DECLARE temp&integer&14 integer
+DECLARE temp&integer&15 integer
+DECLARE temp&integer&16 integer
+DECLARE temp&integer&17 integer
+DECLARE temp&integer&18 integer
+DECLARE temp&integer&19 integer
+DECLARE temp&integer&20 integer
+DECLARE temp&integer&21 integer
+DECLARE temp&integer&22 integer
+DECLARE temp&integer&23 integer
+DECLARE temp&integer&24 integer
+DECLARE temp&integer&25 integer
+DECLARE temp&integer&26 integer
+DECLARE temp&integer&27 integer
+DECLARE temp&integer&28 integer
+DECLARE temp&integer&29 integer
+DECLARE temp&integer&30 integer
+DECLARE temp&integer&31 integer
+DECLARE temp&integer&32 integer
+DECLARE temp&integer&33 integer
+DECLARE temp&integer&34 integer
+DECLARE temp&integer&35 integer
+DECLARE temp&integer&36 integer
+DECLARE temp&integer&37 integer
+DECLARE temp&integer&38 integer
+DECLARE temp&integer&39 integer
+DECLARE temp&integer&40 integer
+DECLARE temp&integer&41 integer
+DECLARE temp&integer&42 integer
+DECLARE temp&integer&43 integer
+DECLARE temp&integer&44 integer
+DECLARE temp&integer&45 integer
+J start&test_if
+
+HALT test_if

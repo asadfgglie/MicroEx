@@ -1,0 +1,207 @@
+line&1:
+line&2:
+comment&Test_file_for_write_statement&0:
+comment&Assume_cpu_has_already_implemented_`write_<type>`_instruction&1:
+comment&`write_<type>_arg`:_print_arg_as_<type>_into_stdout_or_some_output&2:
+line&6:
+line&7:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_write`
+START test_write
+comment&declare_all_usaged_temp_variable&3:
+J temp_var_declare&test_write
+start&test_write:
+	> program_title -> program id (program_title -> program test_write)
+		> Program start with name: `test_write`
+
+line&8:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&9:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID (id -> a)
+	> id_list -> id (id_list -> a)
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `2`
+I_STORE 2 temp&integer&0
+	> expression -> INTEGER_LITERAL (expression -> 2)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [2])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [2])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `4`
+I_STORE 4 temp&integer&1
+	> expression -> INTEGER_LITERAL (expression -> 4)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [4])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [2][4])
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID array_dimension_list (id -> b[2][4])
+	> id_list -> id_list comma id (id_list -> a, b[2][4])
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE a integer
+I_STORE 0 a
+DECLARE b integer_array 8
+I_STORE 0 b[0]
+I_STORE 0 b[1]
+I_STORE 0 b[2]
+I_STORE 0 b[3]
+I_STORE 0 b[4]
+I_STORE 0 b[5]
+I_STORE 0 b[6]
+I_STORE 0 b[7]
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare a, b[2][4] as integer;)
+
+	> statement -> declare_statement
+	> statement_list -> statement
+line&10:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `c`
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID (id -> c)
+	> id_list -> id (id_list -> c)
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> d)
+	> id_list -> id_list comma id (id_list -> c, d)
+	$ lexer got token: `REAL`, scan: `real`
+	> type -> REAL
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE c real
+F_STORE 0.0 c
+DECLARE d real
+F_STORE 0.0 d
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare c, d as real;)
+
+	> statement -> declare_statement
+	> statement_list -> statement_list statement
+line&11:
+line&12:
+	$ lexer got token: `WRITE`, scan: `write`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	> expression_list -> expression (expression_list -> a)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+CALL write_i a
+	> write_statement -> write left_parent expression_list right_parent semicolon (write_statement -> write(a);)
+
+	> statement -> write_statement
+	> statement_list -> statement_list statement
+comment&print_`a`_as_integer_into_output&4:
+	$ lexer got token: `WRITE`, scan: `write`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&2
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&3
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [1])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [0][1])
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID array_dimension_list (id -> b[0][1])
+	> expression -> id (expression -> b)
+	> expression_list -> expression (expression_list -> b[0][1])
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&4
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [1])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [1])
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `3`
+I_STORE 3 temp&integer&5
+	> expression -> INTEGER_LITERAL (expression -> 3)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [3])
+	> array_dimension_list -> array_dimension_list array_dimension (array_dimension_list -> [1][3])
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID array_dimension_list (id -> b[1][3])
+	> expression -> id (expression -> b)
+	> expression_list -> expression_list COMMA expression (expression_list -> b[0][1], b[1][3])
+	$ lexer got token: `ID`, scan: `c`
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID (id -> c)
+	> expression -> id (expression -> c)
+	> expression_list -> expression_list COMMA expression (expression_list -> b[0][1], b[1][3], c)
+	$ lexer got token: `ID`, scan: `d`
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+	> id -> ID (id -> d)
+	> expression -> id (expression -> d)
+	> expression_list -> expression_list COMMA expression (expression_list -> b[0][1], b[1][3], c, d)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+	> Calculating offset for array access.
+comment&Calculating_offset&5:
+I_STORE 0 temp&integer&6
+I_STORE 1 temp&integer&7
+I_MUL temp&integer&7 1 temp&integer&9
+I_ADD temp&integer&6 temp&integer&9 temp&integer&8
+I_STORE temp&integer&8 temp&integer&6
+I_MUL temp&integer&7 4 temp&integer&9
+I_STORE temp&integer&9 temp&integer&7
+I_MUL temp&integer&7 0 temp&integer&9
+I_ADD temp&integer&6 temp&integer&9 temp&integer&8
+I_STORE temp&integer&8 temp&integer&6
+I_MUL temp&integer&7 2 temp&integer&9
+I_STORE temp&integer&9 temp&integer&7
+CALL write_i b[temp&integer&6]
+	> Calculating offset for array access.
+comment&Calculating_offset&6:
+I_STORE 0 temp&integer&10
+I_STORE 1 temp&integer&11
+I_MUL temp&integer&11 3 temp&integer&13
+I_ADD temp&integer&10 temp&integer&13 temp&integer&12
+I_STORE temp&integer&12 temp&integer&10
+I_MUL temp&integer&11 4 temp&integer&13
+I_STORE temp&integer&13 temp&integer&11
+I_MUL temp&integer&11 1 temp&integer&13
+I_ADD temp&integer&10 temp&integer&13 temp&integer&12
+I_STORE temp&integer&12 temp&integer&10
+I_MUL temp&integer&11 2 temp&integer&13
+I_STORE temp&integer&13 temp&integer&11
+CALL write_i b[temp&integer&10]
+CALL write_f c
+CALL write_f d
+	> write_statement -> write left_parent expression_list right_parent semicolon (write_statement -> write(b[0][1], b[1][3], c, d);)
+
+	> statement -> write_statement
+	> statement_list -> statement_list statement
+comment&print_`b[0][1]`,_`b[1][3]`_as_integer_and_print_`c`,_`d`_as_real&7:
+	$ lexer got token: `END`, scan: `end`
+	> program_body -> begin statement_list end
+temp_var_declare&test_write:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+DECLARE temp&integer&5 integer
+DECLARE temp&integer&6 integer
+DECLARE temp&integer&7 integer
+DECLARE temp&integer&8 integer
+DECLARE temp&integer&9 integer
+DECLARE temp&integer&10 integer
+DECLARE temp&integer&11 integer
+DECLARE temp&integer&12 integer
+DECLARE temp&integer&13 integer
+J start&test_write
+
+HALT test_write
+	> program -> program_title program_body
+		> Program done with name: `test_write`

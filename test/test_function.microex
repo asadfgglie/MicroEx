@@ -6,7 +6,7 @@ program function_test
 begin
     fn integer add(integer a, integer b)
         return a + b;
-    fnend
+    endfn
 
     fn real f(integer c1, integer x, integer c2)
         declare tmp as real; %% declare local variable, only can be used in `f`
@@ -14,7 +14,7 @@ begin
         tmp := c1 * x;
         tmp := tmp + c2;
         return tmp;
-    fnend
+    endfn
 
     declare c, d, e as integer; %% all variables not declare in function are global variable
     c := 10;
@@ -27,7 +27,7 @@ begin
         %% function can access global variable, but variable should declare before function declaration
         %% function only can access global variable s.t. declare before function declaration
         return y;
-    fnend
+    endfn
 
     declare a, b as integer;
     a := 1;
@@ -38,7 +38,7 @@ begin
         declare c as integer; %% shadow global variable
         c := -1;
         return c;
-    fnend
+    endfn
 
     declare boolean_var as bool;
     boolean_var := c == test_local();
@@ -50,7 +50,7 @@ begin
         a1 := arr[0][0] + arr[0][1] + arr[0][2];
         a2 := arr[1][0] + arr[1][1] + arr[1][2];
         return a1 * a2;
-    fnend
+    endfn
 
     y := test_array(arr1);
 end

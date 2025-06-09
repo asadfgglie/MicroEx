@@ -1,0 +1,46 @@
+line&1:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_for`
+START test_for
+comment&declare_all_usaged_temp_variable&0:
+J temp_var_declare&test_for
+start&test_for:
+	> program_title -> program id (program_title -> program test_for)
+		> Program start with name: `test_for`
+
+line&2:
+line&3:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&4:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> i)
+	> id_list -> id (id_list -> i)
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE i integer
+I_STORE 0 i
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare i as integer;)
+
+	> statement -> declare_statement
+	> statement_list -> statement
+line&5:
+line&6:
+	$ lexer got token: `FOR`, scan: `for`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> i)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `0`
+I_STORE 0 temp&integer&0
+	> expression -> INTEGER_LITERAL (expression -> 0)
+	$ lexer got token: `TO`, scan: `to`
+	> direction -> to
+	$ lexer got token: `ID`, scan: `test_for`
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+	> id -> ID (id -> test_for)
+	> expression -> id (expression -> test_for)
+Type Error: Loop end expression must be of type int, double or bool.
+	at line (6:28)

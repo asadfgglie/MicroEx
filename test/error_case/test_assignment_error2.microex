@@ -1,0 +1,5 @@
+program test_assignment_error
+begin
+    declare a as integer;
+    a[0] := 666; %% Type Error: Array access on non-array variable.
+end

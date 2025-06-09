@@ -1,0 +1,113 @@
+line&1:
+line&2:
+comment&Test_while_loop_statement&0:
+line&4:
+line&5:
+START test_while
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&test_while
+start&test_while:
+
+line&6:
+line&7:
+I_STORE 10 temp&integer&0
+DECLARE a integer_array 10
+I_STORE 0 a[0]
+I_STORE 0 a[1]
+I_STORE 0 a[2]
+I_STORE 0 a[3]
+I_STORE 0 a[4]
+I_STORE 0 a[5]
+I_STORE 0 a[6]
+I_STORE 0 a[7]
+I_STORE 0 a[8]
+I_STORE 0 a[9]
+DECLARE i integer
+I_STORE 0 i
+
+line&8:
+DECLARE b integer
+I_STORE 0 b
+
+line&9:
+line&10:
+comment&basic_while_loop&2:
+comment&while_condition_will_only_compute_one_time&3:
+comment&use_variable_instead_of_expression&4:
+I_STORE 1 temp&integer&1
+I_STORE temp&integer&1 b
+
+line&14:
+I_CMP 0 b
+JNE label&0
+J label&1
+label&0:
+line&15:
+I_STORE 10 temp&integer&2
+I_CMP i temp&integer&2
+JLT label&2
+J label&3
+label&2:
+I_STORE 1 temp&integer&3
+J label&4
+label&3:
+I_STORE 0 temp&integer&3
+label&4:
+I_CMP 0 temp&integer&3
+JNE label&5
+J label&6
+label&5:
+line&16:
+I_STORE 1 temp&integer&4
+I_STORE temp&integer&4 b
+
+line&17:
+J label&7
+label&6:
+line&18:
+I_STORE 0 temp&integer&5
+I_STORE temp&integer&5 b
+
+line&19:
+label&7:
+
+line&20:
+I_MUL i i temp&integer&6
+comment&Calculating_offset&5:
+I_STORE 0 temp&integer&7
+I_STORE 1 temp&integer&8
+I_MUL temp&integer&8 0 temp&integer&10
+I_ADD temp&integer&7 temp&integer&10 temp&integer&9
+I_STORE temp&integer&9 temp&integer&7
+I_MUL temp&integer&8 10 temp&integer&10
+I_STORE temp&integer&10 temp&integer&8
+I_STORE temp&integer&6 a[temp&integer&7]
+
+line&21:
+I_STORE 1 temp&integer&11
+I_ADD i temp&integer&11 temp&integer&12
+I_STORE temp&integer&12 i
+
+line&22:
+I_CMP 0 b
+JNE label&0
+label&1:
+
+line&23:
+temp_var_declare&test_while:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+DECLARE temp&integer&5 integer
+DECLARE temp&integer&6 integer
+DECLARE temp&integer&7 integer
+DECLARE temp&integer&8 integer
+DECLARE temp&integer&9 integer
+DECLARE temp&integer&10 integer
+DECLARE temp&integer&11 integer
+DECLARE temp&integer&12 integer
+J start&test_while
+
+HALT test_while

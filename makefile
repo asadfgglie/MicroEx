@@ -2,7 +2,7 @@ CFLAGS = -std=gnu11 -lfl -Wall -Wextra -Wpedantic -Wno-unused-function -g
 LIB_SRC = lib/cargs.c
 YACC_FLAGS = -d -Wcounterexamples -Wconflicts-sr
 
-.PHONY: clean build_hw test build
+.PHONY: clean build_hw test build test_hw
 
 all: build
 
@@ -35,7 +35,10 @@ build/lex.yy.c: microex/microex_scanner.l
 clean:
 	@rm -rf build
 	@rm -f microex_c*
-	@rm -f test/result/*
+	@rm -rf test/result/*
 
-test: build/microex_c_hw
+test_hw: build/microex_c_hw
 	@./test_hw.sh
+
+test: build/microex_c
+	@./test.sh

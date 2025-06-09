@@ -1,0 +1,50 @@
+line&1:
+line&2:
+comment&This_is_test_file_for_declare_statements&0:
+line&4:
+line&5:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_declare_error`
+START test_declare_error
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&test_declare_error
+start&test_declare_error:
+	> program_title -> program id (program_title -> program test_declare_error)
+		> Program start with name: `test_declare_error`
+
+line&6:
+line&7:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&8:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> a)
+	> id_list -> id (id_list -> a)
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE a integer
+I_STORE 0 a
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare a as integer;)
+
+	> statement -> declare_statement
+	> statement_list -> statement
+comment&singal_declare&2:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> id -> ID (id -> a)
+	> expression -> id (expression -> a)
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID array_dimension_list (id -> b[0])
+	> id_list -> id (id_list -> b[0])
+	$ lexer got token: `REAL`, scan: `real`
+	> type -> REAL
+	$ lexer got token: `SEMICOLON`, scan: `;`
+Index Error: Array dimension must be greater than 0 when declaring.
+	at line (9:25)

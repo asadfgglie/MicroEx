@@ -1,0 +1,9 @@
+line&1:
+START test_assignment_error
+comment&declare_all_usaged_temp_variable&0:
+J temp_var_declare&test_assignment_error
+start&test_assignment_error:
+
+line&2:
+line&3:
+I_STORE 0 temp&integer&0

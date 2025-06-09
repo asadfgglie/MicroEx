@@ -1,0 +1,70 @@
+line&1:
+line&2:
+comment&This_is_test_file_for_declare_statements&0:
+comment&In_my_implementation,_all_variable_will_be_initialized_to_`0`&1:
+comment&So_every_variable_are_static_checkable_when_initialized&2:
+line&6:
+line&7:
+START test_declare
+comment&declare_all_usaged_temp_variable&3:
+J temp_var_declare&test_declare
+start&test_declare:
+
+line&8:
+line&9:
+line&10:
+DECLARE a integer
+I_STORE 0 a
+
+comment&singal_declare&4:
+DECLARE b real
+F_STORE 0.0 b
+DECLARE c real
+F_STORE 0.0 c
+
+comment&multiple_declare&5:
+I_STORE 10 temp&integer&0
+DECLARE d integer_array 10
+I_STORE 0 d[0]
+I_STORE 0 d[1]
+I_STORE 0 d[2]
+I_STORE 0 d[3]
+I_STORE 0 d[4]
+I_STORE 0 d[5]
+I_STORE 0 d[6]
+I_STORE 0 d[7]
+I_STORE 0 d[8]
+I_STORE 0 d[9]
+
+comment&declare_array&6:
+I_STORE 2 temp&integer&1
+I_STORE 3 temp&integer&2
+DECLARE e real_array 6
+F_STORE 0.0 e[0]
+F_STORE 0.0 e[1]
+F_STORE 0.0 e[2]
+F_STORE 0.0 e[3]
+F_STORE 0.0 e[4]
+F_STORE 0.0 e[5]
+DECLARE f real
+F_STORE 0.0 f
+
+comment&multiple_declare_with_matrix_(row_major)&7:
+line&15:
+I_STORE 1 temp&integer&3
+I_ADD a temp&integer&3 temp&integer&4
+DECLARE g real_array 1
+F_STORE 0.0 g[0]
+
+line&16:
+comment&Dynamic_declare,_but_since_`a_+_1`_is_static_checkable_(a_+_1_=_0_+_1_=_1),&8:
+comment&so_this_declaration_is_valid&9:
+temp_var_declare&test_declare:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+J start&test_declare
+
+HALT test_declare

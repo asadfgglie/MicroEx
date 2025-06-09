@@ -1,0 +1,9 @@
+program test_for
+
+begin
+    declare i as integer;
+
+    for (i := 0 to test_for)
+        write(i);
+    endfor
+end

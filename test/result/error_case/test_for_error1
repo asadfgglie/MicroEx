@@ -1,0 +1,16 @@
+line&1:
+START test_for
+comment&declare_all_usaged_temp_variable&0:
+J temp_var_declare&test_for
+start&test_for:
+
+line&2:
+line&3:
+line&4:
+DECLARE i integer
+I_STORE 0 i
+
+line&5:
+line&6:
+I_STORE 0 temp&integer&0
+I_STORE 10 temp&integer&1

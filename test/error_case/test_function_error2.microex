@@ -1,0 +1,10 @@
+program test_function
+
+begin
+    fn integer test(integer a[10])
+        return a[0];
+    endfn
+
+    declare a as integer;
+    a := test(a); %% error!
+end

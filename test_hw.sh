@@ -1,6 +1,6 @@
 #!/bin/bash
 
-make build
+make build_hw
 # Check if the build was successful
 if [ $? -ne 0 ]; then
     echo "Build failed. Please check the errors."

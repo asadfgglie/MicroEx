@@ -1,0 +1,10 @@
+program test_function
+
+begin
+    fn integer test(integer a, integer b)
+        return a + b;
+    endfn
+
+    declare a, b as real;
+    a := test(a, b); %% error!
+end

@@ -1,0 +1,140 @@
+line&1:
+line&2:
+comment&This_is_a_test_file_for_read_statement&0:
+comment&Each_variable_affected_by_read_statement_will_be_unstatic_checkable&1:
+comment&Assume_cpu_has_already_implemented_`read_<type>`_instruction&2:
+comment&`read_<type>_t`:_read_1_unit_data_from_stdin_or_some_input_as_type&3:
+line&7:
+line&8:
+START test_read
+comment&declare_all_usaged_temp_variable&4:
+J temp_var_declare&test_read
+start&test_read:
+
+line&9:
+line&10:
+DECLARE i integer
+I_STORE 0 i
+DECLARE j integer
+I_STORE 0 j
+DECLARE k integer
+I_STORE 0 k
+
+line&11:
+line&12:
+CALL read_i i
+CALL read_i j
+CALL read_i k
+
+comment&read_integer_into_`i`,_`j`,_`k`&5:
+line&14:
+DECLARE f real
+F_STORE 0.0 f
+DECLARE d real
+F_STORE 0.0 d
+
+line&15:
+line&16:
+CALL read_f f
+CALL read_f d
+
+comment&read_real_into_`f`,_`d`&6:
+line&18:
+CALL read_f f
+CALL read_i i
+
+comment&read_real_into_`f`,_and_read_integer_into_`i`&7:
+line&20:
+I_STORE 5 temp&integer&0
+DECLARE arr integer_array 5
+I_STORE 0 arr[0]
+I_STORE 0 arr[1]
+I_STORE 0 arr[2]
+I_STORE 0 arr[3]
+I_STORE 0 arr[4]
+
+line&21:
+line&22:
+I_STORE 0 temp&integer&1
+I_STORE 1 temp&integer&2
+I_STORE 2 temp&integer&3
+I_STORE 3 temp&integer&4
+I_STORE 4 temp&integer&5
+comment&Calculating_offset&8:
+I_STORE 0 temp&integer&6
+I_STORE 1 temp&integer&7
+I_MUL temp&integer&7 0 temp&integer&9
+I_ADD temp&integer&6 temp&integer&9 temp&integer&8
+I_STORE temp&integer&8 temp&integer&6
+I_MUL temp&integer&7 5 temp&integer&9
+I_STORE temp&integer&9 temp&integer&7
+CALL read_i arr[temp&integer&6]
+comment&Calculating_offset&9:
+I_STORE 0 temp&integer&10
+I_STORE 1 temp&integer&11
+I_MUL temp&integer&11 1 temp&integer&13
+I_ADD temp&integer&10 temp&integer&13 temp&integer&12
+I_STORE temp&integer&12 temp&integer&10
+I_MUL temp&integer&11 5 temp&integer&13
+I_STORE temp&integer&13 temp&integer&11
+CALL read_i arr[temp&integer&10]
+comment&Calculating_offset&10:
+I_STORE 0 temp&integer&14
+I_STORE 1 temp&integer&15
+I_MUL temp&integer&15 2 temp&integer&17
+I_ADD temp&integer&14 temp&integer&17 temp&integer&16
+I_STORE temp&integer&16 temp&integer&14
+I_MUL temp&integer&15 5 temp&integer&17
+I_STORE temp&integer&17 temp&integer&15
+CALL read_i arr[temp&integer&14]
+comment&Calculating_offset&11:
+I_STORE 0 temp&integer&18
+I_STORE 1 temp&integer&19
+I_MUL temp&integer&19 3 temp&integer&21
+I_ADD temp&integer&18 temp&integer&21 temp&integer&20
+I_STORE temp&integer&20 temp&integer&18
+I_MUL temp&integer&19 5 temp&integer&21
+I_STORE temp&integer&21 temp&integer&19
+CALL read_i arr[temp&integer&18]
+comment&Calculating_offset&12:
+I_STORE 0 temp&integer&22
+I_STORE 1 temp&integer&23
+I_MUL temp&integer&23 4 temp&integer&25
+I_ADD temp&integer&22 temp&integer&25 temp&integer&24
+I_STORE temp&integer&24 temp&integer&22
+I_MUL temp&integer&23 5 temp&integer&25
+I_STORE temp&integer&25 temp&integer&23
+CALL read_i arr[temp&integer&22]
+
+line&23:
+comment&read_5_integers_into_`arr[0]`,_`arr[1]`,_`arr[2]`,_`arr[3]`,_`arr[4]`&13:
+temp_var_declare&test_read:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+DECLARE temp&integer&5 integer
+DECLARE temp&integer&6 integer
+DECLARE temp&integer&7 integer
+DECLARE temp&integer&8 integer
+DECLARE temp&integer&9 integer
+DECLARE temp&integer&10 integer
+DECLARE temp&integer&11 integer
+DECLARE temp&integer&12 integer
+DECLARE temp&integer&13 integer
+DECLARE temp&integer&14 integer
+DECLARE temp&integer&15 integer
+DECLARE temp&integer&16 integer
+DECLARE temp&integer&17 integer
+DECLARE temp&integer&18 integer
+DECLARE temp&integer&19 integer
+DECLARE temp&integer&20 integer
+DECLARE temp&integer&21 integer
+DECLARE temp&integer&22 integer
+DECLARE temp&integer&23 integer
+DECLARE temp&integer&24 integer
+DECLARE temp&integer&25 integer
+J start&test_read
+
+HALT test_read

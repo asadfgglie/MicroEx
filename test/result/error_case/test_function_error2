@@ -1,0 +1,36 @@
+line&1:
+START test_function
+comment&declare_all_usaged_temp_variable&0:
+J temp_var_declare&test_function
+start&test_function:
+
+line&2:
+line&3:
+line&4:
+I_STORE 10 fn&temp&integer&0
+fn_name&test:
+fn_arg&fn&test&a:
+DECLARE fn&test&a integer_array 10
+DECLARE test function
+DECLARE fn&test&ret&integer integer
+line&5:
+I_STORE 0 fn&temp&integer&1
+line&6:
+comment&Calculating_offset&1:
+I_STORE 0 fn&temp&integer&2
+I_STORE 1 fn&temp&integer&3
+I_MUL fn&temp&integer&3 0 fn&temp&integer&5
+I_ADD fn&temp&integer&2 fn&temp&integer&5 fn&temp&integer&4
+I_STORE fn&temp&integer&4 fn&temp&integer&2
+I_MUL fn&temp&integer&3 10 fn&temp&integer&5
+I_STORE fn&temp&integer&5 fn&temp&integer&3
+I_STORE fn&test&a[fn&temp&integer&2] fn&temp&integer&6
+I_STORE fn&temp&integer&6 fn&test&ret&integer
+RETURN fn&test&ret&integer
+
+line&7:
+line&8:
+DECLARE a integer
+I_STORE 0 a
+
+line&9:

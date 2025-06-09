@@ -1,0 +1,247 @@
+line&1:
+line&2:
+comment&Test_while_loop_statement&0:
+line&4:
+line&5:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_while`
+START test_while
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&test_while
+start&test_while:
+	> program_title -> program id (program_title -> program test_while)
+		> Program start with name: `test_while`
+
+line&6:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&7:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `INTEGER_LITERAL`, scan: `10`
+I_STORE 10 temp&integer&0
+	> expression -> INTEGER_LITERAL (expression -> 10)
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [10])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [10])
+	$ lexer got token: `COMMA`, scan: `,`
+	> id -> ID array_dimension_list (id -> a[10])
+	> id_list -> id (id_list -> a[10])
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> i)
+	> id_list -> id_list comma id (id_list -> a[10], i)
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE a integer_array 10
+I_STORE 0 a[0]
+I_STORE 0 a[1]
+I_STORE 0 a[2]
+I_STORE 0 a[3]
+I_STORE 0 a[4]
+I_STORE 0 a[5]
+I_STORE 0 a[6]
+I_STORE 0 a[7]
+I_STORE 0 a[8]
+I_STORE 0 a[9]
+DECLARE i integer
+I_STORE 0 i
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare a[10], i as integer;)
+
+	> statement -> declare_statement
+	> statement_list -> statement
+line&8:
+	$ lexer got token: `DECLARE`, scan: `declare`
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `AS`, scan: `as`
+	> id -> ID (id -> b)
+	> id_list -> id (id_list -> b)
+	$ lexer got token: `BOOL`, scan: `bool`
+	> type -> BOOL
+	$ lexer got token: `SEMICOLON`, scan: `;`
+DECLARE b integer
+I_STORE 0 b
+	> declare_statement -> declare id_list as type semicolon (declare_statement -> declare b as integer;)
+
+	> statement -> declare_statement
+	> statement_list -> statement_list statement
+line&9:
+line&10:
+comment&basic_while_loop&2:
+comment&while_condition_will_only_compute_one_time&3:
+comment&use_variable_instead_of_expression&4:
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> b)
+	$ lexer got token: `TRUE_LITERAL`, scan: `true`
+I_STORE 1 temp&integer&1
+	> expression -> TRUE_LITERAL (expression -> true)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_STORE temp&integer&1 b
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> b := true;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&14:
+	$ lexer got token: `WHILE`, scan: `while`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+	> id -> ID (id -> b)
+	> expression -> id (expression -> b)
+I_CMP 0 b
+JNE label&0
+	> while_prefix -> while left_parent expression right_parent (while_prefix -> while (true))
+J label&1
+label&0:
+line&15:
+	$ lexer got token: `IF`, scan: `if`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `LESS`, scan: `<`
+	> id -> ID (id -> i)
+	> expression -> id (expression -> i)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `10`
+I_STORE 10 temp&integer&2
+	> expression -> INTEGER_LITERAL (expression -> 10)
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+I_CMP i temp&integer&2
+JLT label&2
+J label&3
+label&2:
+I_STORE 1 temp&integer&3
+J label&4
+label&3:
+I_STORE 0 temp&integer&3
+label&4:
+	$ lexer got token: `THEN`, scan: `then`
+I_CMP 0 temp&integer&3
+JNE label&5
+J label&6
+label&5:
+	> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (true) then)
+line&16:
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> b)
+	$ lexer got token: `TRUE_LITERAL`, scan: `true`
+I_STORE 1 temp&integer&4
+	> expression -> TRUE_LITERAL (expression -> true)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_STORE temp&integer&4 b
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> b := true;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement
+line&17:
+	$ lexer got token: `ELSE`, scan: `else`
+J label&7
+label&6:
+	> if_statement -> if_prefix statement_list else if_suffix
+line&18:
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> b)
+	$ lexer got token: `FALSE_LITERAL`, scan: `false`
+I_STORE 0 temp&integer&5
+	> expression -> FALSE_LITERAL (expression -> false)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_STORE temp&integer&5 b
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> b := false;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement
+line&19:
+	$ lexer got token: `ENDIF`, scan: `endif`
+	> if_suffix -> statement_list endif
+label&7:
+	> if_statement -> if_else_prefix if_suffix
+
+	> statement -> if_statement
+	> statement_list -> statement
+line&20:
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `LEFT_BRACKET`, scan: `[`
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `RIGHT_BRACKET`, scan: `]`
+	> id -> ID (id -> i)
+	> expression -> id (expression -> i)
+	> array_dimension -> LEFT_BRACKET expression RIGHT_BRACKET (array_dimension -> [0])
+	> array_dimension_list -> array_dimension (array_dimension_list -> [0])
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID array_dimension_list (id -> a[0])
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `MULTIPLY`, scan: `*`
+	> id -> ID (id -> i)
+	> expression -> id (expression -> i)
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `SEMICOLON`, scan: `;`
+	> id -> ID (id -> i)
+	> expression -> id (expression -> i)
+I_MUL i i temp&integer&6
+	> expression -> expression MULTIPLY expression (0 -> 0 * 0)
+	> Calculating offset for array access.
+comment&Calculating_offset&5:
+I_STORE 0 temp&integer&7
+I_STORE 1 temp&integer&8
+I_MUL temp&integer&8 0 temp&integer&10
+I_ADD temp&integer&7 temp&integer&10 temp&integer&9
+I_STORE temp&integer&9 temp&integer&7
+I_MUL temp&integer&8 10 temp&integer&10
+I_STORE temp&integer&10 temp&integer&8
+I_STORE temp&integer&6 a[temp&integer&7]
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> a[0] := 0;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&21:
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> i)
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `PLUS`, scan: `+`
+	> id -> ID (id -> i)
+	> expression -> id (expression -> i)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
+I_STORE 1 temp&integer&11
+	> expression -> INTEGER_LITERAL (expression -> 1)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_ADD i temp&integer&11 temp&integer&12
+	> expression -> expression PLUS expression (1 -> 0 + 1)
+I_STORE temp&integer&12 i
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> i := 1;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement_list statement
+line&22:
+	$ lexer got token: `ENDWHILE`, scan: `endwhile`
+I_CMP 0 b
+JNE label&0
+	> while_statement -> while_prefix statement_list endwhile
+label&1:
+
+	> statement -> while_statement
+	> statement_list -> statement_list statement
+line&23:
+	$ lexer got token: `END`, scan: `end`
+	> program_body -> begin statement_list end
+temp_var_declare&test_while:
+DECLARE temp&integer&0 integer
+DECLARE temp&integer&1 integer
+DECLARE temp&integer&2 integer
+DECLARE temp&integer&3 integer
+DECLARE temp&integer&4 integer
+DECLARE temp&integer&5 integer
+DECLARE temp&integer&6 integer
+DECLARE temp&integer&7 integer
+DECLARE temp&integer&8 integer
+DECLARE temp&integer&9 integer
+DECLARE temp&integer&10 integer
+DECLARE temp&integer&11 integer
+DECLARE temp&integer&12 integer
+J start&test_while
+
+HALT test_while
+	> program -> program_title program_body
+		> Program done with name: `test_while`

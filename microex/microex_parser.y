@@ -1585,6 +1585,11 @@
      * This function generates the necessary assembly code.
     */
     void function_statement_process(symbol *expr_ptr) {
+        if(expr_ptr->array_info.dimensions > 0 && expr_ptr->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        expr_ptr = extract_array_symbol(expr_ptr);
+
         data_type return_type = current_function_info->return_arg->type;
         char *type_str = data_type_to_string(return_type);
         switch (expr_ptr->type) {
@@ -1707,6 +1712,7 @@
     double double_val;
     bool bool_val;
     symbol *symbol_ptr;
+    node *node_ptr;
     data_type type;
     array_type array_info;
     direction direction;
@@ -1767,7 +1773,7 @@
 
 %token FN_MICROEX
 %token RETURN_MICROEX
-%token FNEND_MICROEX
+%token ENDFN_MICROEX
 
 %type <type> type
 %type <symbol_ptr> program_title
@@ -1776,7 +1782,6 @@
 %type <array_info> array_dimension
 %type <array_info> array_dimension_list
 %type <symbol_ptr> expression
-// ensure expression isn't array symbol (already handled in `expression: id` rule)
 %type <symbol_ptr> expression_list
 %type <direction> direction
 %type <if_info> if_prefix
@@ -1870,14 +1875,14 @@ statement:
 
 // function declare statement
 function_statement:
-    function_statement_prefix statement_list RETURN_MICROEX expression SEMICOLON_MICROEX FNEND_MICROEX {
+    function_statement_prefix statement_list RETURN_MICROEX expression SEMICOLON_MICROEX ENDFN_MICROEX {
         function_statement_process($4);
 
         logging("> function_statement -> function_statement_prefix statement_list RETURN expression SEMICOLON FNEND\n");
         
         generate("\n");
     }
-    | function_statement_prefix RETURN_MICROEX expression  SEMICOLON_MICROEX FNEND_MICROEX {
+    | function_statement_prefix RETURN_MICROEX expression  SEMICOLON_MICROEX ENDFN_MICROEX {
         function_statement_process($3);
 
         logging("> function_statement -> function_statement_prefix RETURN expression SEMICOLON FNEND\n");
@@ -2306,6 +2311,10 @@ id:
     ;
 array_dimension:
     LEFT_BRACKET_MICROEX expression RIGHT_BRACKET_MICROEX {
+        if($2->array_info.dimensions > 0 && $2->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $2 = extract_array_symbol($2);
         
         if ($2->type != TYPE_INT && $2->type != TYPE_BOOL) {
@@ -2408,6 +2417,14 @@ assignment_statement:
         if ($1->type == TYPE_UNKNOWN) {
             yyerror_name("Variable not declared.", "Undeclared");
         }
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        $3 = extract_array_symbol($3);
+
         if ($1->array_pointer.dimensions > 0) { // Handle array assignment
             symbol *offset = get_array_offset($1->array_info, $1->array_pointer);
             switch ($1->type) {
@@ -2800,9 +2817,15 @@ assignment_statement:
         generate("\n");
     }
     ;
-// TODO: fix use array args as parameter will load arg incorrectly
 expression:
     expression PLUS_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
@@ -2973,6 +2996,13 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
     }
     | expression MINUS_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
@@ -3127,6 +3157,13 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
     }
     | expression MULTIPLY_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
@@ -3281,6 +3318,13 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
     }
     | expression DIVISION_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
@@ -3466,6 +3510,10 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
     }
     | MINUS_MICROEX expression %prec UMINUS_MICROEX {
+        if($2->array_info.dimensions > 0 && $2->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        
         $2 = extract_array_symbol($2);
 
         switch ($2->type) {
@@ -3513,6 +3561,10 @@ expression:
         $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
     }
     | LEFT_PARENT_MICROEX expression RIGHT_PARENT_MICROEX {
+        if($2->array_info.dimensions > 0 && $2->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        
         $2 = extract_array_symbol($2);
 
         $$ = $2;
@@ -3546,54 +3598,114 @@ expression:
         // since propagate static checkability inherited from $2, so we don't need to set it again
     }
     | expression GREAT_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
         $$ = condition_process($1, GREAT_MICROEX, $3).result_ptr;
     }
     | expression LESS_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
         $$ = condition_process($1, LESS_MICROEX, $3).result_ptr;
     }
     | expression GREAT_EQUAL_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
         $$ = condition_process($1, GREAT_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression LESS_EQUAL_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
         $$ = condition_process($1, LESS_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression EQUAL_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
         $$ = condition_process($1, EQUAL_MICROEX, $3).result_ptr;
     }
     | expression NOT_EQUAL_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
         $$ = condition_process($1, NOT_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression AND_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
         
         $$ = condition_process($1, AND_MICROEX, $3).result_ptr;
     }
     | expression OR_MICROEX expression {
+        if($1->array_info.dimensions > 0 && $1->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $1 = extract_array_symbol($1);
         $3 = extract_array_symbol($3);
 
         $$ = condition_process($1, OR_MICROEX, $3).result_ptr;
     }
     | NOT_MICROEX expression {
+        if($2->array_info.dimensions > 0 && $2->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        
         $$ = add_temp_symbol(TYPE_BOOL);
         $2 = extract_array_symbol($2);
 
@@ -4049,6 +4161,9 @@ write_statement:
             if (current->symbol_ptr->type == TYPE_UNKNOWN) {
                 yyerror_name("Variable not declared.", "Undeclared");
             }
+            if(current->symbol_ptr->array_info.dimensions > 0 && current->array_pointer.dimensions == 0) {
+                yyerror_name("Access non-array symbol with array symbol.", "Type");
+            }
             if (current->array_pointer.dimensions > 0) {
                 symbol *offset = get_array_offset(current->symbol_ptr->array_info, current->array_pointer);
                 switch (current->symbol_ptr->type) {
@@ -4214,6 +4329,10 @@ if_statement:
     ;
 if_prefix:
     IF_MICROEX LEFT_PARENT_MICROEX expression RIGHT_PARENT_MICROEX THEN_MICROEX {
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+
         $3 = extract_array_symbol($3);
 
         label *true_label = add_label();
@@ -4379,6 +4498,15 @@ for_prefix:
         }
         if ($7->type != TYPE_INT && $7->type != TYPE_DOUBLE && $7->type != TYPE_BOOL) {
             yyerror_name("Loop end expression must be of type int, double or bool.", "Type");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($5->array_info.dimensions > 0 && $5->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
+        }
+        if($7->array_info.dimensions > 0 && $7->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
         $5 = extract_array_symbol($5);
         $7 = extract_array_symbol($7);
@@ -4888,6 +5016,9 @@ while_prefix:
     WHILE_MICROEX LEFT_PARENT_MICROEX expression RIGHT_PARENT_MICROEX {
         if ($3->type != TYPE_BOOL && $3->type != TYPE_INT && $3->type != TYPE_DOUBLE) {
             yyerror("Condition in while statement must be of type bool, int or double.");
+        }
+        if($3->array_info.dimensions > 0 && $3->array_pointer.dimensions == 0) {
+            yyerror_name("Access non-array symbol with array symbol.", "Type");
         }
 
         label *while_start_label = add_label();

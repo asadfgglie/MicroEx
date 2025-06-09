@@ -1,0 +1,17 @@
+line&1:
+line&2:
+comment&This_is_test_file_for_declare_statements&0:
+line&4:
+line&5:
+START test_declare_error
+comment&declare_all_usaged_temp_variable&1:
+J temp_var_declare&test_declare_error
+start&test_declare_error:
+
+line&6:
+line&7:
+line&8:
+DECLARE a integer
+I_STORE 0 a
+
+comment&singal_declare&2:
