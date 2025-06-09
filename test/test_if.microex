@@ -1,0 +1,30 @@
+%%%
+ %% Test if statement.
+%%%
+
+program test_if
+begin
+    declare a, b[3] as integer;
+
+    a := 66;
+
+    if (a >= 66 && a < 100) then
+        a := 8; %% if statement
+    endif
+
+    %% if-else statement
+    if (a != 8 || a == 0 && b[1] > b[2]) then
+        a := -11;
+    else
+        a := 66;
+    endif
+    
+    %% nested if
+    if (b[0] > b[1]) then
+        if (a < 0) then
+            write(a);
+        endif
+    else 
+        a := -a;
+    endif
+end

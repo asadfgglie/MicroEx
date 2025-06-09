@@ -16,8 +16,11 @@
 #define FN_ARG_LABEL_PREFIX "fn_arg&"
 // `fn_arg&` ensures that symbol do not conflict with user-defined/auto-generated symbols
 #define FN_NAME_LABEL_PREFIX "fn_name&"
-#define LABEL_PREFIX "label&"
-#define LINE_PREFIX "line&"
+#define LABEL_PREFIX "label&" // label for jump instruction
+#define LINE_PREFIX "line&" //src code line label for debug
+#define COMMENT_PREFIX "comment&" // comment label for debug
+#define TEMP_DECLARE_LABEL "temp_var_declare&"
+#define START_LABEL "start&"
 
 #define SYMBOL_INIT(s, name_var) do {               \
     s->name = name_var;                             \
@@ -33,6 +36,7 @@
                                                     \
     s->function_info = NULL;                        \
     s->is_static_checkable = true;                  \
+    s->is_literal = false;                          \
 } while (false)
 
 
@@ -119,6 +123,12 @@ typedef struct label {
 } label; // label for jump instructions, used in yacc code
 
 typedef struct {
+    label *true_label;
+    label *false_label;
+    label *end_label; // use for exsit else part and if condition is true
+} if_info;
+
+typedef struct {
     label *for_start_label;
     label *for_end_label;
     symbol *for_variable;
@@ -184,6 +194,7 @@ bool realloc_char(reallocable_char *rc, size_t new_size);
 symbol *get_symbol(char *name_ptr);
 symbol *add_function_symbol(const char *name_ptr);
 label *add_label();
+void add_comment(char *comment);
 void free_symbol_table();
 void free_label_table();
 symbol *add_temp_symbol(data_type type);
@@ -202,7 +213,7 @@ char *array_range_to_string(array_type array_info);
 char *array_dimensions_to_string(array_type array_info);
 char *data_array_type_to_string(data_type type);
 
-symbol *get_array_offset_unstatic(array_type array_info, array_type array_pointer);
-size_t get_array_offset(array_type array_info, array_type array_pointer);
+symbol *get_array_offset(array_type array_info, array_type array_pointer);
+symbol *extract_array_symbol(symbol *symbol_ptr);
 size_t array_range(array_type array_info);
 void copy_array_info(array_type *decs, array_type *src);

@@ -1,0 +1,14 @@
+%%%
+ %% Test file for write statement.
+ %% Assume cpu has already implemented `write_<type>` instruction.
+ %% `write_<type> arg`: print arg as <type> into stdout or some output.
+%%%
+
+program test_write
+begin
+    declare a, b[2][4] as integer;
+    declare c, d as real;
+
+    write(a); %% print `a` as integer into output.
+    write(b[0][1], b[1][3], c, d); %% print `b[0][1]`, `b[1][3]` as integer and print `c`, `d` as real
+end

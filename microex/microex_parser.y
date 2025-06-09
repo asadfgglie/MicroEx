@@ -44,6 +44,9 @@
 
     void add_node(symbol *symbol_ptr, list *list_ptr) {
         node* new_node = (node*)malloc(sizeof(node));
+        if (new_node == NULL) {
+            yyerror_name("Out of memory when malloc.", "Parsing");
+        }
         new_node->symbol_ptr = symbol_ptr;
         new_node->next = NULL;
         new_node->array_pointer = symbol_ptr->array_pointer;
@@ -106,50 +109,10 @@
      * Convert an integer symbol to a boolean symbol.
      * If the integer is non-zero, the boolean will be true (1), otherwise false (0).
      * This function generates the necessary assembly code for the conversion.
-     * This function assumes that index isn't out of bounds.
-     * @param index The index should get by `get_array_offset` function.
-     */
-    void itob_array(symbol *src, symbol *dest, size_t index) {
-        if (src->type != TYPE_INT) {
-            yyerror_name("Source symbol must be of type int.", "Parsing");
-        }
-        if (dest->type != TYPE_BOOL) {
-            yyerror_name("Destination symbol must be of type bool.", "Parsing");
-        }
-        if (dest->array_pointer.dimensions == 0) {
-            yyerror_name("Destination symbol must be an array.", "Parsing");
-        }
-        if (src == NULL || dest == NULL) {
-            yyerror_name("Source or destination symbol is NULL.", "Parsing");
-        }
-        if (src == dest) {
-            yyerror_name("Source and destination symbols cannot be the same.", "Parsing");
-        }
-
-        label *true_label = add_label();
-        label *false_label = add_label();
-        label *end_label = add_label();
-        generate("I_CMP 0 %s\n", src->name);
-        generate("JNE %s\n", true_label->name);
-        generate("J %s\n", false_label->name);
-        generate("%s:\n", true_label->name);
-        generate("I_STORE 1 %s[%zu]\n", dest->name, index);
-        generate("J %s\n", end_label->name);
-        generate("%s:\n", false_label->name);
-        generate("I_STORE 0 %s[%zu]\n", dest->name, index);
-        generate("%s:\n", end_label->name);
-
-        dest->value.bool_array[index] = src->value.int_val != 0; // convert int to bool
-    }
-
-    /**
-     * Convert an integer symbol to a boolean symbol.
-     * If the integer is non-zero, the boolean will be true (1), otherwise false (0).
-     * This function generates the necessary assembly code for the conversion.
      * This function assumes that index_symbol is not static checkable.
-     * @param index_symbol The index symbol should get by `get_array_offset_unstatic` function.
+     * @param index_symbol The index symbol should get by `get_array_offset` function.
     */
-    void itob_array_unstatic(symbol *src, symbol *dest, symbol *index_symbol) {
+    void itob_array(symbol *src, symbol *dest, symbol *index_symbol) {
         if (src->type != TYPE_INT) {
             yyerror_name("Source symbol must be of type int.", "Parsing");
         }
@@ -189,50 +152,10 @@
      * Convert a double symbol to a boolean symbol.
      * If the double is non-zero, the boolean will be true (1), otherwise false (0).
      * This function generates the necessary assembly code for the conversion.
-     * This function assumes that index isn't out of bounds.
-     * @param index The index should get by `get_array_offset` function.
-    */
-    void ftob_array(symbol *src, symbol *dest, size_t index) {
-        if (src->type != TYPE_DOUBLE) {
-            yyerror_name("Source symbol must be of type double.", "Parsing");
-        }
-        if (dest->type != TYPE_BOOL) {
-            yyerror_name("Destination symbol must be of type bool.", "Parsing");
-        }
-        if (dest->array_pointer.dimensions == 0) {
-            yyerror_name("Destination symbol must be an array.", "Parsing");
-        }
-        if (src == NULL || dest == NULL) {
-            yyerror_name("Source or destination symbol is NULL.", "Parsing");
-        }
-        if (src == dest) {
-            yyerror_name("Source and destination symbols cannot be the same.", "Parsing");
-        }
-
-        label *true_label = add_label();
-        label *false_label = add_label();
-        label *end_label = add_label();
-        generate("F_CMP 0.0 %s\n", src->name);
-        generate("JNE %s\n", true_label->name);
-        generate("J %s\n", false_label->name);
-        generate("%s:\n", true_label->name);
-        generate("I_STORE 1 %s[%zu]\n", dest->name, index);
-        generate("J %s\n", end_label->name);
-        generate("%s:\n", false_label->name);
-        generate("I_STORE 0 %s[%zu]\n", dest->name, index);
-        generate("%s:\n", end_label->name);
-
-        dest->value.bool_array[index] = src->value.double_val != 0.0; // convert double to bool
-    }
-
-    /** 
-     * Convert a double symbol to a boolean symbol.
-     * If the double is non-zero, the boolean will be true (1), otherwise false (0).
-     * This function generates the necessary assembly code for the conversion.
      * This function assumes that index_symbol is not static checkable.
-     * @param index_symbol The index symbol should get by `get_array_offset_unstatic` function.
+     * @param index_symbol The index symbol should get by `get_array_offset` function.
     */
-    void ftob_array_unstatic(symbol *src, symbol *dest, symbol *index_symbol) {
+    void ftob_array(symbol *src, symbol *dest, symbol *index_symbol) {
         if (src->type != TYPE_DOUBLE) {
             yyerror_name("Source symbol must be of type double.", "Parsing");
         }
@@ -1787,7 +1710,7 @@
     data_type type;
     array_type array_info;
     direction direction;
-    label *label_ptr;
+    if_info if_info;
     for_info for_info;
     while_info while_info;
     function_head function_head;
@@ -1856,7 +1779,8 @@
 // ensure expression isn't array symbol (already handled in `expression: id` rule)
 %type <symbol_ptr> expression_list
 %type <direction> direction
-%type <label_ptr> if_prefix
+%type <if_info> if_prefix
+%type <if_info> if_else_prefix
 %type <for_info> for_prefix
 %type <while_info> while_prefix
 %type <symbol_ptr> arg
@@ -1876,15 +1800,18 @@
 program:
     program_title
     program_body {
-        generate("HALT %s\n", $1->name);
-        generate("\n");
-        logging("> program -> program_title program_body\n");
-        logging("\t> Program done with name: `%s`\n", $1->name);
-
+        generate("%s%s:\n", TEMP_DECLARE_LABEL, $1->name);
         symbol *current_symbol, *next_symbol;
         HASH_ITER(hh, temp_symbol_table, current_symbol, next_symbol) {
             generate("DECLARE %s %s\n", current_symbol->name, data_type_to_string(current_symbol->type));
         }
+        generate("J %s%s\n", START_LABEL, $1->name);
+
+        generate("\n");
+
+        generate("HALT %s\n", $1->name);
+        logging("> program -> program_title program_body\n");
+        logging("\t> Program done with name: `%s`\n", $1->name);
     }
     ;
 program_title:
@@ -1892,6 +1819,9 @@ program_title:
         $2->type = TYPE_PROGRAM_NAME;
         $$ = $2;
         generate("START %s\n", $2->name);
+        add_comment("declare all usaged temp variable");
+        generate("J %s%s\n", TEMP_DECLARE_LABEL, $2->name);
+        generate("%s%s:\n", START_LABEL, $2->name);
         logging("> program_title -> program id (program_title -> program %s)\n", $2->name);
         logging("\t> Program start with name: `%s`\n", $2->name);
         
@@ -2098,10 +2028,6 @@ arg_list:
 arg:
     type id {
         $$ = $2;
-
-        if ($$->array_pointer.dimensions > 0) {
-            yyerror("Currently not support array as args.");
-        }
 
         $$->type = $1;
         char *type_str = data_type_to_string($$->type);
@@ -2311,7 +2237,14 @@ id_list:
     id {
         $$ = $1;
         add_id_node($1);
-        logging("> id_list -> id (id_list -> %s)\n", $1->name);
+        if ($1->array_pointer.dimensions > 0) {
+            dimensions = array_dimensions_to_string($1->array_pointer);
+            logging("> id_list -> id (id_list -> %s%s)\n", $1->name, dimensions);
+            free(dimensions);
+        }
+        else {
+            logging("> id_list -> id (id_list -> %s)\n", $1->name);
+        }
     }
     | id_list COMMA_MICROEX id {
         $$ = $1;
@@ -2373,6 +2306,8 @@ id:
     ;
 array_dimension:
     LEFT_BRACKET_MICROEX expression RIGHT_BRACKET_MICROEX {
+        $2 = extract_array_symbol($2);
+        
         if ($2->type != TYPE_INT && $2->type != TYPE_BOOL) {
             yyerror_name("Array dimension must be integer greater euqal than 0.", "Index");
         }
@@ -2474,382 +2409,216 @@ assignment_statement:
             yyerror_name("Variable not declared.", "Undeclared");
         }
         if ($1->array_pointer.dimensions > 0) { // Handle array assignment
-            if ($1->array_pointer.is_static_checkable) {
-                size_t index = get_array_offset($1->array_info, $1->array_pointer);
-                switch ($1->type) {
-                    case TYPE_INT: {
-                        if ($3->type != TYPE_INT && $3->type != TYPE_DOUBLE && $3->type != TYPE_BOOL) {
-                            yyerror_name("Cannot assign non-numeric value to integer array.", "Type");
-                        }
-                        switch ($3->type) {
-                            case TYPE_INT: {
-                                $1->value.int_array[index] = $3->value.int_val;
-                                generate("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_DOUBLE: {
-                                $1->value.int_array[index] = (long long) $3->value.double_val;
-                                generate("F_TO_I %s %s[%zu]\n", $3->name, $1->name, index);
-                                
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_BOOL: {
-                                $1->value.int_array[index] = $3->value.bool_val ? 1 : 0;
-                                generate("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_PROGRAM_NAME: {
-                                yyerror_name("Cannot assign program name to integer array.", "Type");
-                                break;
-                            }
-                            case TYPE_STRING: {
-                                yyerror_name("Cannot assign string to integer array.", "Type");
-                                break;
-                            }
-                            default: {
-                                yyerror_name("Unknown data type in assignment statement.", "Parsing");
-                                break;
-                            }
-                        }
-                        break;
+            symbol *offset = get_array_offset($1->array_info, $1->array_pointer);
+            switch ($1->type) {
+                case TYPE_INT: {
+                    if ($3->type != TYPE_INT && $3->type != TYPE_DOUBLE && $3->type != TYPE_BOOL) {
+                        yyerror_name("Cannot assign non-numeric value to integer array.", "Type");
                     }
-                    case TYPE_DOUBLE: {
-                        if ($3->type != TYPE_DOUBLE && $3->type != TYPE_INT && $3->type != TYPE_BOOL) {
-                            yyerror_name("Cannot assign non-numeric value to double array.", "Type");
+                    switch ($3->type) {
+                        case TYPE_INT: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.int_array[offset->value.int_val] = $3->value.int_val;
+                            }
+                            // we won't do any semantic propogation here, since we are not sure about the real array offset
+                            generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
+                            }
+                            free(dimensions);
+                            break;
                         }
-                        switch ($3->type) {
-                            case TYPE_DOUBLE: {
-                                $1->value.double_array[index] = $3->value.double_val;
-                                generate("F_STORE %s %s[%zu]\n", $3->name, $1->name, index);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
-                                }
-                                free(dimensions);
-                                break;
+                        case TYPE_DOUBLE: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.int_array[offset->value.int_val] = $3->value.double_val;
                             }
-                            case TYPE_INT: {
-                                $1->value.double_array[index] = (double) $3->value.int_val;
-                                generate("I_TO_F %s %s[%zu]\n", $3->name, $1->name, index);
-                                
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
-                                }
-                                free(dimensions);
-                                break;
+                            // we won't do any semantic propogation here, since we are not sure about the real array offset
+                            generate("F_TO_I %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
                             }
-                            case TYPE_BOOL: {
-                                $1->value.double_array[index] = $3->value.bool_val ? 1.0 : 0.0;
-                                generate("I_TO_F %s %s[%zu]\n", $3->name, $1->name, index);
-
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_PROGRAM_NAME: {
-                                yyerror_name("Cannot assign program name to double array.", "Type");
-                                break;
-                            }
-                            case TYPE_STRING: {
-                                yyerror_name("Cannot assign string to double array.", "Type");
-                                break;
-                            }
-                            default: {
-                                yyerror_name("Unknown data type in assignment statement.", "Parsing");
-                                break;
-                            }
+                            free(dimensions);
+                            break;
                         }
-                        break;
+                        case TYPE_BOOL: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.int_array[offset->value.int_val] = $3->value.bool_val;
+                            }
+                            // we won't do any semantic propogation here, since we are not sure about the real array offset
+                            generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            }
+                            free(dimensions);
+                            break;
+                        }
+                        case TYPE_STRING: {
+                            yyerror_name("Cannot assign string to integer array.", "Type");
+                            break;
+                        }
+                        case TYPE_PROGRAM_NAME: {
+                            yyerror_name("Cannot assign program name to integer array.", "Type");
+                            break;
+                        }
+                        default: {
+                            yyerror_name("Unknown data type in assignment statement.", "Parsing");
+                            break;
+                        }
                     }
-                    case TYPE_STRING: {
-                        if ($3->type != TYPE_STRING) {
-                            yyerror_name("Cannot assign non-string value to string array.", "Type");
-                        }
-                        $1->value.str_array[index] = (char *)realloc($1->value.str_array[index], strlen($3->value.str_val) + 1);
-                        if ($1->value.str_array[index] == NULL) {
-                            yyerror_name("Out of memory when realloc.", "Parsing");
-                        }
-                        strcpy($1->value.str_array[index], $3->value.str_val);
-                        yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                        
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3->value.str_val);
-                        if (!$3->is_static_checkable) {
-                            logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
-                        }
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        switch ($3->type) {
-                            case TYPE_BOOL: {
-                                $1->value.bool_array[index] = $3->value.bool_val;
-                                generate("I_STORE %s %s[%zu]\n", $3->name, $1->name, index);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_INT: {
-                                itob_array($3, $1, index);
-                                
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_DOUBLE: {
-                                ftob_array($3, $1, index);
-
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_PROGRAM_NAME: {
-                                yyerror_name("Cannot assign program name to boolean array.", "Type");
-                                break;
-                            }
-                            case TYPE_STRING: {
-                                yyerror_name("Cannot assign string to boolean array.", "Type");
-                                break;
-                            }
-                            default: {
-                                yyerror_name("Unknown data type in assignment statement.", "Parsing");
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot assign program name to array.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror_name("Unknown data type in assignment statement.", "Parsing");
-                        break;
-                    }
+                    break;
                 }
-            }
-            else { // Handle unstatic array assignment
-                symbol *offset = get_array_offset_unstatic($1->array_info, $1->array_pointer);
-                switch ($1->type) {
-                    case TYPE_INT: {
-                        if ($3->type != TYPE_INT && $3->type != TYPE_DOUBLE && $3->type != TYPE_BOOL) {
-                            yyerror_name("Cannot assign non-numeric value to integer array.", "Type");
-                        }
-                        switch ($3->type) {
-                            case TYPE_INT: {
-                                // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_DOUBLE: {
-                                // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                generate("F_TO_I %s %s[%s]\n", $3->name, $1->name, offset->name);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_BOOL: {
-                                // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_STRING: {
-                                yyerror_name("Cannot assign string to integer array.", "Type");
-                                break;
-                            }
-                            case TYPE_PROGRAM_NAME: {
-                                yyerror_name("Cannot assign program name to integer array.", "Type");
-                                break;
-                            }
-                            default: {
-                                yyerror_name("Unknown data type in assignment statement.", "Parsing");
-                                break;
-                            }
-                        }
-                        break;
+                case TYPE_DOUBLE: {
+                    if ($3->type != TYPE_DOUBLE && $3->type != TYPE_INT && $3->type != TYPE_BOOL) {
+                        yyerror_name("Cannot assign non-numeric value to double array.", "Type");
                     }
-                    case TYPE_DOUBLE: {
-                        if ($3->type != TYPE_DOUBLE && $3->type != TYPE_INT && $3->type != TYPE_BOOL) {
-                            yyerror_name("Cannot assign non-numeric value to double array.", "Type");
+                    switch ($3->type) {
+                        case TYPE_DOUBLE: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.double_array[offset->value.int_val] = $3->value.double_val;
+                            }
+                            // we won't do any semantic propogation here, since we are not sure about the real array offset
+                            generate("F_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                            }
+                            free(dimensions);
+                            break;
                         }
-                        switch ($3->type) {
-                            case TYPE_DOUBLE: {
-                                // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                generate("F_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
-                                }
-                                free(dimensions);
-                                break;
+                        case TYPE_INT: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.double_array[offset->value.int_val] = $3->value.int_val;
                             }
-                            case TYPE_INT: {
-                                // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                generate("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
-                                }
-                                free(dimensions);
-                                break;
+                            // we won't do any semantic propogation here, since we are not sure about the real array offset
+                            generate("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                             }
-                            case TYPE_BOOL: {
-                                // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                generate("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_STRING: {
-                                yyerror_name("Cannot assign string to double array.", "Type");
-                                break;
-                            }
-                            case TYPE_PROGRAM_NAME: {
-                                yyerror_name("Cannot assign program name to double array.", "Type");
-                                break;
-                            }
-                            default: {
-                                yyerror_name("Unknown data type in assignment statement.", "Parsing");
-                                break;
-                            }
+                            free(dimensions);
+                            break;
                         }
-                        break;
+                        case TYPE_BOOL: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.double_array[offset->value.int_val] = $3->value.bool_val;
+                            }
+                            // we won't do any semantic propogation here, since we are not sure about the real array offset
+                            generate("I_TO_F %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            }
+                            free(dimensions);
+                            break;
+                        }
+                        case TYPE_STRING: {
+                            yyerror_name("Cannot assign string to double array.", "Type");
+                            break;
+                        }
+                        case TYPE_PROGRAM_NAME: {
+                            yyerror_name("Cannot assign program name to double array.", "Type");
+                            break;
+                        }
+                        default: {
+                            yyerror_name("Unknown data type in assignment statement.", "Parsing");
+                            break;
+                        }
                     }
-                    case TYPE_STRING: {
-                        if ($3->type != TYPE_STRING) {
-                            yyerror_name("Cannot assign non-string value to string array.", "Type");
-                        }
-                        // we won't do any semantic propogation here, since we are not sure about the real array offset
-                        yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                        
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3->value.str_val);
-                        if (!$3->is_static_checkable) {
-                            logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
-                        }
-                        free(dimensions);
-                        break;
+                    break;
+                }
+                case TYPE_STRING: {
+                    if ($3->type != TYPE_STRING) {
+                        yyerror_name("Cannot assign non-string value to string array.", "Type");
                     }
-                    case TYPE_BOOL: {
-                        if ($3->type != TYPE_BOOL && $3->type != TYPE_INT && $3->type != TYPE_DOUBLE) {
-                            yyerror_name("Cannot assign non-boolean value to boolean array.", "Type");
-                        }
-                        switch ($3->type) {
-                            case TYPE_BOOL: {
-                                // we won't do any semantic propogation here, since we are not sure about the real array offset
-                                generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
-                                }
-                                free(dimensions);
-                                break;
+                    // we won't do any semantic propogation here, since we are not sure about the real array offset
+                    yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                    
+                    dimensions = array_dimensions_to_string($1->array_pointer);
+                    logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := \"%s\";)\n", $1->name, dimensions, $3->value.str_val);
+                    if (!$3->is_static_checkable) {
+                        logging("\t> %s = \"%s\" is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.str_val);
+                    }
+                    free(dimensions);
+                    break;
+                }
+                case TYPE_BOOL: {
+                    if ($3->type != TYPE_BOOL && $3->type != TYPE_INT && $3->type != TYPE_DOUBLE) {
+                        yyerror_name("Cannot assign non-boolean value to boolean array.", "Type");
+                    }
+                    switch ($3->type) {
+                        case TYPE_BOOL: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.bool_array[offset->value.int_val] = $3->value.bool_val;
                             }
-                            case TYPE_INT: {
-                                itob_array_unstatic($3, $1, offset);
+                            // we won't do any semantic propogation here, since we are not sure about the real array offset
+                            generate("I_STORE %s %s[%s]\n", $3->name, $1->name, offset->name);
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %s;)\n", $1->name, dimensions, $3->value.bool_val ? "true" : "false");
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.bool_val ? "true" : "false");
+                            }
+                            free(dimensions);
+                            break;
+                        }
+                        case TYPE_INT: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.bool_array[offset->value.int_val] = $3->value.int_val;
+                            }
+                            itob_array($3, $1, offset);
 
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
-                                }
-                                free(dimensions);
-                                break;
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %lld;)\n", $1->name, dimensions, $3->value.int_val);
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.int_val);
                             }
-                            case TYPE_DOUBLE: {
-                                ftob_array_unstatic($3, $1, offset);
-                                
-                                dimensions = array_dimensions_to_string($1->array_pointer);
-                                logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
-                                if (!$3->is_static_checkable) {
-                                    logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
-                                }
-                                free(dimensions);
-                                break;
-                            }
-                            case TYPE_PROGRAM_NAME: {
-                                yyerror_name("Cannot assign program name to boolean array.", "Type");
-                                break;
-                            }
-                            case TYPE_STRING: {
-                                yyerror_name("Cannot assign string to boolean array.", "Type");
-                                break;
-                            }
-                            default: {
-                                yyerror_name("Unknown data type in assignment statement.", "Parsing");
-                                break;
-                            }
+                            free(dimensions);
+                            break;
                         }
-                        break;
+                        case TYPE_DOUBLE: {
+                            if ($1->array_pointer.is_static_checkable) {
+                                $1->value.bool_array[offset->value.int_val] = $3->value.double_val;
+                            }
+                            ftob_array($3, $1, offset);
+                            
+                            dimensions = array_dimensions_to_string($1->array_pointer);
+                            logging("> assignment_statement -> id ASSIGN expression semicolon (assignment -> %s%s := %g;)\n", $1->name, dimensions, $3->value.double_val);
+                            if (!$3->is_static_checkable) {
+                                logging("\t> %s = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, $3->value.double_val);
+                            }
+                            free(dimensions);
+                            break;
+                        }
+                        case TYPE_PROGRAM_NAME: {
+                            yyerror_name("Cannot assign program name to boolean array.", "Type");
+                            break;
+                        }
+                        case TYPE_STRING: {
+                            yyerror_name("Cannot assign string to boolean array.", "Type");
+                            break;
+                        }
+                        default: {
+                            yyerror_name("Unknown data type in assignment statement.", "Parsing");
+                            break;
+                        }
                     }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot assign program name to array.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror_name("Unknown data type in assignment statement.", "Parsing");
-                        break;
-                    }
+                    break;
+                }
+                case TYPE_PROGRAM_NAME: {
+                    yyerror_name("Cannot assign program name to array.", "Type");
+                    break;
+                }
+                default: {
+                    yyerror_name("Unknown data type in assignment statement.", "Parsing");
+                    break;
                 }
             }
         }
@@ -3031,8 +2800,12 @@ assignment_statement:
         generate("\n");
     }
     ;
+// TODO: fix use array args as parameter will load arg incorrectly
 expression:
     expression PLUS_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         switch ($1->type) {
             case TYPE_INT: {
                 switch ($3->type) {
@@ -3200,6 +2973,9 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
     }
     | expression MINUS_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         switch ($1->type) {
             case TYPE_INT: {
                 switch ($3->type) {
@@ -3351,6 +3127,9 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
     }
     | expression MULTIPLY_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         switch ($1->type) {
             case TYPE_INT: {
                 switch ($3->type) {
@@ -3502,6 +3281,9 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
     }
     | expression DIVISION_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         switch ($1->type) {
             case TYPE_INT: {
                 switch ($3->type) {
@@ -3684,6 +3466,8 @@ expression:
         $$->is_static_checkable = $1->is_static_checkable && $3->is_static_checkable; // propagate static checkability
     }
     | MINUS_MICROEX expression %prec UMINUS_MICROEX {
+        $2 = extract_array_symbol($2);
+
         switch ($2->type) {
             case TYPE_INT: {
                 $$ = add_temp_symbol(TYPE_INT);
@@ -3729,6 +3513,8 @@ expression:
         $$->is_static_checkable = $2->is_static_checkable; // propagate static checkability
     }
     | LEFT_PARENT_MICROEX expression RIGHT_PARENT_MICROEX {
+        $2 = extract_array_symbol($2);
+
         $$ = $2;
         switch ($2->type) {
             case TYPE_INT: {
@@ -3760,31 +3546,57 @@ expression:
         // since propagate static checkability inherited from $2, so we don't need to set it again
     }
     | expression GREAT_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         $$ = condition_process($1, GREAT_MICROEX, $3).result_ptr;
     }
     | expression LESS_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         $$ = condition_process($1, LESS_MICROEX, $3).result_ptr;
     }
     | expression GREAT_EQUAL_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         $$ = condition_process($1, GREAT_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression LESS_EQUAL_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         $$ = condition_process($1, LESS_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression EQUAL_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         $$ = condition_process($1, EQUAL_MICROEX, $3).result_ptr;
     }
     | expression NOT_EQUAL_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         $$ = condition_process($1, NOT_EQUAL_MICROEX, $3).result_ptr;
     }
     | expression AND_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+        
         $$ = condition_process($1, AND_MICROEX, $3).result_ptr;
     }
     | expression OR_MICROEX expression {
+        $1 = extract_array_symbol($1);
+        $3 = extract_array_symbol($3);
+
         $$ = condition_process($1, OR_MICROEX, $3).result_ptr;
     }
     | NOT_MICROEX expression {
         $$ = add_temp_symbol(TYPE_BOOL);
+        $2 = extract_array_symbol($2);
+
         switch ($2->type) {
             case TYPE_BOOL: {
                 $$->value.bool_val = !$2->value.bool_val;
@@ -3829,116 +3641,8 @@ expression:
             yyerror_name("Variable not declared.", "Undeclared");
         }
 
-        if ($1->array_pointer.dimensions > 0) { // array access
-            if ($1->array_info.dimensions == 0) {
-                yyerror_name("Array access with non-array variable.", "Type");
-            }
-            if ($1->array_info.dimensions != $1->array_pointer.dimensions) {
-                yyerror_name("Array access with wrong number of dimensions.", "Index");
-            }
-            if ($1->array_pointer.is_static_checkable) {
-                size_t index = get_array_offset($1->array_info, $1->array_pointer);
-                switch ($1->type) {
-                    case TYPE_INT: {
-                        $$ = add_temp_symbol(TYPE_INT);
-                        $$->value.int_val = $1->value.int_array[index];
-                        generate("I_STORE %s[%zu] %s\n", $1->name, index, $$->name);
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        $$->value.double_val = $1->value.double_array[index];
-                        generate("F_STORE %s[%zu] %s\n", $1->name, index, $$->name);
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        $$ = add_temp_symbol(TYPE_STRING);
-                        $$->value.str_val = strdup($1->value.str_array[index]);
-                        yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        $$ = add_temp_symbol(TYPE_BOOL);
-                        $$->value.bool_val = $1->value.bool_array[index];
-                        generate("I_STORE %s[%zu] %s\n", $1->name, index, $$->name);
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> expression -> id (expression -> %s%s)\n", $$->name, dimensions);
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot access program name as an array.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror_name("Unknown data type in array access.", "Parsing");
-                        break;
-                    }
-                }
-            }
-            else {
-                symbol *offset = get_array_offset_unstatic($1->array_info, $1->array_pointer);
-                switch ($1->type) {
-                    case TYPE_INT: {
-                        // we won't do any semantic propogation here, since we are not sure about the real array offset
-                        $$ = add_temp_symbol(TYPE_INT);
-                        generate("I_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        // we won't do any semantic propogation here, since we are not sure about the real array offset
-                        $$ = add_temp_symbol(TYPE_DOUBLE);
-                        generate("F_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_STRING: {
-                        // we won't do any semantic propogation here, since we are not sure about the real array offset
-                        $$ = add_temp_symbol(TYPE_STRING);
-                        yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        // we won't do any semantic propogation here, since we are not sure about the real array offset
-                        $$ = add_temp_symbol(TYPE_BOOL);
-                        generate("I_STORE %s[%s] %s\n", $1->name, offset->name, $$->name);
-                        dimensions = array_dimensions_to_string($1->array_pointer);
-                        logging("> expression -> id (expression -> %s%s)\n", $1->name, dimensions);
-                        free(dimensions);
-                        break;
-                    }
-                    case TYPE_PROGRAM_NAME: {
-                        yyerror_name("Cannot access program name as an array.", "Type");
-                        break;
-                    }
-                    default: {
-                        yyerror_name("Unknown data type in array access.", "Parsing");
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            $$ = $1;
-            logging("> expression -> id (expression -> %s)\n", $1->name);
-        }
+        $$ = $1;
+        logging("> expression -> id (expression -> %s)\n", $1->name);
 
         $$->is_static_checkable = $1->is_static_checkable; // propagate static checkability
     }
@@ -3959,6 +3663,10 @@ expression:
         }
         if ($1->function_info->argc != expression_list.len) {
             tmp = (char *)malloc(sizeof(char) * (41 + 2 * SIZE_T_CHARLEN));
+            if (tmp == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            tmp[0] = '\0';
             sprintf(tmp, "Unexcept number of args, except %zu, got %zu", $1->function_info->argc, expression_list.len);
             yyerror_name(tmp, "ArgsNumbers");
         }
@@ -3979,10 +3687,43 @@ expression:
                 sprintf(tmp, "Args at position %zu except type %s, but got %s.", i, type1, type2);
                 yyerror_name(tmp, "Type");
             }
-            if ($1->function_info->args[i]->array_info.dimensions > 0) {
+            if ($1->function_info->args[i]->array_info.dimensions > 0 && current->symbol_ptr->array_pointer.dimensions > 0) {
+                tmp = (char *)malloc(sizeof(char) * (71 + SIZE_T_CHARLEN));
+                if (tmp == NULL) {
+                    yyerror_name("Out of memory when malloc.", "Parsing");
+                }
+                tmp[0] = '\0';
+                sprintf(tmp, "Args at position %zu except array symbol, but got array access variable.", i);
+                yyerror_name(tmp, "Type");
+            }
+            if ($1->function_info->args[i]->array_info.dimensions > 0 && current->symbol_ptr->array_info.dimensions == 0) {
+                tmp = (char *)malloc(sizeof(char) * (69 + SIZE_T_CHARLEN));
+                if (tmp == NULL) {
+                    yyerror_name("Out of memory when malloc.", "Parsing");
+                }
+                tmp[0] = '\0';
+                sprintf(tmp, "Args at position %zu except array symbol, but got non-array variable.", i);
+                yyerror_name(tmp, "Type");
+            }
+            if ($1->function_info->args[i]->array_info.dimensions == 0 && current->symbol_ptr->array_info.dimensions > 0) {
+                if (current->array_pointer.dimensions == 0) {
+                    tmp = (char *)malloc(sizeof(char) * (69 + SIZE_T_CHARLEN));
+                    if (tmp == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    tmp[0] = '\0';
+                    sprintf(tmp, "Args at position %zu except non-array symbol, but got array symbol.", i);
+                    yyerror_name(tmp, "Type");
+                }
+                else {
+                    current->symbol_ptr = extract_array_symbol(current->symbol_ptr);
+                }
+            }
+
+            if ($1->function_info->args[i]->array_info.dimensions > 0 && current->symbol_ptr->array_info.dimensions > 0) {
                 char *dim1 = array_dimensions_to_string($1->function_info->args[i]->array_info);
-                if ($1->function_info->args[i]->array_info.dimensions != current->array_pointer.dimensions) {
-                    char *dim2 = array_dimensions_to_string(current->array_pointer);
+                char *dim2 = array_dimensions_to_string(current->symbol_ptr->array_info);
+                if ($1->function_info->args[i]->array_info.dimensions != current->symbol_ptr->array_info.dimensions || strcmp(dim1, dim2) != 0) {
                     tmp = (char *)malloc(sizeof(char) * (59 + SIZE_T_CHARLEN + strlen(dim1) + strlen(dim2)));
                     if (tmp == NULL) {
                         yyerror_name("Out of memory when malloc.", "Parsing");
@@ -3995,7 +3736,7 @@ expression:
                 // copy value to arg's array
                 // all function now only call by value
                 size_t max_index = array_range($1->function_info->args[i]->array_info);
-                for (size_t index = 0; index < max_index; i++) {
+                for (size_t index = 0; index < max_index; index++) {
                     switch (current->symbol_ptr->type) {
                         case TYPE_INT:
                         case TYPE_BOOL: {
@@ -4005,12 +3746,12 @@ expression:
                             else {
                                 $1->function_info->args[i]->value.bool_array[index] = current->symbol_ptr->value.bool_array[index];
                             }
-                            generate("I_STORE %s%s %s%s\n", current->symbol_ptr->name, dim1, $1->function_info->args[i]->name, dim1);
+                            generate("I_STORE %s[%zu] %s[%zu]\n", current->symbol_ptr->name, index, $1->function_info->args[i]->name, index);
                             break;
                         }
                         case TYPE_DOUBLE: {
                             $1->function_info->args[i]->value.double_array[index] = current->symbol_ptr->value.double_array[index];
-                            generate("F_STORE %s%s %s%s\n", current->symbol_ptr->name, dim1, $1->function_info->args[i]->name, dim1);
+                            generate("F_STORE %s[%zu] %s[%zu]\n", current->symbol_ptr->name, index, $1->function_info->args[i]->name, index);
                             break;
                         }
                         case TYPE_STRING: {
@@ -4030,6 +3771,9 @@ expression:
                         }
                     }
                 }
+
+                free(dim1);
+                free(dim2);
             }
             else {
                 switch (current->symbol_ptr->type) {
@@ -4046,7 +3790,7 @@ expression:
                     }
                     case TYPE_DOUBLE: {
                         $1->function_info->args[i]->value.double_val = current->symbol_ptr->value.double_val;
-                        generate("F_STORE %s%s %s%s\n", current->symbol_ptr->name, $1->function_info->args[i]->name);
+                        generate("F_STORE %s %s\n", current->symbol_ptr->name, $1->function_info->args[i]->name);
                         break;
                     }
                     case TYPE_STRING: {
@@ -4127,6 +3871,10 @@ expression:
         }
         if ($1->function_info->argc != id_list.len) {
             tmp = (char *)malloc(sizeof(char) * (41 + 2 * SIZE_T_CHARLEN));
+            if (tmp == NULL) {
+                yyerror_name("Out of memory when malloc.", "Parsing");
+            }
+            tmp[0] = '\0';
             sprintf(tmp, "Unexcept number of args, except %zu, got %zu", $1->function_info->argc, id_list.len);
             yyerror_name(tmp, "ArgsNumbers");
         }
@@ -4199,33 +3947,31 @@ read_statement:
                 yyerror_name("Variable not declared.", "Undeclared");
             }
             if (current->array_pointer.dimensions > 0) { // array access
-                if (current->array_pointer.is_static_checkable) {
-                    size_t index = get_array_offset(current->symbol_ptr->array_info, current->array_pointer);
-                    switch (current->symbol_ptr->type) {
-                        case TYPE_INT: {
-                            generate("CALL read_i %s[%zu]\n", current->symbol_ptr->name, index);
-                            break;
-                        }
-                        case TYPE_DOUBLE: {
-                            generate("CALL read_f %s[%zu]\n", current->symbol_ptr->name, index);
-                            break;
-                        }
-                        case TYPE_STRING: {
-                            yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                            break;
-                        }
-                        case TYPE_BOOL: {
-                            generate("CALL read_b %s[%zu]\n", current->symbol_ptr->name, index);
-                            break;
-                        }
-                        case TYPE_PROGRAM_NAME: {
-                            yyerror_name("Cannot access program name as an array.", "Type");
-                            break;
-                        }
-                        default: {
-                            yyerror_name("Unknown data type in array access.", "Parsing");
-                            break;
-                        }
+                symbol *offset = get_array_offset(current->symbol_ptr->array_info, current->array_pointer);
+                switch (current->symbol_ptr->type) {
+                    case TYPE_INT: {
+                        generate("CALL read_i %s[%s]\n", current->symbol_ptr->name, offset->name);
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        generate("CALL read_f %s[%s]\n", current->symbol_ptr->name, offset->name);
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                        break;
+                    }
+                    case TYPE_BOOL: {
+                        generate("CALL read_b %s[%s]\n", current->symbol_ptr->name, offset->name);
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME: {
+                        yyerror_name("Cannot access program name as an array.", "Type");
+                        break;
+                    }
+                    default: {
+                        yyerror_name("Unknown data type in array access.", "Parsing");
+                        break;
                     }
                 }
             } 
@@ -4303,30 +4049,55 @@ write_statement:
             if (current->symbol_ptr->type == TYPE_UNKNOWN) {
                 yyerror_name("Variable not declared.", "Undeclared");
             }
-            switch (current->symbol_ptr->type) {
-                case TYPE_INT: {
-                    generate("CALL write_i %s\n", current->symbol_ptr->name);
-                    break;
+            if (current->array_pointer.dimensions > 0) {
+                symbol *offset = get_array_offset(current->symbol_ptr->array_info, current->array_pointer);
+                switch (current->symbol_ptr->type) {
+                    case TYPE_BOOL:
+                    case TYPE_INT: {
+                        generate("CALL write_i %s[%s]\n", current->symbol_ptr->name, offset->name);
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        generate("CALL write_f %s[%s]\n", current->symbol_ptr->name, offset->name);
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME: {
+                        yyerror_name("Cannot access program name in write statement.", "Type");
+                        break;
+                    }
+                    default: {
+                        yyerror_name("Unknown data type in variable access.", "Parsing");
+                        break;
+                    }
                 }
-                case TYPE_DOUBLE: {
-                    generate("CALL write_f %s\n", current->symbol_ptr->name);
-                    break;
-                }
-                case TYPE_STRING: {
-                    yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
-                    break;
-                }
-                case TYPE_BOOL: {
-                    generate("CALL write_b %s\n", current->symbol_ptr->name);
-                    break;
-                }
-                case TYPE_PROGRAM_NAME: {
-                    yyerror_name("Cannot access program name in write statement.", "Type");
-                    break;
-                }
-                default: {
-                    yyerror_name("Unknown data type in variable access.", "Parsing");
-                    break;
+            }
+            else {
+                switch (current->symbol_ptr->type) {
+                    case TYPE_BOOL:
+                    case TYPE_INT: {
+                        generate("CALL write_i %s\n", current->symbol_ptr->name);
+                        break;
+                    }
+                    case TYPE_DOUBLE: {
+                        generate("CALL write_f %s\n", current->symbol_ptr->name);
+                        break;
+                    }
+                    case TYPE_STRING: {
+                        yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                        break;
+                    }
+                    case TYPE_PROGRAM_NAME: {
+                        yyerror_name("Cannot access program name in write statement.", "Type");
+                        break;
+                    }
+                    default: {
+                        yyerror_name("Unknown data type in variable access.", "Parsing");
+                        break;
+                    }
                 }
             }
 
@@ -4351,7 +4122,15 @@ write_statement:
                 strcat(expressions_name.str, ", ");
             }
             strcat(expressions_name.str, current->symbol_ptr->name);
-            // expression semantics record is already handle array access in expression rule
+            if (current->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->array_pointer);
+                if (!realloc_char(&expressions_name, expressions_name.capacity + strlen(dimensions) + 1)) {
+                    // +1 for null terminator
+                    yyerror_name("Out of memory when realloc.", "Parsing");
+                }
+                strcat(expressions_name.str, dimensions);
+                free(dimensions);
+            }
             current = current->next;
         }
         logging("> write_statement -> write left_parent expression_list right_parent semicolon (write_statement -> write(%s);)\n", expressions_name.str);
@@ -4365,7 +4144,14 @@ expression_list:
     expression {
         $$ = $1;
         add_expression_node($1);
-        logging("> expression_list -> expression (expression_list -> %s)\n", $1->name);
+        if ($1->array_pointer.dimensions > 0) {
+            dimensions = array_dimensions_to_string($1->array_pointer);
+            logging("> expression_list -> expression (expression_list -> %s%s)\n", $1->name, dimensions);
+            free(dimensions);
+        }
+        else {
+            logging("> expression_list -> expression (expression_list -> %s)\n", $1->name);
+        }
     }
     | expression_list COMMA_MICROEX expression {
         $$ = $1;
@@ -4395,7 +4181,15 @@ expression_list:
                 strcat(expressions_name.str, ", ");
             }
             strcat(expressions_name.str, current->symbol_ptr->name);
-            // expression semantics record is already handle array access in expression rule
+            if (current->array_pointer.dimensions > 0) {
+                dimensions = array_dimensions_to_string(current->array_pointer);
+                if (!realloc_char(&expressions_name, expressions_name.capacity + strlen(dimensions) + 1)) {
+                    // +1 for null terminator
+                    yyerror_name("Out of memory when realloc.", "Parsing");
+                }
+                strcat(expressions_name.str, dimensions);
+                free(dimensions);
+            }
             current = current->next;
         }
         logging("> expression_list -> expression_list COMMA expression (expression_list -> %s)\n", expressions_name.str);
@@ -4405,12 +4199,14 @@ expression_list:
 // if statement
 if_statement:
     if_prefix if_suffix {
-        generate("%s:\n", $1->name); // false label for if condition isn't true
+        generate("%s:\n", $1.false_label->name); // false label for if condition isn't true
+        generate("%s:\n", $1.end_label->name); // endif label for if statement going done
         logging("> if_statement -> if_prefix if_suffix\n");
         
         generate("\n");
     }
     | if_else_prefix if_suffix {
+        generate("%s:\n", $1.end_label->name); // endif label for if statement going done
         logging("> if_statement -> if_else_prefix if_suffix\n");
         
         generate("\n");
@@ -4418,15 +4214,22 @@ if_statement:
     ;
 if_prefix:
     IF_MICROEX LEFT_PARENT_MICROEX expression RIGHT_PARENT_MICROEX THEN_MICROEX {
+        $3 = extract_array_symbol($3);
+
         label *true_label = add_label();
         label *false_label = add_label();
-        $$ = false_label; // propagate false label for else part
+        label *end_label = add_label();
+
+        $$.true_label = true_label;
+        $$.false_label = false_label;
+        $$.end_label = end_label;
+
         switch ($3->type) {
             case TYPE_INT:
             case TYPE_BOOL: {
                 generate("I_CMP 0 %s\n", $3->name);
                 generate("JNE %s\n", true_label->name);
-                generate("JUMP %s\n", false_label->name);
+                generate("J %s\n", false_label->name);
                 generate("%s:\n", true_label->name);
                 if ($3->type == TYPE_INT) {
                     logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%lld) then)\n", $3->value.int_val);
@@ -4438,7 +4241,7 @@ if_prefix:
             case TYPE_DOUBLE: {
                 generate("F_CMP 0.0 %s\n", $3->name);
                 generate("JNE %s\n", true_label->name);
-                generate("JUMP %s\n", false_label->name);
+                generate("J %s\n", false_label->name);
                 generate("%s:\n", true_label->name);
                 logging("> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (%g) then)\n", $3->value.double_val);
                 break;
@@ -4460,7 +4263,10 @@ if_prefix:
     ;
 if_else_prefix:
     if_prefix statement_list ELSE_MICROEX {
-        generate("%s:\n", $1->name); // false label for if condition isn't true
+        $$ = $1;
+
+        generate("J %s\n", $1.end_label->name); // jump to `endif` if condition is true
+        generate("%s:\n", $1.false_label->name); // false label for if condition isn't true
         logging("> if_statement -> if_prefix statement_list else if_suffix\n");
     }
     ;
@@ -4475,70 +4281,45 @@ for_statement:
     for_prefix statement_list ENDFOR_MICROEX {
         // increment/decrement the for variable
         if ($1.for_variable->array_pointer.dimensions > 0) {
-            if ($1.for_variable->array_pointer.is_static_checkable) {
-                size_t index = get_array_offset($1.for_variable->array_info, $1.for_variable->array_pointer);
-                switch ($1.for_variable->type) {
-                    case TYPE_INT: {
-                        if ($1.for_direction == DIRECTION_TO) {
-                            $1.for_variable->value.int_array[index]++;
-                            generate("INC %s[%zu]\n", $1.for_variable->name, index);
+            symbol *offset = get_array_offset($1.for_variable->array_info, $1.for_variable->array_pointer);
+            switch ($1.for_variable->type) {
+                case TYPE_INT: {
+                    if ($1.for_direction == DIRECTION_TO) {
+                        if ($1.for_variable->array_pointer.is_static_checkable) {
+                            $1.for_variable->value.int_array[offset->value.int_val]++;
                         }
-                        else {
-                            $1.for_variable->value.int_array[index]--;
-                            generate("DEC %s[%zu]\n", $1.for_variable->name, index);
+                        generate("INC %s[%s]\n", $1.for_variable->name, offset->name);
+                    }
+                    else {
+                        if ($1.for_variable->array_pointer.is_static_checkable) {
+                            $1.for_variable->value.int_array[offset->value.int_val]--;
                         }
-                        break;
+                        generate("DEC %s[%s]\n", $1.for_variable->name, offset->name);
                     }
-                    case TYPE_DOUBLE: {
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        if ($1.for_direction == DIRECTION_TO) {
-                            $1.for_variable->value.double_array[index]++;
-                            generate("F_ADD %s[%zu] 1.0 %s\n", $1.for_variable->name, index, temp_symbol->name);
-                        } else {
-                            $1.for_variable->value.double_array[index]--;
-                            generate("F_SUB %s[%zu] 1.0 %s\n", $1.for_variable->name, index, temp_symbol->name);
-                        }
-                        generate("F_STORE %s %s[%zu]\n", temp_symbol->name, $1.for_variable->name, index);
-                        break;
-                    }
-                    case TYPE_BOOL:
-                    case TYPE_STRING:
-                    case TYPE_PROGRAM_NAME:
-                    default: {
-                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                        break;
-                    }
+                    break;
                 }
-            }
-            else {
-                symbol *offset = get_array_offset_unstatic($1.for_variable->array_info, $1.for_variable->array_pointer);
-                switch ($1.for_variable->type) {
-                    case TYPE_INT: {
-                        if ($1.for_direction == DIRECTION_TO) {
-                            generate("INC %s[%s]\n", $1.for_variable->name, offset->name);
+                case TYPE_DOUBLE: {
+                    symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
+                    if ($1.for_direction == DIRECTION_TO) {
+                        if ($1.for_variable->array_pointer.is_static_checkable) {
+                            $1.for_variable->value.double_array[offset->value.int_val]++;
                         }
-                        else {
-                            generate("DEC %s[%s]\n", $1.for_variable->name, offset->name);
+                        generate("F_ADD %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
+                    } else {
+                        if ($1.for_variable->array_pointer.is_static_checkable) {
+                            $1.for_variable->value.double_array[offset->value.int_val]--;
                         }
-                        break;
+                        generate("F_SUB %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
                     }
-                    case TYPE_DOUBLE: {
-                        symbol *temp_symbol = add_temp_symbol(TYPE_DOUBLE);
-                        if ($1.for_direction == DIRECTION_TO) {
-                            generate("F_ADD %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
-                        } else {
-                            generate("F_SUB %s[%s] 1.0 %s\n", $1.for_variable->name, offset->name, temp_symbol->name);
-                        }
-                        generate("F_STORE %s %s[%s]\n", temp_symbol->name, $1.for_variable->name, offset->name);
-                        break;
-                    }
-                    case TYPE_BOOL:
-                    case TYPE_STRING:
-                    case TYPE_PROGRAM_NAME:
-                    default: {
-                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                        break;
-                    }
+                    generate("F_STORE %s %s[%s]\n", temp_symbol->name, $1.for_variable->name, offset->name);
+                    break;
+                }
+                case TYPE_BOOL:
+                case TYPE_STRING:
+                case TYPE_PROGRAM_NAME:
+                default: {
+                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                    break;
                 }
             }
         }
@@ -4599,6 +4380,8 @@ for_prefix:
         if ($7->type != TYPE_INT && $7->type != TYPE_DOUBLE && $7->type != TYPE_BOOL) {
             yyerror_name("Loop end expression must be of type int, double or bool.", "Type");
         }
+        $5 = extract_array_symbol($5);
+        $7 = extract_array_symbol($7);
 
         // loop variable initialization
         if ($3->array_pointer.dimensions > 0) {
@@ -4608,360 +4391,198 @@ for_prefix:
             if ($3->array_info.dimensions != $3->array_pointer.dimensions) {
                 yyerror_name("Array access with wrong number of dimensions.", "Index");
             }
-            if ($3->array_pointer.is_static_checkable) {
-                size_t index = get_array_offset($3->array_info, $3->array_pointer);
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        switch ($5->type) {
-                            case TYPE_BOOL: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %s))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %lld))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %g))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+            symbol *offset = get_array_offset($3->array_info, $3->array_pointer);
+            switch ($3->type) {
+                case TYPE_INT: {
+                    switch ($5->type) {
+                        case TYPE_BOOL: {
+                            switch ($7->type) {
+                                case TYPE_BOOL: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    break;
                                 }
-                                generate("I_STORE %s %s[%zu]\n", $5->name, $3->name, index);
-                                break;
-                            }
-                            case TYPE_INT: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %s))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %lld))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %g))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                                case TYPE_INT: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    break;
                                 }
-                                generate("I_STORE %s %s[%zu]\n", $5->name, $3->name, index);
-                                break;
-                            }
-                            case TYPE_DOUBLE: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %s))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %lld))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %g))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                                case TYPE_DOUBLE: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    break;
                                 }
-                                generate("F_TO_I %s %s[%zu]\n", $5->name, $3->name, index);
-                                break;
+                                case TYPE_STRING:
+                                case TYPE_PROGRAM_NAME:
+                                default: {
+                                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                                    break;
+                                }
                             }
-                            case TYPE_STRING: 
-                            case TYPE_PROGRAM_NAME: 
-                            default: {
-                                yyerror_name("Impossible data type when parsing.", "Parsing");
-                                break;
+                            if ($3->array_pointer.is_static_checkable) {
+                                $3->value.int_array[offset->value.int_val] = $5->value.bool_val;
                             }
+                            generate("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            break;
                         }
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        switch ($5->type) {
-                            case TYPE_BOOL: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %s))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %lld))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %s %s %g))\n", $3->name, index, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                        case TYPE_INT: {
+                            switch ($7->type) {
+                                case TYPE_BOOL: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    break;
                                 }
-                                generate("I_TO_F %s %s[%zu]\n", $5->name, $3->name, index);
-                                break;
-                            }
-                            case TYPE_INT: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %s))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %lld))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %lld %s %g))\n", $3->name, index, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                                case TYPE_INT: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    break;
                                 }
-                                generate("I_TO_F %s %s[%zu]\n", $5->name, $3->name, index);
-                                break;
-                            }
-                            case TYPE_DOUBLE: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %s))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %lld))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%zu] := %g %s %g))\n", $3->name, index, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                                case TYPE_DOUBLE: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    break;
                                 }
-                                generate("F_STORE %s %s[%zu]\n", $5->name, $3->name, index);
-                                break;
+                                case TYPE_STRING:
+                                case TYPE_PROGRAM_NAME:
+                                default: {
+                                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                                    break;
+                                }
                             }
-                            case TYPE_STRING: 
-                            case TYPE_PROGRAM_NAME: 
-                            default: {
-                                yyerror_name("Impossible data type when parsing.", "Parsing");
-                                break;
+                            if ($3->array_pointer.is_static_checkable) {
+                                $3->value.int_array[offset->value.int_val] = $5->value.int_val;
                             }
+                            generate("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            break;
                         }
-                        break;
+                        case TYPE_DOUBLE: {
+                            switch ($7->type) {
+                                case TYPE_BOOL: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    break;
+                                }
+                                case TYPE_INT: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    break;
+                                }
+                                case TYPE_DOUBLE: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    break;
+                                }
+                                case TYPE_STRING:
+                                case TYPE_PROGRAM_NAME:
+                                default: {
+                                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                                    break;
+                                }
+                            }
+                            if ($3->array_pointer.is_static_checkable) {
+                                $3->value.int_array[offset->value.int_val] = $5->value.double_val;
+                            }
+                            generate("F_TO_I %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            break;
+                        }
+                        case TYPE_STRING:
+                        case TYPE_PROGRAM_NAME:
+                        default: {
+                            yyerror_name("Impossible data type when parsing.", "Parsing");
+                            break;
+                        }
                     }
-                    case TYPE_BOOL:
-                    case TYPE_STRING: 
-                    case TYPE_PROGRAM_NAME: 
-                    default: {
-                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                        break;
-                    }
+                    break;
                 }
-            }
-            else {
-                symbol *offset = get_array_offset_unstatic($3->array_info, $3->array_pointer);
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        switch ($5->type) {
-                            case TYPE_BOOL: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                case TYPE_DOUBLE: {
+                    switch ($5->type) {
+                        case TYPE_BOOL: {
+                            switch ($7->type) {
+                                case TYPE_BOOL: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    break;
                                 }
-                                generate("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
-                                break;
-                            }
-                            case TYPE_INT: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                                case TYPE_INT: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    break;
                                 }
-                                generate("I_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
-                                break;
-                            }
-                            case TYPE_DOUBLE: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                                case TYPE_DOUBLE: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    break;
                                 }
-                                generate("F_TO_I %s %s[%s]\n", $5->name, $3->name, offset->name);
-                                break;
+                                case TYPE_STRING:
+                                case TYPE_PROGRAM_NAME:
+                                default: {
+                                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                                    break;
+                                }
                             }
-                            case TYPE_STRING:
-                            case TYPE_PROGRAM_NAME:
-                            default: {
-                                yyerror_name("Impossible data type when parsing.", "Parsing");
-                                break;
+                            if ($3->array_pointer.is_static_checkable) {
+                                $3->value.double_array[offset->value.int_val] = $5->value.bool_val;
                             }
+                            generate("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            break;
                         }
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        switch ($5->type) {
-                            case TYPE_BOOL: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %s))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %lld))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %s %s %g))\n", $3->name, offset->name, $5->value.bool_val ? "true" : "false", ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                        case TYPE_INT: {
+                            switch ($7->type) {
+                                case TYPE_BOOL: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    break;
                                 }
-                                generate("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
-                                break;
-                            }
-                            case TYPE_INT: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %s))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                                case TYPE_INT: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %lld))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    break;
                                 }
-                                generate("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
-                                break;
-                            }
-                            case TYPE_DOUBLE: {
-                                switch ($7->type) {
-                                    case TYPE_BOOL: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
-                                        break;
-                                    }
-                                    case TYPE_INT: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
-                                        break;
-                                    }
-                                    case TYPE_DOUBLE: {
-                                        logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
-                                        break;
-                                    }
-                                    case TYPE_STRING:
-                                    case TYPE_PROGRAM_NAME:
-                                    default: {
-                                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                                        break;
-                                    }
+                                case TYPE_DOUBLE: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %lld %s %g))\n", $3->name, offset->name, $5->value.int_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    break;
                                 }
-                                generate("F_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
-                                break;
+                                case TYPE_STRING:
+                                case TYPE_PROGRAM_NAME:
+                                default: {
+                                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                                    break;
+                                }
                             }
-                            case TYPE_STRING:
-                            case TYPE_PROGRAM_NAME:
-                            default: {
-                                yyerror_name("Impossible data type when parsing.", "Parsing");
-                                break;
+                            if ($3->array_pointer.is_static_checkable) {
+                                $3->value.double_array[offset->value.int_val] = $5->value.int_val;
                             }
+                            generate("I_TO_F %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            break;
                         }
-                        break;
+                        case TYPE_DOUBLE: {
+                            switch ($7->type) {
+                                case TYPE_BOOL: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %s))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.bool_val ? "true" : "false");
+                                    break;
+                                }
+                                case TYPE_INT: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %lld))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.int_val);
+                                    break;
+                                }
+                                case TYPE_DOUBLE: {
+                                    logging("> for_prefix -> for left_parent id assign expression direction expression right_parent (for_prefix -> for (%s[%s] := %g %s %g))\n", $3->name, offset->name, $5->value.double_val, ($6 == DIRECTION_TO) ? "to" : "downto", $7->value.double_val);
+                                    break;
+                                }
+                                case TYPE_STRING:
+                                case TYPE_PROGRAM_NAME:
+                                default: {
+                                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                                    break;
+                                }
+                            }
+                            if ($3->array_pointer.is_static_checkable) {
+                                $3->value.double_array[offset->value.int_val] = $5->value.double_val;
+                            }
+                            generate("F_STORE %s %s[%s]\n", $5->name, $3->name, offset->name);
+                            break;
+                        }
+                        case TYPE_STRING:
+                        case TYPE_PROGRAM_NAME:
+                        default: {
+                            yyerror_name("Impossible data type when parsing.", "Parsing");
+                            break;
+                        }
                     }
-                    case TYPE_BOOL:
-                    case TYPE_STRING:
-                    case TYPE_PROGRAM_NAME:
-                    default: {
-                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                        break;
-                    }
+                    break;
+                }
+                case TYPE_BOOL:
+                case TYPE_STRING:
+                case TYPE_PROGRAM_NAME:
+                default: {
+                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                    break;
                 }
             }
         }
@@ -5195,68 +4816,34 @@ direction:
 while_statement:
     while_prefix statement_list ENDWHILE_MICROEX {
         if ($1.while_condition->array_pointer.dimensions > 0) {
-            if ($1.while_condition->array_pointer.is_static_checkable) {
-                size_t index = get_array_offset($1.while_condition->array_info, $1.while_condition->array_pointer);
-                switch ($1.while_condition->type) {
-                    case TYPE_INT: {
-                        generate("I_CMP 0 %s[%zu]\n", $1.while_condition->name, index);
-                        generate("JNE %s\n", $1.while_start_label->name);
+            symbol *offset = get_array_offset($1.while_condition->array_info, $1.while_condition->array_pointer);
+            switch ($1.while_condition->type) {
+                case TYPE_INT: {
+                    generate("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
+                    generate("JNE %s\n", $1.while_start_label->name);
 
-                        logging("> while_statement -> while_prefix statement_list endwhile\n");
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        generate("F_CMP 0.0 %s[%zu]\n", $1.while_condition->name, index);
-                        generate("JNE %s\n", $1.while_start_label->name);
-
-                        logging("> while_statement -> while_prefix statement_list endwhile\n");
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        generate("I_CMP 0 %s[%zu]\n", $1.while_condition->name, index);
-                        generate("JNE %s\n", $1.while_start_label->name);
-
-                        logging("> while_statement -> while_prefix statement_list endwhile\n");
-                        break;
-                    }
-                    case TYPE_STRING:
-                    case TYPE_PROGRAM_NAME:
-                    default: {
-                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                        break;
-                    }
+                    logging("> while_statement -> while_prefix statement_list endwhile\n");
+                    break;
                 }
-            }
-            else {
-                symbol *offset = get_array_offset_unstatic($1.while_condition->array_info, $1.while_condition->array_pointer);
-                switch ($1.while_condition->type) {
-                    case TYPE_INT: {
-                        generate("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
-                        generate("JNE %s\n", $1.while_start_label->name);
+                case TYPE_DOUBLE: {
+                    generate("F_CMP 0.0 %s[%s]\n", $1.while_condition->name, offset->name);
+                    generate("JNE %s\n", $1.while_start_label->name);
 
-                        logging("> while_statement -> while_prefix statement_list endwhile\n");
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        generate("F_CMP 0.0 %s[%s]\n", $1.while_condition->name, offset->name);
-                        generate("JNE %s\n", $1.while_start_label->name);
+                    logging("> while_statement -> while_prefix statement_list endwhile\n");
+                    break;
+                }
+                case TYPE_BOOL: {
+                    generate("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
+                    generate("JNE %s\n", $1.while_start_label->name);
 
-                        logging("> while_statement -> while_prefix statement_list endwhile\n");
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        generate("I_CMP 0 %s[%s]\n", $1.while_condition->name, offset->name);
-                        generate("JNE %s\n", $1.while_start_label->name);
-
-                        logging("> while_statement -> while_prefix statement_list endwhile\n");
-                        break;
-                    }
-                    case TYPE_STRING:
-                    case TYPE_PROGRAM_NAME:
-                    default: {
-                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                        break;
-                    }
+                    logging("> while_statement -> while_prefix statement_list endwhile\n");
+                    break;
+                }
+                case TYPE_STRING:
+                case TYPE_PROGRAM_NAME:
+                default: {
+                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                    break;
                 }
             }
         }
@@ -5307,78 +4894,35 @@ while_prefix:
         label *while_end_label = add_label();
 
         if ($3->array_pointer.dimensions > 0) {
-            if ($3->array_pointer.is_static_checkable) {
-                size_t index = get_array_offset($3->array_info, $3->array_pointer);
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        generate("I_CMP 0 %s[%zu]\n", $3->name, index);
-                        generate("JNE %s\n", while_start_label->name);
+            symbol *offset = get_array_offset($3->array_info, $3->array_pointer);
+            dimensions = array_dimensions_to_string($3->array_pointer);
+            switch ($3->type) {
+                case TYPE_INT: {
+                    generate("I_CMP 0 %s[%s]\n", $3->name, offset->name);
+                    generate("JNE %s\n", while_start_label->name);
 
-                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%lld))\n", $3->value.int_array[index]);
-                        if (!$3->is_static_checkable) {
-                            logging("\t> %s[%zu] = %lld is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.int_array[index]);
-                        }
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        generate("F_CMP 0.0 %s[%zu]\n", $3->name, index);
-                        generate("JNE %s\n", while_start_label->name);
-
-                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%g))\n", $3->value.double_array[index]);
-                        if (!$3->is_static_checkable) {
-                            logging("\t> %s[%zu] = %g is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.double_array[index]);
-                        }
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        generate("I_CMP 0 %s[%zu]\n", $3->name, index);
-                        generate("JNE %s\n", while_start_label->name);
-
-                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s))\n", $3->value.bool_array[index] ? "true" : "false");
-                        if (!$3->is_static_checkable) {
-                            logging("\t> %s[%zu] = %s is not static checkable, so parsing log may not be accurate.\n", $3->name, index, $3->value.bool_array[index] ? "true" : "false");
-                        }
-                        break;
-                    }
-                    case TYPE_STRING:
-                    case TYPE_PROGRAM_NAME:
-                    default: {
-                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                        break;
-                    }
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                    break;
                 }
-            }
-            else {
-                symbol *offset = get_array_offset_unstatic($3->array_info, $3->array_pointer);
-                dimensions = array_dimensions_to_string($3->array_pointer);
-                switch ($3->type) {
-                    case TYPE_INT: {
-                        generate("I_CMP 0 %s[%s]\n", $3->name, offset->name);
-                        generate("JNE %s\n", while_start_label->name);
+                case TYPE_DOUBLE: {
+                    generate("F_CMP 0.0 %s[%s]\n", $3->name, offset->name);
+                    generate("JNE %s\n", while_start_label->name);
 
-                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
-                        break;
-                    }
-                    case TYPE_DOUBLE: {
-                        generate("F_CMP 0.0 %s[%s]\n", $3->name, offset->name);
-                        generate("JNE %s\n", while_start_label->name);
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                    break;
+                }
+                case TYPE_BOOL: {
+                    generate("I_CMP 0 %s[%s]\n", $3->name, offset->name);
+                    generate("JNE %s\n", while_start_label->name);
 
-                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
-                        break;
-                    }
-                    case TYPE_BOOL: {
-                        generate("I_CMP 0 %s[%s]\n", $3->name, offset->name);
-                        generate("JNE %s\n", while_start_label->name);
-
-                        logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
-                        break;
-                    }
-                    case TYPE_STRING:
-                    case TYPE_PROGRAM_NAME:
-                    default: {
-                        yyerror_name("Impossible data type when parsing.", "Parsing");
-                        break;
-                    }
+                    logging("> while_prefix -> while left_parent expression right_parent (while_prefix -> while (%s%s))\n", $3->name, dimensions);
+                    break;
+                }
+                case TYPE_STRING:
+                case TYPE_PROGRAM_NAME:
+                default: {
+                    yyerror_name("Impossible data type when parsing.", "Parsing");
+                    break;
                 }
             }
         }

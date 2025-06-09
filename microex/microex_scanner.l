@@ -95,13 +95,16 @@ fnend [Ff][Nn][Ee][Nn][Dd]
     line_label();
 }
 {line_comment} {
+    line_word_count += yyleng;
     if (yytext[yyleng - 1] == '\n') {
         line_count += 1;
         line_word_count = 0;
     }
+    add_comment(yytext);
 }
 {multi_line_comment} {
     is_multi_line_comment = !is_multi_line_comment;
+    line_word_count += yyleng;
 }
 
 {program} {
@@ -927,67 +930,122 @@ void free_label_table() {
     }
 }
 
-size_t get_array_offset(array_type array_info, array_type array_pointer) {
-    if (array_info.dimensions == 0) {
-        yyerror_name("Array access on non-array variable.", "Type");
-    }
-    if (array_pointer.dimensions != array_info.dimensions) {
-        yyerror_name("Array access with wrong number of dimensions.", "Index");
-    }
-    if (!array_pointer.is_static_checkable) {
-        yyerror_name("Try to get array offset on non-static array. Use `get_array_offset_unstatic` instead.", "Parsing");
-    }
+/**
+ * Extract symbol from `symbol_ptr-><type>_array[get_array_offset(symbol_ptr->array_info, symbol_ptr->array_pointer)->value.int_val] and return new symbol for result.
+ * Otherwise will return original `symbol_ptr`
+ */
+symbol *extract_array_symbol(symbol *symbol_ptr) {
+    symbol *result = symbol_ptr;
 
-    logging("> Calculating offset for static array access.\n");
-
-    size_t offset = 0;
-    size_t stride = 1;
-    
-    for (size_t i = array_pointer.dimensions - 1; i <= array_pointer.dimensions - 1; i--) {
-        // use `i <= array_pointer.dimensions - 1` since `i` is unsigned
-        if (array_pointer.dimension_sizes[i] >= array_info.dimension_sizes[i]) {
-            yyerror_name("Array index out of bounds.", "Index");
+    if (symbol_ptr->array_pointer.dimensions > 0) { // array access
+        char *dimensions;
+        if (symbol_ptr->array_info.dimensions == 0) {
+            yyerror_name("Array access with non-array variable.", "Type");
+        }
+        if (symbol_ptr->array_info.dimensions != symbol_ptr->array_pointer.dimensions) {
+            yyerror_name("Array access with wrong number of dimensions.", "Index");
+        }
+        symbol *offset = get_array_offset(symbol_ptr->array_info, symbol_ptr->array_pointer);
+        switch (symbol_ptr->type) {
+            case TYPE_INT: {
+                result = add_temp_symbol(TYPE_INT);
+                if (symbol_ptr->array_pointer.is_static_checkable) {
+                    result->value.int_val = symbol_ptr->value.int_array[offset->value.int_val];
+                }
+                // we won't do any semantic propogation here, since we are not sure about the real array offset
+                generate("I_STORE %s[%s] %s\n", symbol_ptr->name, offset->name, result->name);
+                dimensions = array_dimensions_to_string(symbol_ptr->array_pointer);
+                logging("> extract array access: expression -> %s%s\n", symbol_ptr->name, dimensions);
+                free(dimensions);
+                break;
+            }
+            case TYPE_DOUBLE: {
+                result = add_temp_symbol(TYPE_DOUBLE);
+                if (symbol_ptr->array_pointer.is_static_checkable) {
+                    result->value.double_val = symbol_ptr->value.double_array[offset->value.int_val];
+                }
+                // we won't do any semantic propogation here, since we are not sure about the real array offset
+                generate("F_STORE %s[%s] %s\n", symbol_ptr->name, offset->name, result->name);
+                dimensions = array_dimensions_to_string(symbol_ptr->array_pointer);
+                logging("> extract array access: expression -> %s%s\n", symbol_ptr->name, dimensions);
+                free(dimensions);
+                break;
+            }
+            case TYPE_STRING: {
+                result = add_temp_symbol(TYPE_STRING);
+                if (symbol_ptr->array_pointer.is_static_checkable) {
+                    result->value.str_val = (char *)malloc(sizeof(char) * (strlen(symbol_ptr->value.str_array[offset->value.int_val]) + 1));
+                    if (result->value.str_val == NULL) {
+                        yyerror_name("Out of memory when malloc.", "Parsing");
+                    }
+                    result->value.str_val[0] = '\0';
+                    sprintf(result->value.str_val, "%s", symbol_ptr->value.str_array[offset->value.int_val]);
+                }
+                // we won't do any semantic propogation here, since we are not sure about the real array offset
+                yyerror_warning_test_mode("STRING type is not supported yet and won't generate code for it.", "Feature", true, true);
+                dimensions = array_dimensions_to_string(symbol_ptr->array_pointer);
+                logging("> extract array access: expression -> %s%s\n", symbol_ptr->name, dimensions);
+                free(dimensions);
+                break;
+            }
+            case TYPE_BOOL: {
+                result = add_temp_symbol(TYPE_BOOL);
+                if (symbol_ptr->array_pointer.is_static_checkable) {
+                    result->value.bool_val = symbol_ptr->value.bool_array[offset->value.int_val];
+                }
+                // we won't do any semantic propogation here, since we are not sure about the real array offset
+                generate("I_STORE %s[%s] %s\n", symbol_ptr->name, offset->name, result->name);
+                dimensions = array_dimensions_to_string(symbol_ptr->array_pointer);
+                logging("> extract array access: expression -> %s%s\n", symbol_ptr->name, dimensions);
+                free(dimensions);
+                break;
+            }
+            case TYPE_PROGRAM_NAME: {
+                yyerror_name("Cannot access program name as an array.", "Type");
+                break;
+            }
+            default: {
+                yyerror_name("Unknown data type in array access.", "Parsing");
+                break;
+            }
         }
 
-        offset += array_pointer.dimension_sizes[i] * stride;
-        stride *= array_info.dimension_sizes[i];
+        result->is_static_checkable = symbol_ptr->is_static_checkable && symbol_ptr->array_pointer.is_static_checkable;
     }
 
-    return offset;
+    return result;
 }
 
 /**
  * Calculate the offset of an array, add temporary symbol for unstatic access.
  * Returns a pointer to the temporary symbol.
  */
-symbol *get_array_offset_unstatic(array_type array_info, array_type array_pointer) {
+symbol *get_array_offset(array_type array_info, array_type array_pointer) {
     if (array_info.dimensions == 0) {
         yyerror_name("Array access on non-array variable.", "Type");
     }
     if (array_pointer.dimensions != array_info.dimensions) {
         yyerror_name("Array access with wrong number of dimensions.", "Index");
     }
-    if (array_pointer.is_static_checkable) {
-        yyerror_name("Try to get array offset on static array. Use `get_array_offset` instead.", "Parsing");
-    }
 
-    logging("> Calculating offset for unstatic array access.\n");
+    logging("> Calculating offset for array access.\n");
+    add_comment("Calculating offset");
 
     symbol *offset = add_temp_symbol(TYPE_INT);
-    offset->is_static_checkable = false;
+    offset->is_static_checkable = array_pointer.is_static_checkable;
     offset->value.int_val = 0;
     generate("I_STORE %d %s\n", 0, offset->name);
 
     symbol *stride = add_temp_symbol(TYPE_INT);
-    stride->is_static_checkable = false;
+    stride->is_static_checkable = array_pointer.is_static_checkable;
     stride->value.int_val = 1;
     generate("I_STORE %d %s\n", 1, stride->name);
 
     symbol *temp_offset_symbol = add_temp_symbol(TYPE_INT);
-    temp_offset_symbol->is_static_checkable = false;
+    temp_offset_symbol->is_static_checkable = array_pointer.is_static_checkable;
 
     symbol *temp_stride_symbol = add_temp_symbol(TYPE_INT);
-    temp_stride_symbol->is_static_checkable = false;
+    temp_stride_symbol->is_static_checkable = array_pointer.is_static_checkable;
 
     for (size_t i = array_pointer.dimensions - 1; i <= array_pointer.dimensions - 1; i--) {
         // use `i <= array_pointer.dimensions - 1` since `i` is unsigned
@@ -995,6 +1053,15 @@ symbol *get_array_offset_unstatic(array_type array_info, array_type array_pointe
 
         // offset += array_pointer.dimension_sizes[i] * stride;
         // stride *= array_info.dimension_sizes[i];
+        if (array_pointer.is_static_checkable) {
+            if (array_pointer.dimension_sizes[i] >= array_info.dimension_sizes[i]) {
+                yyerror_name("Array index out of bounds.", "Index");
+            }
+
+            offset->value.int_val += array_pointer.dimension_sizes[i] * stride->value.int_val;
+            stride->value.int_val *= array_info.dimension_sizes[i];
+        }
+
         if (array_pointer.dimension_sizes_symbol[i] == NULL) {
             generate("I_MUL %s %zu %s\n", stride->name, array_pointer.dimension_sizes[i], temp_stride_symbol->name);
             generate("I_ADD %s %s %s\n", offset->name, temp_stride_symbol->name, temp_offset_symbol->name);
@@ -1088,6 +1155,48 @@ void logging(const char *format, ...) {
 
 void line_label() {
     generate("%s%llu:\n", LINE_PREFIX, line_count);
+}
+
+void add_comment(char *comment) {
+    static size_t index = 0;
+    char *tmp = (char *)malloc(sizeof(char) * (strlen(comment) + 1));
+    if (tmp == NULL) {
+        yyerror_name("Out of memory when malloc.", "Parsing");
+    }
+    strcpy(tmp, comment);
+    
+    size_t offset = 0;
+    for (size_t i = 0; tmp[i - offset] != '\0'; i++) {
+        tmp[i - offset] = tmp[i];
+        if (tmp[i - offset] == ' ' || tmp[i - offset] == '\t' || 
+            tmp[i - offset] == '-') {
+            tmp[i - offset] = '_';
+        }
+        if (tmp[i - offset] == '%' || tmp[i - offset] == '\n' || 
+            tmp[i - offset] == '.' || tmp[i - offset] == '!' ||
+            tmp[i - offset] == '?') {
+            tmp[i - offset] = tmp[i - offset + 1];
+            offset++;
+        }
+    }
+
+    offset = 0;
+    bool cut = true;
+    for (size_t i = 0; tmp[i - offset] != '\0'; i++) {
+        tmp[i - offset] = tmp[i];
+        if (tmp[i - offset] == '_' && cut) {
+            tmp[i - offset] = tmp[i - offset + 1];
+            offset++;
+        }
+        else {
+            cut = false;
+        }
+    }
+
+    generate("%s%s&%zu:\n", COMMENT_PREFIX, tmp, index);
+    index++;
+    
+    free(tmp);
 }
 
 // for Bison yacc to call parser

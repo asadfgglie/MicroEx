@@ -1,0 +1,23 @@
+%%%
+ %% Test while-loop statement.
+%%%
+
+program test_while
+begin
+    declare a[10], i as integer;
+    declare b as bool;
+
+    %% basic while loop
+    %% while condition will only compute one time!
+    %% use variable instead of expression
+    b := true;
+    while (b)
+        if (i < 10) then
+            b := true;
+        else
+            b := false;
+        endif
+        a[i] := i * i;
+        i := i + 1;
+    endwhile
+end

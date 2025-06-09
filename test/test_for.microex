@@ -1,0 +1,27 @@
+%%%
+ %% Test for-loop statement.
+%%%
+
+program test_for
+
+begin
+    declare i, j, b[10] as integer;
+
+    %% basic for-loop
+    %% to: 0, 1, 2, ... 8, 9. not include 10
+    %% note: start point and end point will only compute one time!
+    %% directly use non-array variable for dynamic for-loop times!
+    for (i := 0 TO 10)
+        b[i] := i;
+    endfor
+
+    %% downto: 9, 8, 7, ... 1, 0. not include -1
+    for (i := 9 DOWNTO -1)
+        b[i] := b[9 - i] * b[i];
+
+        %% nested for-loop & dynamic for-loop
+        for (j := 0 to i)
+            write(b[i]);
+        endfor
+    endfor
+end

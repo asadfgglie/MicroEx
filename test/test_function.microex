@@ -43,15 +43,14 @@ begin
     declare boolean_var as bool;
     boolean_var := c == test_local();
 
-    declare arr[2][3] as integer;
+    declare arr1[2][3] as integer;
 
-    fn integer test_array()
-        %% currently not support array as parameter, so array need to declare as global variable
+    fn integer test_array(integer arr[2][3])
         declare a1, a2 as integer;
         a1 := arr[0][0] + arr[0][1] + arr[0][2];
         a2 := arr[1][0] + arr[1][1] + arr[1][2];
         return a1 * a2;
     fnend
 
-    y := test_array();
+    y := test_array(arr1);
 end
