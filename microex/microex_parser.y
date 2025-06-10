@@ -2508,6 +2508,10 @@
 program:
     program_title
     program_body {
+        label *halt = add_label();
+        generate("J %s\n", halt->name);
+        generate("\n");
+
         generate("%s%s:\n", TEMP_DECLARE_LABEL, $1->name);
         symbol *current_symbol, *next_symbol;
         HASH_ITER(hh, temp_symbol_table, current_symbol, next_symbol) {
@@ -2517,6 +2521,7 @@ program:
 
         generate("\n");
 
+        generate("%s:\n", halt->name);
         generate("HALT %s\n", $1->name);
         logging("> program -> program_title program_body\n");
         logging("\t> Program done with name: `%s`\n", $1->name);
@@ -4132,7 +4137,10 @@ write_statement:
             if (current->array_pointer.dimensions > 0) {
                 symbol *offset = get_array_offset(current->symbol_ptr->array_info, current->array_pointer);
                 switch (current->symbol_ptr->type) {
-                    case TYPE_BOOL:
+                    case TYPE_BOOL: {
+                        generate("CALL write_b %s[%s]\n", current->symbol_ptr->name, offset->name);
+                        break;
+                    }
                     case TYPE_INT: {
                         generate("CALL write_i %s[%s]\n", current->symbol_ptr->name, offset->name);
                         break;
@@ -4157,7 +4165,10 @@ write_statement:
             }
             else {
                 switch (current->symbol_ptr->type) {
-                    case TYPE_BOOL:
+                    case TYPE_BOOL: {
+                        generate("CALL write_b %s\n", current->symbol_ptr->name);
+                        break;
+                    }
                     case TYPE_INT: {
                         generate("CALL write_i %s\n", current->symbol_ptr->name);
                         break;

@@ -94,6 +94,8 @@ JNE label&0
 label&1:
 
 line&23:
+J label&8
+
 temp_var_declare&test_while:
 DECLARE temp&integer&0 integer
 DECLARE temp&integer&1 integer
@@ -110,4 +112,5 @@ DECLARE temp&integer&11 integer
 DECLARE temp&integer&12 integer
 J start&test_while
 
+label&8:
 HALT test_while

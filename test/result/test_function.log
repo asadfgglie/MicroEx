@@ -901,6 +901,8 @@ I_TO_F temp&integer&70 y
 line&56:
 	$ lexer got token: `END`, scan: `end`
 	> program_body -> begin statement_list end
+J label&3
+
 temp_var_declare&function_test:
 DECLARE fn&temp&integer&0 integer
 DECLARE fn&temp&integer&1 integer
@@ -975,6 +977,7 @@ DECLARE fn&temp&integer&69 integer
 DECLARE temp&integer&70 integer
 J start&function_test
 
+label&3:
 HALT function_test
 	> program -> program_title program_body
 		> Program done with name: `function_test`

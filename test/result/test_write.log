@@ -185,6 +185,8 @@ CALL write_f d
 comment&print_`b[0][1]`,_`b[1][3]`_as_integer_and_print_`c`,_`d`_as_real&7:
 	$ lexer got token: `END`, scan: `end`
 	> program_body -> begin statement_list end
+J label&0
+
 temp_var_declare&test_write:
 DECLARE temp&integer&0 integer
 DECLARE temp&integer&1 integer
@@ -202,6 +204,7 @@ DECLARE temp&integer&12 integer
 DECLARE temp&integer&13 integer
 J start&test_write
 
+label&0:
 HALT test_write
 	> program -> program_title program_body
 		> Program done with name: `test_write`

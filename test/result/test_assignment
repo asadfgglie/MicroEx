@@ -200,6 +200,8 @@ I_STORE temp&integer&68 temp&integer&66
 F_STORE temp&real&64 d[temp&integer&65]
 
 comment&Dynamic_access_&_assignment&10:
+J label&0
+
 temp_var_declare&test_assignment:
 DECLARE temp&integer&0 integer
 DECLARE temp&integer&1 integer
@@ -272,4 +274,5 @@ DECLARE temp&integer&67 integer
 DECLARE temp&integer&68 integer
 J start&test_assignment
 
+label&0:
 HALT test_assignment

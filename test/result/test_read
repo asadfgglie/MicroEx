@@ -108,6 +108,8 @@ CALL read_i arr[temp&integer&22]
 
 line&23:
 comment&read_5_integers_into_`arr[0]`,_`arr[1]`,_`arr[2]`,_`arr[3]`,_`arr[4]`&13:
+J label&0
+
 temp_var_declare&test_read:
 DECLARE temp&integer&0 integer
 DECLARE temp&integer&1 integer
@@ -137,4 +139,5 @@ DECLARE temp&integer&24 integer
 DECLARE temp&integer&25 integer
 J start&test_read
 
+label&0:
 HALT test_read

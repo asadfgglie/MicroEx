@@ -356,6 +356,8 @@ label&9
 line&27:
 	$ lexer got token: `END`, scan: `end`
 	> program_body -> begin statement_list end
+J label&24
+
 temp_var_declare&test_for:
 DECLARE temp&integer&0 integer
 DECLARE temp&integer&1 integer
@@ -397,6 +399,7 @@ DECLARE temp&integer&36 integer
 DECLARE temp&integer&37 integer
 J start&test_for
 
+label&24:
 HALT test_for
 	> program -> program_title program_body
 		> Program done with name: `test_for`

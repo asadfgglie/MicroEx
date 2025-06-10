@@ -59,6 +59,8 @@ F_STORE 0.0 g[0]
 line&16:
 comment&Dynamic_declare,_but_since_`a_+_1`_is_static_checkable_(a_+_1_=_0_+_1_=_1),&8:
 comment&so_this_declaration_is_valid&9:
+J label&0
+
 temp_var_declare&test_declare:
 DECLARE temp&integer&0 integer
 DECLARE temp&integer&1 integer
@@ -67,4 +69,5 @@ DECLARE temp&integer&3 integer
 DECLARE temp&integer&4 integer
 J start&test_declare
 
+label&0:
 HALT test_declare

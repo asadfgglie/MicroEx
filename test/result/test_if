@@ -164,6 +164,8 @@ line&29:
 label&26:
 
 line&30:
+J label&33
+
 temp_var_declare&test_if:
 DECLARE temp&integer&0 integer
 DECLARE temp&integer&1 integer
@@ -193,4 +195,5 @@ DECLARE temp&integer&24 integer
 DECLARE temp&integer&25 integer
 J start&test_if
 
+label&33:
 HALT test_if

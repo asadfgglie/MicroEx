@@ -188,6 +188,8 @@ JNE label&8
 label&9
 
 line&27:
+J label&24
+
 temp_var_declare&test_for:
 DECLARE temp&integer&0 integer
 DECLARE temp&integer&1 integer
@@ -229,4 +231,5 @@ DECLARE temp&integer&36 integer
 DECLARE temp&integer&37 integer
 J start&test_for
 
+label&24:
 HALT test_for
