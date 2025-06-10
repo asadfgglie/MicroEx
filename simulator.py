@@ -54,6 +54,7 @@ class Simulator:
     def __init__(self):
         self.instruction: dict[int, tuple[list[str], int]] = dict()
         self.label: dict[str, int] = dict()
+        self.function: dict[str, int] = dict()
         self.instruction_ptr: int | None = None
         self.call_stack: list[int] = list()
         self.is_loaded: bool = False
@@ -116,6 +117,7 @@ class Simulator:
                             raise ValueError(f"Declare nested function in function: `{args[0]}`.")
                         if args[0] not in self.variables:
                             self.declaring_func = args[0]
+                        self.function[args[0]] = self.instruction_ptr
                     self.variables[args[0]] = Variable(args[0], 
                                                     VarType._value2member_map_[args[1]], 
                                                     int(args[2]) if len(args) == 3 else 0)
@@ -194,29 +196,43 @@ class Simulator:
                     
                     self.cmp_cmds = cmds
                 elif op == 'J':
+                    if args[0] not in self.label:
+                        raise ValueError(f"label `{args[0]}` not exist.")
                     self.instruction_ptr = self.label[args[0]]
                     continue
                 elif op == 'JE':
+                    if args[0] not in self.label:
+                        raise ValueError(f"label `{args[0]}` not exist.")
                     if eval(self.cmp_cmds[0] + ' == ' + self.cmp_cmds[1]):
                         self.instruction_ptr = self.label[args[0]]
                         continue
                 elif op == 'JG':
+                    if args[0] not in self.label:
+                        raise ValueError(f"label `{args[0]}` not exist.")
                     if eval(self.cmp_cmds[0] + ' > ' + self.cmp_cmds[1]):
                         self.instruction_ptr = self.label[args[0]]
                         continue
                 elif op == 'JGE':
+                    if args[0] not in self.label:
+                        raise ValueError(f"label `{args[0]}` not exist.")
                     if eval(self.cmp_cmds[0] + ' >= ' + self.cmp_cmds[1]):
                         self.instruction_ptr = self.label[args[0]]
                         continue
                 elif op == 'JL':
+                    if args[0] not in self.label:
+                        raise ValueError(f"label `{args[0]}` not exist.")
                     if eval(self.cmp_cmds[0] + ' < ' + self.cmp_cmds[1]):
                         self.instruction_ptr = self.label[args[0]]
                         continue
                 elif op == 'JLE':
+                    if args[0] not in self.label:
+                        raise ValueError(f"label `{args[0]}` not exist.")
                     if eval(self.cmp_cmds[0] + ' <= ' + self.cmp_cmds[1]):
                         self.instruction_ptr = self.label[args[0]]
                         continue
                 elif op == 'JNE':
+                    if args[0] not in self.label:
+                        raise ValueError(f"label `{args[0]}` not exist.")
                     if eval(self.cmp_cmds[0] + ' != ' + self.cmp_cmds[1]):
                         self.instruction_ptr = self.label[args[0]]
                         continue
@@ -249,9 +265,10 @@ class Simulator:
                     else:
                         if args[-1].split('[')[0] not in self.variables:
                             raise ValueError(f"{args[-1].split('[')[0]} isn't declare!")
-
+                        if args[0] not in self.function:
+                            raise ValueError(f"Can't find function: `{arg[0]}`")
                         self.call_stack.append(self.instruction_ptr)
-                        self.instruction_ptr = self.label[f"{FN_NAME_LABEL_PREFIX}{args[0]}"]
+                        self.instruction_ptr = self.function[args[0]]
                         continue
                 elif op == 'RETURN':
                     if args[-1].startswith(FN_RETURN_SYMBOL_PREFIX.format(self.declaring_func)):

@@ -20,4 +20,5 @@ for test_file in test/*.microex; do
         echo "Test $test_file failed. Please check the errors."
         exit 1
     fi
+    echo "Execute $base_name done"
 done

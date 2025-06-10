@@ -1006,7 +1006,7 @@ void yyerror_warning_test_mode(const char *msg, const char *error_name, bool is_
         printf("%s Error: %s\n\tat line (%llu:%llu)\n", error_name, msg, line_count, line_word_count);
         fprintf(stderr, "This function only works in test mode.\n");
         fprintf(stderr, "Since it may not be fully implemented yet, output target code may be incorrect.\n");
-        fprintf(stderr, "If you want to enable test mode, please use the -t option.\n");
+        fprintf(stderr, "If you want to enable test mode, please use the `-t` option.\n");
         exit(EXIT_FAILURE);
     }
 
