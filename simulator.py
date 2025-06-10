@@ -63,7 +63,7 @@ class Simulator:
     
     def arg_arr(self, index: int, args: list[str]):
         try:
-            int(int(args[index].split('[')[-1].removesuffix(']')))
+            int(args[index].split('[')[-1].removesuffix(']'))
             return f"self.variables[args[{index}].split('[')[0]].value[int(args[{index}].split('[')[-1].removesuffix(']'))]"
         except:
             return f"self.variables[args[{index}].split('[')[0]].value[int(self.variables[args[{index}].split('[')[-1].removesuffix(']')])]"
