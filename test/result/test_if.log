@@ -88,7 +88,7 @@ I_STORE 100 temp&integer&4
 	> expression -> INTEGER_LITERAL (expression -> 100)
 	$ lexer got token: `RIGHT_PARENT`, scan: `)`
 I_CMP a temp&integer&4
-JLT label&3
+JL label&3
 J label&4
 label&3:
 I_STORE 1 temp&integer&5
@@ -156,7 +156,7 @@ I_STORE 0 temp&integer&10
 	> expression -> INTEGER_LITERAL (expression -> 0)
 	$ lexer got token: `AND`, scan: `&&`
 I_CMP a temp&integer&10
-JEQ label&12
+JE label&12
 J label&13
 label&12:
 I_STORE 1 temp&integer&11
@@ -187,7 +187,7 @@ I_STORE 2 temp&integer&13
 	> id -> ID array_dimension_list (id -> b[2])
 	> expression -> id (expression -> b[2])
 I_CMP b b
-JGT label&15
+JG label&15
 J label&16
 label&15:
 I_STORE 1 temp&integer&14
@@ -273,7 +273,7 @@ I_STORE 1 temp&integer&21
 	> id -> ID array_dimension_list (id -> b[1])
 	> expression -> id (expression -> b[1])
 I_CMP b b
-JGT label&21
+JG label&21
 J label&22
 label&21:
 I_STORE 1 temp&integer&22
@@ -299,7 +299,7 @@ I_STORE 0 temp&integer&23
 	> expression -> INTEGER_LITERAL (expression -> 0)
 	$ lexer got token: `RIGHT_PARENT`, scan: `)`
 I_CMP a temp&integer&23
-JLT label&27
+JL label&27
 J label&28
 label&27:
 I_STORE 1 temp&integer&24

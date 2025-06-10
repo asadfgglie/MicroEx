@@ -1,0 +1,10 @@
+program test_function
+
+begin
+    fn integer test(integer a)
+        fn integer nested() %% Error: nested function declare is not allow!
+            return 0;
+        endfn
+        return a;
+    endfn
+end

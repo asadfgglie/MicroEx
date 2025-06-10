@@ -38,7 +38,7 @@ I_STORE 0 temp&integer&1
 I_STORE 10 temp&integer&2
 I_STORE temp&integer&1 i
 I_CMP i temp&integer&2
-JLT label&2
+JL label&2
 J label&3
 label&2:
 I_STORE 1 temp&integer&3
@@ -64,7 +64,7 @@ I_STORE i b[temp&integer&4]
 line&16:
 INC i
 I_CMP i temp&integer&2
-JLT label&5
+JL label&5
 J label&6
 label&5:
 I_STORE 1 temp&integer&8
@@ -74,7 +74,7 @@ I_STORE 0 temp&integer&8
 label&7:
 I_CMP 0 temp&integer&8
 JNE label&0
-label&1
+label&1:
 
 line&17:
 line&18:
@@ -84,7 +84,7 @@ I_STORE 1 temp&integer&10
 I_UMINUS temp&integer&10 temp&integer&11
 I_STORE temp&integer&9 i
 I_CMP i temp&integer&11
-JGT label&10
+JG label&10
 J label&11
 label&10:
 I_STORE 1 temp&integer&12
@@ -130,62 +130,64 @@ I_STORE temp&integer&25 b[temp&integer&26]
 
 line&21:
 line&22:
-comment&nested_for_loop_&_dynamic_for_loop&11:
+comment&nested_for_loop&11:
 I_STORE 0 temp&integer&30
+I_STORE 1 temp&integer&31
+I_ADD i temp&integer&31 temp&integer&32
 I_STORE temp&integer&30 j
-I_CMP j i
-JLT label&15
+I_CMP j temp&integer&32
+JL label&15
 J label&16
 label&15:
-I_STORE 1 temp&integer&31
+I_STORE 1 temp&integer&33
 J label&17
 label&16:
-I_STORE 0 temp&integer&31
+I_STORE 0 temp&integer&33
 label&17:
-I_CMP 0 temp&integer&31
+I_CMP 0 temp&integer&33
 JNE label&13
 J label&14
 label&13:
 line&24:
 comment&Calculating_offset&12:
-I_STORE 0 temp&integer&32
-I_STORE 1 temp&integer&33
-I_MUL temp&integer&33 i temp&integer&35
-I_ADD temp&integer&32 temp&integer&35 temp&integer&34
-I_STORE temp&integer&34 temp&integer&32
-I_MUL temp&integer&33 10 temp&integer&35
-I_STORE temp&integer&35 temp&integer&33
-CALL write_i b[temp&integer&32]
+I_STORE 0 temp&integer&34
+I_STORE 1 temp&integer&35
+I_MUL temp&integer&35 i temp&integer&37
+I_ADD temp&integer&34 temp&integer&37 temp&integer&36
+I_STORE temp&integer&36 temp&integer&34
+I_MUL temp&integer&35 10 temp&integer&37
+I_STORE temp&integer&37 temp&integer&35
+CALL write_i b[temp&integer&34]
 
 line&25:
 INC j
-I_CMP j i
-JLT label&18
+I_CMP j temp&integer&32
+JL label&18
 J label&19
 label&18:
-I_STORE 1 temp&integer&36
+I_STORE 1 temp&integer&38
 J label&20
 label&19:
-I_STORE 0 temp&integer&36
+I_STORE 0 temp&integer&38
 label&20:
-I_CMP 0 temp&integer&36
+I_CMP 0 temp&integer&38
 JNE label&13
-label&14
+label&14:
 
 line&26:
 DEC i
 I_CMP i temp&integer&11
-JGT label&21
+JG label&21
 J label&22
 label&21:
-I_STORE 1 temp&integer&37
+I_STORE 1 temp&integer&39
 J label&23
 label&22:
-I_STORE 0 temp&integer&37
+I_STORE 0 temp&integer&39
 label&23:
-I_CMP 0 temp&integer&37
+I_CMP 0 temp&integer&39
 JNE label&8
-label&9
+label&9:
 
 line&27:
 J label&24
@@ -229,6 +231,8 @@ DECLARE temp&integer&34 integer
 DECLARE temp&integer&35 integer
 DECLARE temp&integer&36 integer
 DECLARE temp&integer&37 integer
+DECLARE temp&integer&38 integer
+DECLARE temp&integer&39 integer
 J start&test_for
 
 label&24:

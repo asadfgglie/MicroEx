@@ -1,0 +1,15 @@
+line&1:
+START test_function
+comment&declare_all_usaged_temp_variable&0:
+J temp_var_declare&test_function
+start&test_function:
+
+line&2:
+line&3:
+line&4:
+fn_name&test:
+fn_arg&fn&test&a:
+DECLARE fn&test&a integer
+DECLARE test function
+DECLARE fn&test&ret&integer integer
+line&5:

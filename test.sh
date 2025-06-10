@@ -1,12 +1,5 @@
 #!/bin/bash
 
-make build
-# Check if the build was successful
-if [ $? -ne 0 ]; then
-    echo "Build failed. Please check the errors."
-    exit 1
-fi
-
 # Ensure the result directory exists
 rm -rf test/result/*
 mkdir -p test/result/

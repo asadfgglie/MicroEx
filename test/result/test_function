@@ -151,7 +151,7 @@ I_STORE 0 boolean_var
 line&44:
 CALL test_local temp&integer&17
 I_CMP c temp&integer&17
-JEQ label&0
+JE label&0
 J label&1
 label&0:
 I_STORE 1 temp&integer&18

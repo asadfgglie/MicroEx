@@ -12,12 +12,13 @@ begin
     %% use variable instead of expression
     b := true;
     while (b)
+        a[i] := i * i;
+        
+        i := i + 1;
         if (i < 10) then
             b := true;
         else
             b := false;
         endif
-        a[i] := i * i;
-        i := i + 1;
     endwhile
 end

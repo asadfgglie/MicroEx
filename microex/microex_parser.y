@@ -440,7 +440,7 @@
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.int_val == expr2->symbol_ptr->value.int_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
@@ -450,13 +450,13 @@
 
                                 result->value.bool_val = (temp_symbol->value.double_val == expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.int_val == expr2->symbol_ptr->value.bool_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -483,13 +483,13 @@
 
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val == temp_symbol->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val == expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
@@ -499,7 +499,7 @@
 
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val == temp_symbol->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -522,7 +522,7 @@
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.bool_val == expr2->symbol_ptr->value.int_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
@@ -532,13 +532,13 @@
 
                                 result->value.bool_val = (temp_symbol->value.double_val == expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.bool_val == expr2->symbol_ptr->value.bool_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JEQ %s\n", true_label->name);
+                                generate("JE %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -585,7 +585,7 @@
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.int_val > expr2->symbol_ptr->value.int_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
@@ -595,13 +595,13 @@
 
                                 result->value.bool_val = (temp_symbol->value.double_val > expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.int_val > expr2->symbol_ptr->value.bool_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -628,13 +628,13 @@
 
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val > temp_symbol->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val > expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
@@ -644,7 +644,7 @@
 
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val > temp_symbol->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -667,7 +667,7 @@
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.bool_val > expr2->symbol_ptr->value.int_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
@@ -677,13 +677,13 @@
 
                                 result->value.bool_val = (temp_symbol->value.double_val > expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.bool_val > expr2->symbol_ptr->value.bool_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JGT %s\n", true_label->name);
+                                generate("JG %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -723,7 +723,7 @@
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.int_val < expr2->symbol_ptr->value.int_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
@@ -733,13 +733,13 @@
 
                                 result->value.bool_val = (temp_symbol->value.double_val < expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.int_val < expr2->symbol_ptr->value.bool_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -766,13 +766,13 @@
 
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val < temp_symbol->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val < expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
@@ -782,7 +782,7 @@
 
                                 result->value.bool_val = (expr1->symbol_ptr->value.double_val < temp_symbol->value.double_val);
                                 generate("F_CMP %s %s\n", expr1->symbol_ptr->name, temp_symbol->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -809,7 +809,7 @@
                             case TYPE_INT: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.bool_val < expr2->symbol_ptr->value.int_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_DOUBLE: {
@@ -819,13 +819,13 @@
 
                                 result->value.bool_val = (temp_symbol->value.double_val < expr2->symbol_ptr->value.double_val);
                                 generate("F_CMP %s %s\n", temp_symbol->name, expr2->symbol_ptr->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_BOOL: {
                                 result->value.bool_val = (expr1->symbol_ptr->value.bool_val < expr2->symbol_ptr->value.bool_val);
                                 generate("I_CMP %s %s\n", expr1->symbol_ptr->name, expr2->symbol_ptr->name);
-                                generate("JLT %s\n", true_label->name);
+                                generate("JL %s\n", true_label->name);
                                 break;
                             }
                             case TYPE_STRING: {
@@ -4462,7 +4462,7 @@ for_statement:
         condition_info info = condition_process(&$1.for_node, (($1.for_direction == DIRECTION_TO) ? LESS_MICROEX : GREAT_MICROEX), &$1.for_end_node);
         generate("I_CMP 0 %s\n", info.result_node.symbol_ptr->name);
         generate("JNE %s\n", $1.for_start_label->name);
-        generate("%s\n", $1.for_end_label->name); // end label for for loop
+        generate("%s:\n", $1.for_end_label->name); // end label for for loop
         logging("> for_statement -> for_prefix statement_list endfor\n");
         
         generate("\n");

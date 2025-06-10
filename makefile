@@ -37,8 +37,11 @@ clean:
 	@rm -f microex_c*
 	@rm -rf test/result/*
 
-test_hw: build/microex_c_hw
+test_hw: build_hw
 	@./test_hw.sh
 
-test: build/microex_c
+test_compile: build
 	@./test.sh
+
+test: test_compile
+	@./test_exe.sh

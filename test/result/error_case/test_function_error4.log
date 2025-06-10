@@ -1,0 +1,41 @@
+line&1:
+	$ lexer got token: `PROGRAM`, scan: `program`
+	$ lexer got token: `ID`, scan: `test_function`
+START test_function
+comment&declare_all_usaged_temp_variable&0:
+J temp_var_declare&test_function
+start&test_function:
+	> program_title -> program id (program_title -> program test_function)
+		> Program start with name: `test_function`
+
+line&2:
+line&3:
+	$ lexer got token: `BEGIN`, scan: `begin`
+line&4:
+	$ lexer got token: `FN`, scan: `fn`
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `ID`, scan: `test`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	> function_statement_head -> FN type ID LEFT_PARENT (function_statement_head -> fn integer test ()
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `ID`, scan: `a`
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+	> id -> ID (id -> fn&test&a)
+	> arg -> type id (arg -> integer fn&test&a)
+	> arg_list -> arg (arg_list -> integer fn&test&a)
+	> function_statement_prefix -> function_statement_head RIGHT_PARENT (function_statement_prefix -> fn integer test (integer fn&test&a))
+fn_name&test:
+fn_arg&fn&test&a:
+DECLARE fn&test&a integer
+DECLARE test function
+DECLARE fn&test&ret&integer integer
+line&5:
+	$ lexer got token: `FN`, scan: `fn`
+	$ lexer got token: `INTEGER`, scan: `integer`
+	> type -> INTEGER
+	$ lexer got token: `ID`, scan: `nested`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+Syntax Error: Nested function is not allowed.
+	at line (5:26)

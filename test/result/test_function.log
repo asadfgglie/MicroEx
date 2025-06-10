@@ -518,7 +518,7 @@ CALL test_local temp&integer&17
 	> expression -> ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX (expression -> test_local())
 	$ lexer got token: `SEMICOLON`, scan: `;`
 I_CMP c temp&integer&17
-JEQ label&0
+JE label&0
 J label&1
 label&0:
 I_STORE 1 temp&integer&18

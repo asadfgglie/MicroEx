@@ -43,57 +43,58 @@ JNE label&0
 J label&1
 label&0:
 line&15:
-I_STORE 10 temp&integer&2
-I_CMP i temp&integer&2
-JLT label&2
+I_MUL i i temp&integer&2
+comment&Calculating_offset&5:
+I_STORE 0 temp&integer&3
+I_STORE 1 temp&integer&4
+I_MUL temp&integer&4 i temp&integer&6
+I_ADD temp&integer&3 temp&integer&6 temp&integer&5
+I_STORE temp&integer&5 temp&integer&3
+I_MUL temp&integer&4 10 temp&integer&6
+I_STORE temp&integer&6 temp&integer&4
+I_STORE temp&integer&2 a[temp&integer&3]
+
+line&16:
+line&17:
+I_STORE 1 temp&integer&7
+I_ADD i temp&integer&7 temp&integer&8
+I_STORE temp&integer&8 i
+
+line&18:
+I_STORE 10 temp&integer&9
+I_CMP i temp&integer&9
+JL label&2
 J label&3
 label&2:
-I_STORE 1 temp&integer&3
+I_STORE 1 temp&integer&10
 J label&4
 label&3:
-I_STORE 0 temp&integer&3
+I_STORE 0 temp&integer&10
 label&4:
-I_CMP 0 temp&integer&3
+I_CMP 0 temp&integer&10
 JNE label&5
 J label&6
 label&5:
-line&16:
-I_STORE 1 temp&integer&4
-I_STORE temp&integer&4 b
-
-line&17:
-J label&7
-label&6:
-line&18:
-I_STORE 0 temp&integer&5
-I_STORE temp&integer&5 b
-
 line&19:
-label&7:
+I_STORE 1 temp&integer&11
+I_STORE temp&integer&11 b
 
 line&20:
-I_MUL i i temp&integer&6
-comment&Calculating_offset&5:
-I_STORE 0 temp&integer&7
-I_STORE 1 temp&integer&8
-I_MUL temp&integer&8 i temp&integer&10
-I_ADD temp&integer&7 temp&integer&10 temp&integer&9
-I_STORE temp&integer&9 temp&integer&7
-I_MUL temp&integer&8 10 temp&integer&10
-I_STORE temp&integer&10 temp&integer&8
-I_STORE temp&integer&6 a[temp&integer&7]
-
+J label&7
+label&6:
 line&21:
-I_STORE 1 temp&integer&11
-I_ADD i temp&integer&11 temp&integer&12
-I_STORE temp&integer&12 i
+I_STORE 0 temp&integer&12
+I_STORE temp&integer&12 b
 
 line&22:
+label&7:
+
+line&23:
 I_CMP 0 b
 JNE label&0
 label&1:
 
-line&23:
+line&24:
 J label&8
 
 temp_var_declare&test_while:

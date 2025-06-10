@@ -37,7 +37,7 @@ I_STORE 0 temp&integer&3
 label&2:
 I_STORE 100 temp&integer&4
 I_CMP a temp&integer&4
-JLT label&3
+JL label&3
 J label&4
 label&3:
 I_STORE 1 temp&integer&5
@@ -73,7 +73,7 @@ I_STORE 0 temp&integer&9
 label&11:
 I_STORE 0 temp&integer&10
 I_CMP a temp&integer&10
-JEQ label&12
+JE label&12
 J label&13
 label&12:
 I_STORE 1 temp&integer&11
@@ -84,7 +84,7 @@ label&14:
 I_STORE 1 temp&integer&12
 I_STORE 2 temp&integer&13
 I_CMP b b
-JGT label&15
+JG label&15
 J label&16
 label&15:
 I_STORE 1 temp&integer&14
@@ -119,7 +119,7 @@ comment&nested_if&4:
 I_STORE 0 temp&integer&20
 I_STORE 1 temp&integer&21
 I_CMP b b
-JGT label&21
+JG label&21
 J label&22
 label&21:
 I_STORE 1 temp&integer&22
@@ -134,7 +134,7 @@ label&24:
 line&24:
 I_STORE 0 temp&integer&23
 I_CMP a temp&integer&23
-JLT label&27
+JL label&27
 J label&28
 label&27:
 I_STORE 1 temp&integer&24

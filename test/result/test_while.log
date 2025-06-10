@@ -96,71 +96,6 @@ JNE label&0
 J label&1
 label&0:
 line&15:
-	$ lexer got token: `IF`, scan: `if`
-	$ lexer got token: `LEFT_PARENT`, scan: `(`
-	$ lexer got token: `ID`, scan: `i`
-	$ lexer got token: `LESS`, scan: `<`
-	> id -> ID (id -> i)
-	> expression -> id (expression -> i)
-	$ lexer got token: `INTEGER_LITERAL`, scan: `10`
-I_STORE 10 temp&integer&2
-	> expression -> INTEGER_LITERAL (expression -> 10)
-	$ lexer got token: `RIGHT_PARENT`, scan: `)`
-I_CMP i temp&integer&2
-JLT label&2
-J label&3
-label&2:
-I_STORE 1 temp&integer&3
-J label&4
-label&3:
-I_STORE 0 temp&integer&3
-label&4:
-	$ lexer got token: `THEN`, scan: `then`
-I_CMP 0 temp&integer&3
-JNE label&5
-J label&6
-label&5:
-	> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (true) then)
-line&16:
-	$ lexer got token: `ID`, scan: `b`
-	$ lexer got token: `ASSIGN`, scan: `:=`
-	> id -> ID (id -> b)
-	$ lexer got token: `TRUE_LITERAL`, scan: `true`
-I_STORE 1 temp&integer&4
-	> expression -> TRUE_LITERAL (expression -> true)
-	$ lexer got token: `SEMICOLON`, scan: `;`
-I_STORE temp&integer&4 b
-	> assignment_statement -> id ASSIGN expression semicolon (assignment -> b := true;)
-
-	> statement -> assignment_statement
-	> statement_list -> statement
-line&17:
-	$ lexer got token: `ELSE`, scan: `else`
-J label&7
-label&6:
-	> if_statement -> if_prefix statement_list else if_suffix
-line&18:
-	$ lexer got token: `ID`, scan: `b`
-	$ lexer got token: `ASSIGN`, scan: `:=`
-	> id -> ID (id -> b)
-	$ lexer got token: `FALSE_LITERAL`, scan: `false`
-I_STORE 0 temp&integer&5
-	> expression -> FALSE_LITERAL (expression -> false)
-	$ lexer got token: `SEMICOLON`, scan: `;`
-I_STORE temp&integer&5 b
-	> assignment_statement -> id ASSIGN expression semicolon (assignment -> b := false;)
-
-	> statement -> assignment_statement
-	> statement_list -> statement
-line&19:
-	$ lexer got token: `ENDIF`, scan: `endif`
-	> if_suffix -> statement_list endif
-label&7:
-	> if_statement -> if_else_prefix if_suffix
-
-	> statement -> if_statement
-	> statement_list -> statement
-line&20:
 	$ lexer got token: `ID`, scan: `a`
 	$ lexer got token: `LEFT_BRACKET`, scan: `[`
 	$ lexer got token: `ID`, scan: `i`
@@ -179,23 +114,24 @@ line&20:
 	$ lexer got token: `SEMICOLON`, scan: `;`
 	> id -> ID (id -> i)
 	> expression -> id (expression -> i)
-I_MUL i i temp&integer&6
+I_MUL i i temp&integer&2
 	> expression -> expression MULTIPLY expression (0 -> 0 * 0)
 	> Calculating offset for array access.
 comment&Calculating_offset&5:
-I_STORE 0 temp&integer&7
-I_STORE 1 temp&integer&8
-I_MUL temp&integer&8 i temp&integer&10
-I_ADD temp&integer&7 temp&integer&10 temp&integer&9
-I_STORE temp&integer&9 temp&integer&7
-I_MUL temp&integer&8 10 temp&integer&10
-I_STORE temp&integer&10 temp&integer&8
-I_STORE temp&integer&6 a[temp&integer&7]
+I_STORE 0 temp&integer&3
+I_STORE 1 temp&integer&4
+I_MUL temp&integer&4 i temp&integer&6
+I_ADD temp&integer&3 temp&integer&6 temp&integer&5
+I_STORE temp&integer&5 temp&integer&3
+I_MUL temp&integer&4 10 temp&integer&6
+I_STORE temp&integer&6 temp&integer&4
+I_STORE temp&integer&2 a[temp&integer&3]
 	> assignment_statement -> id ASSIGN expression semicolon (assignment -> a[0] := 0;)
 
 	> statement -> assignment_statement
-	> statement_list -> statement_list statement
-line&21:
+	> statement_list -> statement
+line&16:
+line&17:
 	$ lexer got token: `ID`, scan: `i`
 	$ lexer got token: `ASSIGN`, scan: `:=`
 	> id -> ID (id -> i)
@@ -204,17 +140,82 @@ line&21:
 	> id -> ID (id -> i)
 	> expression -> id (expression -> i)
 	$ lexer got token: `INTEGER_LITERAL`, scan: `1`
-I_STORE 1 temp&integer&11
+I_STORE 1 temp&integer&7
 	> expression -> INTEGER_LITERAL (expression -> 1)
 	$ lexer got token: `SEMICOLON`, scan: `;`
-I_ADD i temp&integer&11 temp&integer&12
+I_ADD i temp&integer&7 temp&integer&8
 	> expression -> expression PLUS expression (1 -> 0 + 1)
-I_STORE temp&integer&12 i
+I_STORE temp&integer&8 i
 	> assignment_statement -> id ASSIGN expression semicolon (assignment -> i := 1;)
 
 	> statement -> assignment_statement
 	> statement_list -> statement_list statement
+line&18:
+	$ lexer got token: `IF`, scan: `if`
+	$ lexer got token: `LEFT_PARENT`, scan: `(`
+	$ lexer got token: `ID`, scan: `i`
+	$ lexer got token: `LESS`, scan: `<`
+	> id -> ID (id -> i)
+	> expression -> id (expression -> i)
+	$ lexer got token: `INTEGER_LITERAL`, scan: `10`
+I_STORE 10 temp&integer&9
+	> expression -> INTEGER_LITERAL (expression -> 10)
+	$ lexer got token: `RIGHT_PARENT`, scan: `)`
+I_CMP i temp&integer&9
+JL label&2
+J label&3
+label&2:
+I_STORE 1 temp&integer&10
+J label&4
+label&3:
+I_STORE 0 temp&integer&10
+label&4:
+	$ lexer got token: `THEN`, scan: `then`
+I_CMP 0 temp&integer&10
+JNE label&5
+J label&6
+label&5:
+	> if_prefix -> if left_parent expression right_parent then (if_prefix -> if (true) then)
+line&19:
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> b)
+	$ lexer got token: `TRUE_LITERAL`, scan: `true`
+I_STORE 1 temp&integer&11
+	> expression -> TRUE_LITERAL (expression -> true)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_STORE temp&integer&11 b
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> b := true;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement
+line&20:
+	$ lexer got token: `ELSE`, scan: `else`
+J label&7
+label&6:
+	> if_statement -> if_prefix statement_list else if_suffix
+line&21:
+	$ lexer got token: `ID`, scan: `b`
+	$ lexer got token: `ASSIGN`, scan: `:=`
+	> id -> ID (id -> b)
+	$ lexer got token: `FALSE_LITERAL`, scan: `false`
+I_STORE 0 temp&integer&12
+	> expression -> FALSE_LITERAL (expression -> false)
+	$ lexer got token: `SEMICOLON`, scan: `;`
+I_STORE temp&integer&12 b
+	> assignment_statement -> id ASSIGN expression semicolon (assignment -> b := false;)
+
+	> statement -> assignment_statement
+	> statement_list -> statement
 line&22:
+	$ lexer got token: `ENDIF`, scan: `endif`
+	> if_suffix -> statement_list endif
+label&7:
+	> if_statement -> if_else_prefix if_suffix
+
+	> statement -> if_statement
+	> statement_list -> statement_list statement
+line&23:
 	$ lexer got token: `ENDWHILE`, scan: `endwhile`
 I_CMP 0 b
 JNE label&0
@@ -223,7 +224,7 @@ label&1:
 
 	> statement -> while_statement
 	> statement_list -> statement_list statement
-line&23:
+line&24:
 	$ lexer got token: `END`, scan: `end`
 	> program_body -> begin statement_list end
 J label&8

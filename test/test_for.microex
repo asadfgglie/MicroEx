@@ -19,8 +19,8 @@ begin
     for (i := 9 DOWNTO -1)
         b[i] := b[9 - i] * b[i];
 
-        %% nested for-loop & dynamic for-loop
-        for (j := 0 to i)
+        %% nested for-loop
+        for (j := 0 to i + 1)
             write(b[i]);
         endfor
     endfor
