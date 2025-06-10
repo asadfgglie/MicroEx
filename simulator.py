@@ -1,9 +1,5 @@
 import argparse
-import logging
 import enum
-
-FN_NAME_LABEL_PREFIX = "fn_name&"
-FN_RETURN_SYMBOL_PREFIX = "fn&{}&ret"
 
 buffer: list[str] = list()
 def get_input() -> str:
@@ -87,16 +83,28 @@ class Simulator:
                     if ins != '\n':
                         op = ins.split()[0]
                         if op.startswith("START"):
-                            self.instruction_ptr = len(self.instruction)
+                            if len(ins.split()) <= 4:
+                                self.instruction_ptr = len(self.instruction)
+                            else:
+                                raise ValueError(f"Incorrect 3 address instruction in line: {i}")
                         elif op[-1] == ':':
-                            self.label[op[:-1]] = len(self.instruction)
+                            if len(ins.split()) == 1:
+                                self.label[op[:-1]] = len(self.instruction)
+                            else:
+                                raise ValueError(f"Incorrect label in line: {i}")
                         else:
-                            self.instruction[len(self.instruction)] = (ins.split(), i)
+                            if len(ins.split()) <= 4:
+                                index = len(self.instruction)
+                                self.instruction[index] = (ins.split(), i)
+                                self.instruction[index][0][0] = self.instruction[index][0][0].upper()
+                            else:
+                                raise ValueError(f"Incorrect 3 address instruction in line: {i}")
                     i += 1
             if self.instruction_ptr is None:
                 raise ValueError("Can't fine start point in code.")
         except Exception as e:
-            logging.error("Can't load asm code.", e)
+            print("Can't load asm code.")
+            print(f"{e}")
             exit(1)
 
         self.is_loaded = True
@@ -271,7 +279,7 @@ class Simulator:
                         self.instruction_ptr = self.function[args[0]]
                         continue
                 elif op == 'RETURN':
-                    if args[-1].startswith(FN_RETURN_SYMBOL_PREFIX.format(self.declaring_func)):
+                    if self.declaring_func is not None:
                         self.declaring_func = None
                     else:
                         ret = str(eval(self.arg_arr(-1, args) if len(args[-1].split('[')) > 1 else self.arg_var(-1)))
@@ -403,7 +411,7 @@ class Simulator:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', action='store')
+    parser.add_argument('-f', '--file', action='store', help="Input target code file path for execute. Since this implementation use `exec()` and `eval()` to get execution result, so make sure only execute trust code.")
     parser = parser.parse_args()
     cpu = Simulator()
     cpu.execute(parser.file)

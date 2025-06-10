@@ -3888,6 +3888,7 @@ expression:
             }
 
             $1->function_info->args[i]->is_static_checkable = current->symbol_ptr->is_static_checkable;
+            $$.symbol_ptr->is_static_checkable = $$.symbol_ptr->is_static_checkable && current->symbol_ptr->is_static_checkable;
 
             exprs_name_len += strlen(current->symbol_ptr->name);
             if (current->next != NULL) {
@@ -3932,7 +3933,7 @@ expression:
         $$.next = NULL;
         $$.array_pointer = empty_array_info();
 
-        $$.symbol_ptr->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
+        $$.symbol_ptr->is_static_checkable = $1->function_info->return_arg->is_static_checkable && $$.symbol_ptr->is_static_checkable; // propagate static checkability
     }
     | ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX {
         if ($1->type == TYPE_UNKNOWN) {
@@ -3965,7 +3966,7 @@ expression:
         generate("CALL %s %s\n", $1->name, $$.symbol_ptr->name);
         logging("> expression -> ID_MICROEX LEFT_PARENT_MICROEX RIGHT_PARENT_MICROEX (expression -> %s())\n", $1->name);
 
-        $$.symbol_ptr->is_static_checkable = $1->function_info->return_arg->is_static_checkable; // propagate static checkability
+        $$.symbol_ptr->is_static_checkable = $1->function_info->return_arg->is_static_checkable && $$.symbol_ptr->is_static_checkable; // propagate static checkability
     }
     | INTEGER_LITERAL_MICROEX {
         $$.symbol_ptr = add_temp_symbol(TYPE_INT);
